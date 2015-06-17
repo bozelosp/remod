@@ -1,0 +1,8 @@
+cell1-11b-CA3.CNG_apical.swc
+cell1-3a-CA3.CNG_apical.swc
+cell1-8b-CA3.CNG_apical.swc
+cell1-CA3.CNG_apical.swc
+cell13-CA3.CNG_apical.swc
+cell1b-CA3.CNG_apical.swc
+cell2-CA3.CNG_apical.swc
+cell49-CA3.CNG_apical.swc

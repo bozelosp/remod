@@ -1,0 +1,10 @@
+12299402.CNG.swc
+c11471.CNG.swc
+c12873.CNG.swc
+c53063.CNG.swc
+c60463.CNG.swc
+c80764.CNG.swc
+cell1-3a-CA3.CNG.swc
+cell1-8b-CA3.CNG.swc
+cell1-CA3.CNG.swc
+cell2-3a-CA3.CNG.swc

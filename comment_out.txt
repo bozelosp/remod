@@ -1,0 +1,47 @@
+'''#print dist_angle_basal
+#print dist_angle_apical
+
+basal_num=20
+apical_num=12
+
+def da (dist_freq_list, angles_freq_list, list_num):
+
+	la=[]
+
+	dist_pop_list = dist_freq_list.keys()
+	dist_fr_list = dist_freq_list.values()
+
+	dist_fr_list = [x * 100 for x in dist_fr_list]
+
+	de_novo_dist=weighted_sample(dist_pop_list, dist_fr_list, list_num)
+
+	for i in de_novo_dist:
+		
+		angles_pop_list=angles_freq_list[i].keys()
+		angles_fr_list=angles_freq_list[i].values()
+
+		angles_fr_list = [x * 100 for x in angles_fr_list]
+
+		de_novo_angle=weighted_sample(angles_pop_list, angles_fr_list, 1)
+
+		la.append([i, de_novo_angle[0]])
+
+	return la
+
+la_basal=da(dist_freq_basal, angles_freq_basal, basal_num)
+la_apical=da(dist_freq_apical, angles_freq_apical, apical_num)
+
+print principal_axis
+print soma_root
+
+print soma_root[0], soma_root[1], soma_root[2]
+
+for i in la_basal:
+
+	point=createP(i[0], i[1], principal_axis, soma_root, 1)
+	print point[0][0], point[0][1], point[0][2]
+
+for i in la_apical:
+
+	point=createP(i[0], i[1], principal_axis, soma_root, 1)
+	print point[0][0], point[0][1], point[0][2]'''

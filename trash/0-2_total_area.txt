@@ -1,0 +1,1 @@
+<function total_area at 0x10a2eb2a8>

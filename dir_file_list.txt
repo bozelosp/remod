@@ -1,0 +1,19 @@
+/Users/bozelosp/Dropbox/remod/hippocampal_ca3_pyramidal/ cell1-11b-CA3.CNG.swc,cell1-3a-CA3.CNG.swc,cell1-8b-CA3.CNG.swc,cell1-CA3.CNG.swc,cell13-CA3.CNG.swc,cell1b-CA3.CNG.swc,cell2-CA3.CNG.swc,cell49-CA3.CNG.swc
+
+/Users/bozelosp/Dropbox/remod/hippocampal_ca3_apical_shrinked/downloads/files/downloads/files/ cell1-11b-CA3.CNG_apical_new_new.swc,cell1-3a-CA3.CNG_apical_new_new.swc,cell1-8b-CA3.CNG_apical_new_new.swc,cell1-CA3.CNG_apical_new_new.swc,cell13-CA3.CNG_apical_new_new.swc,cell1b-CA3.CNG_apical_new_new.swc,cell2-CA3.CNG_apical_new_new.swc,cell49-CA3.CNG_apical_new_new.swc
+
+/Users/bozelosp/Dropbox/remod/amygdala_pyramidal/ N-1-1-2-3-R.CNG.swc,N-1-5-3-5R.CNG.swc,N-10-1-3-4-L.CNG.swc,N-10-5-3-5L.CNG.swc,N-11-1-3-5R-L.CNG.swc,N-11-5-3-5L.CNG.swc,N-12-4-3-2R-L.CNG.swc,N-12-7-3-5L.CNG.swc
+
+/Users/bozelosp/Dropbox/remod/hippocampal_ca3_pyramidal/downloads/files/ cell1-11b-CA3.CNG_new.swc,cell1-8b-CA3.CNG_new.swc,cell13-CA3.CNG_new.swc,cell2-CA3.CNG_new.swc,cell1-3a-CA3.CNG_new.swc,cell1-CA3.CNG_new.swc,cell1b-CA3.CNG_new.swc,cell49-CA3.CNG_new.swc
+
+/Users/bozelosp/Dropbox/remod/hippocampal_ca3_pyramidal/downloads/files/downloads/files/ cell1-11b-CA3.CNG_new_new.swc,cell1-3a-CA3.CNG_new_new.swc,cell1-8b-CA3.CNG_new_new.swc,cell1-CA3.CNG_new_new.swc,cell13-CA3.CNG_new_new.swc,cell1b-CA3.CNG_new_new.swc,cell2-CA3.CNG_new_new.swc,cell49-CA3.CNG_new_new.swc
+
+/Users/bozelosp/Dropbox/remod/hippocampal_ca3_apical_shrinked/ cell1-11b-CA3.CNG_apical.swc,cell1-3a-CA3.CNG_apical.swc,cell1-8b-CA3.CNG_apical.swc,cell1-CA3.CNG_apical.swc,cell13-CA3.CNG_apical.swc,cell1b-CA3.CNG_apical.swc,cell2-CA3.CNG_apical.swc,cell49-CA3.CNG_apical.swc
+
+/Users/bozelosp/Dropbox/remod/hippocampal_ca3_apical_shrinked/downloads/files/ cell1-11b-CA3.CNG_apical_new.swc,cell1-3a-CA3.CNG_apical_new.swc,cell1-8b-CA3.CNG_apical_new.swc,cell1-CA3.CNG_apical_new.swc,cell13-CA3.CNG_apical_new.swc,cell1b-CA3.CNG_apical_new.swc,cell2-CA3.CNG_apical_new.swc,cell49-CA3.CNG_apical_new.swc
+
+amygdala: /Users/bozelosp/Dropbox/remod/amygdala_pyramidal/ N-1-1-2-3-R.CNG.swc,N-1-5-3-5R.CNG.swc,N-10-1-3-4-L.CNG.swc,N-10-5-3-5L.CNG.swc,N-11-1-3-5R-L.CNG.swc,N-11-5-3-5L.CNG.swc,N-12-4-3-2R-L.CNG.swc,N-12-7-3-5L.CNG.swc
+
+/Users/bozelosp/Dropbox/remod/amygdala_pyramidal/downloads/files/ N-1-1-2-3-R.CNG_new.swc,N-1-5-3-5R.CNG_new.swc,N-10-1-3-4-L.CNG_new.swc,N-10-5-3-5L.CNG_new.swc,N-11-1-3-5R-L.CNG_new.swc,N-11-5-3-5L.CNG_new.swc,N-12-4-3-2R-L.CNG_new.swc,N-12-7-3-5L.CNG_new.swc
+
+/Users/bozelosp/Dropbox/remod/amygdala_pyramidal/downloads/files/downloads/files/ N-1-1-2-3-R.CNG_new_new.swc,N-1-5-3-5R.CNG_new_new.swc,N-10-1-3-4-L.CNG_new_new.swc,N-10-5-3-5L.CNG_new_new.swc,N-11-1-3-5R-L.CNG_new_new.swc,N-11-5-3-5L.CNG_new_new.swc,N-12-4-3-2R-L.CNG_new_new.swc,N-12-7-3-5L.CNG_new_new.swc
