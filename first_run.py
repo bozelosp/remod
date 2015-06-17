@@ -90,6 +90,42 @@ for dend in apical_terminal:
 	print >>f, str(dend) + ' ' + str(dist[dend])
 f.close()
 
+fdendarea=directory+'downloads/statistics/'+file_name+'_all_dendritic_areas.txt' # <--------- temporary
+#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+f = open(fdendarea, 'w+')
+for dend in dlist:
+	print >>f, str(dend) + ' ' + str(area[dend])
+f.close()
+
+fdendarea=directory+'downloads/statistics/'+file_name+'_basal_dendritic_areas.txt' # <--------- temporary
+#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+f = open(fdendarea, 'w+')
+for dend in basal:
+	print >>f, str(dend) + ' ' + str(area[dend])
+f.close()
+
+fdendarea=directory+'downloads/statistics/'+file_name+'_basal_terminal_dendritic_areas.txt' # <--------- temporary
+#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+f = open(fdendarea, 'w+')
+for dend in basal_terminal:
+	print >>f, str(dend) + ' ' + str(area[dend])
+f.close()
+
+fdendarea=directory+'downloads/statistics/'+file_name+'_apical_dendritic_area.txt' # <--------- temporary
+#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+f = open(fdendarea, 'w+')
+for dend in apical:
+	print >>f, str(dend) + ' ' + str(area[dend])
+f.close()
+
+fdendarea=directory+'downloads/statistics/'+file_name+'_apical_terminal_dendritic_areas.txt' # <--------- temporary
+#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+f = open(fdendarea, 'w+')
+for dend in apical_terminal:
+	print >>f, str(dend) + ' ' + str(area[dend])
+f.close()
+
+
 fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_dendrites.txt'
 #fnumdend=directory+file_name+'_number_of_dendrites.txt'
 f = open(fnumdend, 'w+')
