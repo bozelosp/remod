@@ -60,7 +60,7 @@ def branching_points(points):
 
 	for i in points:
 		if points[i][6]==1:
-			if points[i][1] not in [1,2]:
+			if points[i][1] not in [2]:
 				bpoints.append(points[i][0])
 
 	for i in points:
@@ -68,15 +68,13 @@ def branching_points(points):
 		count=0
 		for k in points:
 			if points[k][6]==c:
-				if points[i][1] not in [1,2]:
+				if points[i][1] not in [2]:
 					count+=1
 		if count>1:
 			if points[i][0] not in bpoints:
 				bpoints.append(points[i][0])
 
 	bpoints.sort()
-
-	print len(bpoints)
 
 	basal_bpoints=[]
 	apical_bpoints=[]
@@ -184,7 +182,7 @@ def dend_add3d_points(dlist, dend_indices, points):
 		dend_add3d[i]=pts
 	return dend_add3d
 
-def pathways(dlist, points, dend_indices): #returns the pathway to root of all dendrites
+def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to root of all dendrites
 
 	path={}
 
@@ -193,6 +191,7 @@ def pathways(dlist, points, dend_indices): #returns the pathway to root of all d
 		pathway=[]
 		pathway.append(word)
 		con=points[word][6]
+		r=0
 		while points[con][1]!=1:
 			con=points[word][6]
 			for k in dlist:
@@ -200,6 +199,14 @@ def pathways(dlist, points, dend_indices): #returns the pathway to root of all d
 					word=dend_indices[k][0]
 					pathway.append(word)
 					break
+			u=points[con][6]
+
+			if r>5000 and points[u][0] in soma:
+				word=dend_indices[k][0]
+				pathway.append(word)
+				break
+			r+=1
+
 		path[i]=pathway
 
 	print dend_indices
@@ -315,7 +322,7 @@ def read_file(fname):
 	dend_indices=dend_point(dlist, points)
 	dend_names, exceptions, basal, apical=dend_name(dlist, points)
 	dend_add3d=dend_add3d_points(dlist, dend_indices, points)
-	path=pathways(dlist, points, dend_indices)
+	path=pathways(dlist, points, dend_indices, soma_index)
 	all_terminal, basal_terminal, apical_terminal=terminal(dlist, path, basal, apical)
 	dist=dend_length(dend_add3d, dlist, parental_points, points)
 	area=dend_area(dend_add3d, dlist, parental_points, points)
