@@ -24,6 +24,8 @@ if not os.path.exists(str(directory)+'downloads/statistics/'):
 
 file_name=file_name.replace('.swc','')
 
+#Dendritic Lists
+
 fdendlist=directory+'downloads/statistics/'+file_name+'_all_dendritic_list.txt'
 f = open(fdendlist, 'w+')
 for dend in dlist:
@@ -54,6 +56,7 @@ for dend in apical_terminal:
 	print >>f, dend
 f.close()
 
+#Dendritic Lengths
 
 fdendlength=directory+'downloads/statistics/'+file_name+'_all_dendritic_lengths.txt' # <--------- temporary
 #fdendlength=directory+file_name+'_dendritic_lengths.txt'
@@ -89,6 +92,8 @@ f = open(fdendlength, 'w+')
 for dend in apical_terminal:
 	print >>f, str(dend) + ' ' + str(dist[dend])
 f.close()
+
+#Dendritic Areas
 
 fdendarea=directory+'downloads/statistics/'+file_name+'_all_dendritic_areas.txt' # <--------- temporary
 #fdendlength=directory+file_name+'_dendritic_lengths.txt'
@@ -133,6 +138,8 @@ print >>f, 'basal' + ' ' + str(len(basal)) + ' ' + str(len(basal_terminal))
 print >>f, 'apical' + ' ' + str(len(apical)) + ' ' + str(len(apical_terminal))
 f.close()
 
+#Dendritic Total Length
+
 t_length=total_length(dlist, dist, soma_index)
 fdendlist=directory+'downloads/statistics/'+file_name+'_total_length.txt'
 f = open(fdendlist, 'w+')
@@ -150,6 +157,8 @@ fdendlist=directory+'downloads/statistics/'+file_name+'_apical_total_length.txt'
 f = open(fdendlist, 'w+')
 print >>f, apical_t_length
 f.close()
+
+#Dendritic Total Area
 
 t_area=total_area(dlist, area, soma_index)
 fdendlist=directory+'downloads/statistics/'+file_name+'_total_area.txt'
@@ -189,6 +198,8 @@ f = open(f, 'w+')
 for dend in apical:
 	print >>f, str(dend) + ' ' + str(bo[dend])
 f.close()
+
+#Dendritic Median Diameters
 
 med_diam=median_diameter(dlist, dend_add3d)
 f=directory+'downloads/statistics/'+file_name+'_all_median_diameter.txt'
@@ -245,6 +256,8 @@ for order in bo_dlen:
 f.close()
 
 plength=path_length(dlist, path, dist)
+
+#Dendritic Path Lengths
 
 f_plen=directory+'downloads/statistics/'+file_name+'_all_path_lengths.txt'
 f = open(f_plen, 'w+')
