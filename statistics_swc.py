@@ -67,7 +67,7 @@ def median_diameter(dlist, dend_add3d):
 	med_diam=dict()
 	for dend in dlist:
 		m=len(dend_add3d[dend])/2
-		med_diam[dend]=dend_add3d[dend][m][5]
+		med_diam[dend]=float(dend_add3d[dend][m][5])*2
 	return med_diam
 
 def print_branch_order(dlist, bo):
