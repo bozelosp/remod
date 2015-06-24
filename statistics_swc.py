@@ -38,7 +38,7 @@ def total_area(dlist, area, soma_index): #soma_included
 		current=soma_index[k]
 		next=soma_index[k+1]
 
-		diam=next[5]/float(2)
+		diam=next[5]*2
 		di=distance(next[2], current[2], next[3], current[3], next[4], current[4])
 		a=2*pi*diam*di+2*pi*(diam**2)
 		t_area+=a
