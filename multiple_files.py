@@ -6,10 +6,13 @@ from actions_swc import *
 import sys
 import numpy as np
 import os
+import time
+
+start_time = time.time()
 
 def clearall():
     """clear all globals"""
-    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_bo_frequency', 'average_bo_dlength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'round_to', 'radius', 'average_number_of_basal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_terminal_dendrites', 'kmeans_file']
+    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_bo_frequency', 'average_bo_dlength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'round_to', 'radius', 'average_number_of_basal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_terminal_dendrites', 'km']
     for uniquevar in [var for var in globals().copy() if var[0] != "_" and var != 'clearall' and var !='myl' and var not in myl]:
         del globals()[uniquevar]
 
@@ -90,8 +93,7 @@ dist_angle_apical=[]
 
 number_of_files=len(file_names)
 
-kmeans_path=directory+'kmeans.txt'
-kmeans_file = open(kmeans_path, 'w+')
+km=[]
 
 for file_name in file_names:
 
@@ -161,6 +163,7 @@ for file_name in file_names:
 	average_apical_t_length.append(apical_t_length)
 
 	if basal_t_length<50 or apical_t_length<50:
+		import os
 		os.remove(fdendlist)
 		os.remove(fdendlength)
 		os.remove(fnumdend)
@@ -320,9 +323,15 @@ for file_name in file_names:
 		print >>f, "%s %s" % (length, sholl_apical_length[length])
 	f.close
 
-	print >> kmeans_file, str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))
+	km.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
 
 	clearall()
+
+kmeans_path=directory+'downloads/statistics/'+'kmeans.txt'
+kmeans_file = open(kmeans_path, 'w+')
+
+for i in km:
+	print >>kmeans_file, i
 
 kmeans_file.close()
 
@@ -508,6 +517,11 @@ for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
 f.close()
+
+elapsed_time = time.time() - start_time
+
+print
+print elapsed_time
 
 '''basal_num=30
 apical_num=10
