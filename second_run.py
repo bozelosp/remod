@@ -10,7 +10,8 @@ import os
 
 #python second_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none none percent 50 percent 50
 #python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none extend percent 20 none none 
-#python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_apical_terminal 0 none none percent none percent 10 
+#python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_apical_terminal 0 none none percent none percent 10
+#python second_run.py /Users/bozelosp/Dropbox/remod/swc/ m-2.CNG.swc who_apical_terminal 0 none none none none percent 50 
 
 if (len(sys.argv)==11):
 	directory=str(sys.argv[1])
@@ -96,7 +97,7 @@ if action == 'shrink':
 			print 'Consider these warnings before you proceed to shrink action!\n'
 			for dend in not_applicable:
 				print 'Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')'
-			sys.exit(0)
+			#sys.exit(0)
 
 now = datetime .datetime.now()
 
@@ -109,7 +110,7 @@ if action == 'shrink' or action == 'remove' :
 
 newfile=comment_lines + newfile
 
-check_indices(newfile) #check if indices are continuous from 0 and u
+#check_indices(newfile) #check if indices are continuous from 0 and u
 
 print_newfile(directory, file_name, newfile, edit)
 

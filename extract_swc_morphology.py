@@ -66,6 +66,7 @@ def branching_points(points):
 	for i in points:
 		c=points[i][6]
 		count=0
+		print i
 		for k in points:
 			if points[k][6]==c:
 				if points[i][1] not in [2]:

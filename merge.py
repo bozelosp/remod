@@ -24,13 +24,17 @@ else:
 	print "Hi"
 	sys.exit(0)
 
-before_dir=str(directory)+"DH0528_new/"#"before/"
-after_dir=str(directory)+"baker/"#"after/"
+before_dir=str(directory)+"before/"
+after_dir=str(directory)+"after/"
 
 before_files=read_files(before_dir)
 after_files=read_files(after_dir)
 
 to_merge_files=[x for x in before_files if x in after_files]
+
+print before_files
+print after_files
+print to_merge_files
 
 for f in to_merge_files:
 

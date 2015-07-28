@@ -165,7 +165,7 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 
 		for i in points:
 
-			if points[i][1]==parameter:
+			if points[i][1] in parameter:
 
 				x1=points[i][2]
 				y1=points[i][3]
@@ -176,7 +176,7 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 				p=parental_points[i]
 				
 				x2=points[p][2]
-				y3=points[p][3]
+				y2=points[p][3]
 				z2=points[p][4]
 
 				mydist2=distance(xr,x2,yr,y2,zr,z2)
@@ -185,7 +185,7 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 
 					n_intersections+=1
 
-		sholl_list[next_dist]=sum_length
+		sholl_list[next_dist]=n_intersections
 
 	return sholl_list
 
@@ -270,7 +270,7 @@ def sholl_length(points, parental_points, soma_index, radius, parameter):
 
 		for i in points:
 
-			if points[i][1]==parameter:
+			if points[i][1] in parameter:
 
 				x=points[i][2]
 				y=points[i][3]

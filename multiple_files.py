@@ -9,7 +9,7 @@ import os
 
 def clearall():
     """clear all globals"""
-    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_bo_frequency', 'average_bo_dlength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_basal_length', 'average_sholl_apical_length', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'round_to', 'radius', 'average_number_of_basal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_terminal_dendrites']
+    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_bo_frequency', 'average_bo_dlength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'round_to', 'radius', 'average_number_of_basal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_terminal_dendrites', 'kmeans_file']
     for uniquevar in [var for var in globals().copy() if var[0] != "_" and var != 'clearall' and var !='myl' and var not in myl]:
         del globals()[uniquevar]
 
@@ -77,13 +77,21 @@ average_sholl_all_bp={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_basal_bp={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_apical_bp={k: [] for k in np.arange(0, 10000, radius)}
 
+average_sholl_all_length={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_basal_length={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_apical_length={k: [] for k in np.arange(0, 10000,radius)}
+
+average_sholl_all_intersections={k: [] for k in np.arange(0, 10000, radius)}
+average_sholl_basal_intersections={k: [] for k in np.arange(0, 10000, radius)}
+average_sholl_apical_intersections={k: [] for k in np.arange(0, 10000, radius)}
 
 dist_angle_basal=[]
 dist_angle_apical=[]
 
 number_of_files=len(file_names)
+
+kmeans_path=directory+'kmeans.txt'
+kmeans_file = open(kmeans_path, 'w+')
 
 for file_name in file_names:
 
@@ -132,25 +140,34 @@ for file_name in file_names:
 	f.close()
 
 	t_length=total_length(dlist, dist, soma_index)
-	fdendlist=directory+'downloads/statistics/'+file_name+'_total_length.txt'
-	f = open(fdendlist, 'w+')
+	ftotlength=directory+'downloads/statistics/'+file_name+'_total_length.txt'
+	f = open(ftotlength, 'w+')
 	print >>f, t_length
 	f.close()
 	average_t_length.append(t_length)
 
 	basal_t_length=total_length(basal, dist, soma_index)
-	fdendlist=directory+'downloads/statistics/'+file_name+'_basal_total_length.txt'
-	f = open(fdendlist, 'w+')
+	ftotblength=directory+'downloads/statistics/'+file_name+'_basal_total_length.txt'
+	f = open(ftotblength, 'w+')
 	print >>f, basal_t_length
 	f.close()
 	average_basal_t_length.append(basal_t_length)
 
 	apical_t_length=total_length(apical, dist, soma_index)
-	fdendlist=directory+'downloads/statistics/'+file_name+'_apical_total_length.txt'
-	f = open(fdendlist, 'w+')
+	ftotalength=directory+'downloads/statistics/'+file_name+'_apical_total_length.txt'
+	f = open(ftotalength, 'w+')
 	print >>f, apical_t_length
 	f.close()
 	average_apical_t_length.append(apical_t_length)
+
+	if basal_t_length<50 or apical_t_length<50:
+		os.remove(fdendlist)
+		os.remove(fdendlength)
+		os.remove(fnumdend)
+		os.remove(ftotlength)
+		os.remove(ftotblength)
+		os.remove(ftotalength)
+		continue
 
 	t_area=total_area(dlist, area, soma_index)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_total_area.txt'
@@ -235,23 +252,6 @@ for file_name in file_names:
 		print >>f, "%s %s" % (length, sholl_basal_bp[length])
 	f.close()
 
-	vector=[]
-	sholl_basal_intersections=sholl_intersections(points, parental_points, soma_index, radius, 3)
-	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_basal_intersections.txt'
-	f = open(f_sholl, 'w+')
-	for length in sorted(sholl_basal_intersections):
-		average_sholl_basal_intersections[length].append(sholl_basal_intersections[length])
-		print >>f, "%s %s" % (length, sholl_basal_intersections[length])
-
-		vector.append(sholl_basal_intersections[length])
-
-	f.close()
-
-	f_vector=directory+'downloads/statistics/average/sholl_basal_vector.txt'
-	f = open(f_vector, 'a+')
-	print >>f, file_name, vector
-	f.close
-
 	sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_index, radius)
 	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_apical_bp.txt'
 	f = open(f_sholl, 'w+')
@@ -260,7 +260,51 @@ for file_name in file_names:
 		print >>f, "%s %s" % (length, sholl_apical_bp[length])
 	f.close
 
-	sholl_basal_length=sholl_length(points, parental_points, soma_index, radius, 3)
+	vector=[]
+	sholl_all_intersections=sholl_intersections(points, parental_points, soma_index, radius, [3,4])
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_intersections.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_all_intersections):
+		average_sholl_all_intersections[length].append(sholl_all_intersections[length])
+		print >>f, "%s %s" % (length, sholl_all_intersections[length])
+		vector.append(sholl_all_intersections[length])
+	f.close()
+
+	vector=[]
+	sholl_basal_intersections=sholl_intersections(points, parental_points, soma_index, radius, [3])
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_basal_intersections.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_basal_intersections):
+		average_sholl_basal_intersections[length].append(sholl_basal_intersections[length])
+		print >>f, "%s %s" % (length, sholl_basal_intersections[length])
+		vector.append(sholl_basal_intersections[length])
+	f.close()
+
+	vector=[]
+	sholl_apical_intersections=sholl_intersections(points, parental_points, soma_index, radius, [4])
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_apical_intersections.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_apical_intersections):
+		average_sholl_apical_intersections[length].append(sholl_apical_intersections[length])
+		print >>f, "%s %s" % (length, sholl_apical_intersections[length])
+		vector.append(sholl_apical_intersections[length])
+	f.close()
+
+
+	f_vector=directory+'downloads/statistics/average/sholl_basal_vector.txt'
+	f = open(f_vector, 'a+')
+	print >>f, file_name, vector
+	f.close
+
+	sholl_all_length=sholl_length(points, parental_points, soma_index, radius, [3,4])
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_length.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_all_length):
+		average_sholl_all_length[length].append(sholl_all_length[length])
+		print >>f, "%s %s" % (length, sholl_all_length[length])
+	f.close
+
+	sholl_basal_length=sholl_length(points, parental_points, soma_index, radius, [3])
 	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_basal_length.txt'
 	f = open(f_sholl, 'w+')
 	for length in sorted(sholl_basal_length):
@@ -268,7 +312,7 @@ for file_name in file_names:
 		print >>f, "%s %s" % (length, sholl_basal_length[length])
 	f.close
 
-	sholl_apical_length=sholl_length(points, parental_points, soma_index, radius, 4)
+	sholl_apical_length=sholl_length(points, parental_points, soma_index, radius, [4])
 	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_apical_length.txt'
 	f = open(f_sholl, 'w+')
 	for length in sorted(sholl_apical_length):
@@ -276,7 +320,11 @@ for file_name in file_names:
 		print >>f, "%s %s" % (length, sholl_apical_length[length])
 	f.close
 
+	print >> kmeans_file, str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))
+
 	clearall()
+
+kmeans_file.close()
 
 import collections
 from random_sampling import *
@@ -290,8 +338,13 @@ remove_empty_keys(average_sholl_all_bp)
 remove_empty_keys(average_sholl_basal_bp)
 remove_empty_keys(average_sholl_apical_bp)
 
+remove_empty_keys(average_sholl_all_length)
 remove_empty_keys(average_sholl_basal_length)
 remove_empty_keys(average_sholl_apical_length)
+
+remove_empty_keys(average_sholl_all_intersections)
+remove_empty_keys(average_sholl_basal_intersections)
+remove_empty_keys(average_sholl_apical_intersections)
 
 print
 print "Average statistics:"
