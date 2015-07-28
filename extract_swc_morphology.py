@@ -66,7 +66,7 @@ def branching_points(points):
 	for i in points:
 		c=points[i][6]
 		count=0
-		print i
+		#print i
 		for k in points:
 			if points[k][6]==c:
 				if points[i][1] not in [2]:
@@ -210,9 +210,9 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 
 		path[i]=pathway
 
-	print dend_indices
-	print
-	print path
+	#print dend_indices
+	#print
+	#print path
 	return path
 
 def terminal(dlist, path, basal, apical): #returns a list of the terminal dendrites

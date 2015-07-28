@@ -12,7 +12,7 @@ start_time = time.time()
 
 def clearall():
     """clear all globals"""
-    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_bo_frequency', 'average_bo_dlength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'round_to', 'radius', 'average_number_of_basal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_terminal_dendrites', 'km']
+    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_bo_frequency', 'average_bo_dlength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'round_to', 'radius', 'average_number_of_basal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_terminal_dendrites', 'km', 'start_time']
     for uniquevar in [var for var in globals().copy() if var[0] != "_" and var != 'clearall' and var !='myl' and var not in myl]:
         del globals()[uniquevar]
 
@@ -327,6 +327,8 @@ for file_name in file_names:
 
 	clearall()
 
+print km
+
 kmeans_path=directory+'downloads/statistics/'+'kmeans.txt'
 kmeans_file = open(kmeans_path, 'w+')
 
@@ -517,6 +519,8 @@ for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
 f.close()
+
+import time
 
 elapsed_time = time.time() - start_time
 
