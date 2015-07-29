@@ -44,7 +44,7 @@ print
 print 'Open file: ' + str(file_name)
 print
 
-(swc_lines, points, comment_lines, parents, bpoints, basal_bpoints, apical_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, exceptions, basal, apical, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 
 #regex_who=re.search('(.*)', choices[0])
 #who=regex_who.group(1)
@@ -104,8 +104,8 @@ edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str
 
 (newfile, dlist, mylist)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
-if action == 'shrink' or action == 'remove' :
-	newfile=index_reassign(dlist, dend_add3d, bo, con, basal, apical, soma_index)
+#if action == 'shrink' or action == 'remove' :
+newfile=index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index)
 
 newfile=comment_lines + newfile
 

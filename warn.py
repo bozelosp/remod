@@ -47,4 +47,4 @@ def check_indices(newfile):
 		"\nSegment indices are continuous!"
 	else:
 		"\nError! Segment indices are not continuous"
-		sys.exit(0)
+		#sys.exit(0)

@@ -5,7 +5,7 @@ while($line=<F>)
 {
 	chomp $line;
 	#system("python multiple_files.py /Users/bozelosp/Dropbox/remod/hippocampal_ca3_pyramidal/ $line");
-	system("python second_run.py /Users/bozelosp/Downloads/CA3_cells/ $line who_random_apical 30 none remove none none none none");
+	system("python second_run.py /Users/bozelosp/Downloads/CA3_cells/ $line who_random_basal 30 none branch percent 50 none none");
 }
 
 $t2=time();

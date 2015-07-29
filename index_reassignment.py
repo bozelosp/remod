@@ -1,8 +1,14 @@
 from statistics_swc import *
 
-def index_reassign(dlist, dend_add3d, bo, con, basal, apical, soma_index):
+def index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index):
 
 	(bo_freq, bo_max)=bo_frequency(dlist, bo)
+
+	bo_sorted_axon_dends=[]
+	for i in range(1,bo_max+1):
+		for dend in axon:
+			if bo[dend]==i:
+				bo_sorted_axon_dends.append(dend)
 
 	bo_sorted_basal_dends=[]
 	for i in range(1,bo_max+1):
@@ -15,6 +21,12 @@ def index_reassign(dlist, dend_add3d, bo, con, basal, apical, soma_index):
 		for dend in apical:
 			if bo[dend]==i:
 				bo_sorted_apical_dends.append(dend)
+
+	bo_sorted_elsep_dends=[]
+	for i in range(1,bo_max+1):
+		for dend in elsep:
+			if bo[dend]==i:
+				bo_sorted_elsep_dends.append(dend)
 
 	mylist=[]
 
@@ -40,9 +52,52 @@ def index_reassign(dlist, dend_add3d, bo, con, basal, apical, soma_index):
 
 			soma_index[i][0]=index
 			soma_index[i][6]=previous
+			previous=index
 			index+=1
 			mylist.append(soma_index[i])
-	
+
+	for dend in bo_sorted_axon_dends:
+
+		for i in range(len(dend_add3d[dend])):
+
+			if bo[dend]==1:
+
+				if i==0:
+
+					dend_add3d[dend][i][0]=index
+					dend_add3d[dend][i][6]=1
+					previous=index
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+				else:
+
+					dend_add3d[dend][i][0]=index
+					dend_add3d[dend][i][6]=previous
+					previous=index				
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+			if bo[dend]>1:
+
+				if i==0:
+
+					parent_dend=con[dend_add3d[dend][i][0]]
+					parent_point=dend_add3d[parent_dend][-1]
+					dend_add3d[dend][i][6]=parent_point[0]
+					dend_add3d[dend][i][0]=index
+					previous=index
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+				else:
+
+					dend_add3d[dend][i][0]=index
+					dend_add3d[dend][i][6]=previous
+					previous=index				
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
 	for dend in bo_sorted_basal_dends:
 
 		for i in range(len(dend_add3d[dend])):
@@ -86,6 +141,48 @@ def index_reassign(dlist, dend_add3d, bo, con, basal, apical, soma_index):
 					mylist.append(dend_add3d[dend][i])
 
 	for dend in bo_sorted_apical_dends:
+
+		for i in range(len(dend_add3d[dend])):
+
+			if bo[dend]==1:
+
+				if i==0:
+
+					dend_add3d[dend][i][0]=index
+					dend_add3d[dend][i][6]=1
+					previous=index
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+				else:
+
+					dend_add3d[dend][i][0]=index
+					dend_add3d[dend][i][6]=previous
+					previous=index				
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+			if bo[dend]>1:
+
+				if i==0:
+
+					parent_dend=con[dend_add3d[dend][i][0]]
+					parent_point=dend_add3d[parent_dend][-1]
+					dend_add3d[dend][i][6]=parent_point[0]
+					dend_add3d[dend][i][0]=index
+					previous=index
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+				else:
+
+					dend_add3d[dend][i][0]=index
+					dend_add3d[dend][i][6]=previous
+					previous=index				
+					index+=1
+					mylist.append(dend_add3d[dend][i])
+
+	for dend in bo_sorted_elsep_dends:
 
 		for i in range(len(dend_add3d[dend])):
 

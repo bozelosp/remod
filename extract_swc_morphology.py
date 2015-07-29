@@ -77,16 +77,22 @@ def branching_points(points):
 
 	bpoints.sort()
 
+	axon_bpoints=[]
 	basal_bpoints=[]
 	apical_bpoints=[]
+	else_bpoints=[]
 
 	for i in bpoints:
-		if points[i][1]==3:
+		if points[i][1]==2:
+			axon_bpoints.append(i)
+		elif points[i][1]==3:
 			basal_bpoints.append(i)
-		if points[i][1]==4:
+		elif points[i][1]==4:
 			apical_bpoints.append(i)
+		else:
+			else_bpoints.append(i)
 
-	return bpoints, basal_bpoints, apical_bpoints, soma_index
+	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index
 
 def parental(points):
 
@@ -136,27 +142,22 @@ def dend_point(dlist, points):
 
 def dend_name(dlist, points):
 
-	exceptions=[]
 	dend_names={}
 
+	axon=[]
 	basal=[]
 	apical=[]
+	elsep=[]
 
 	undef_index=0
-	soma_index=0
 	axon_index=0
 	basal_index=0
 	apic_index=0
 
 	for i in dlist:
-		if points[i][1]==0:
-			dend_names[i]='undef' + '[' + str(undef_index) + ']'
-			undef_index+=1
-		elif points[i][1]==1:
-			dend_names[i]='soma' + '[' + str(soma_index) + ']'
-			soma_index+=1
-		elif points[i][1]==2:
+		if points[i][1]==2:
 			dend_names[i]='axon' + '[' + str(axon_index) + ']'
+			axon.append(i)
 			axon_index+=1
 		elif points[i][1]==3:
 			dend_names[i]='dend' + '[' + str(basal_index) + ']'
@@ -166,10 +167,12 @@ def dend_name(dlist, points):
 			dend_names[i]='apic' + '[' + str(apic_index) + ']'
 			apical.append(i)
 			apic_index+=1
-		else:	
-			exceptions.append(i)
+		else:
+			dend_names[i]='undef' + '[' + str(undef_index) + ']'
+			elsep.append(i)
+			undef_index+=1
 
-	return dend_names, exceptions, basal, apical
+	return dend_names, axon, basal, apical, elsep
 
 def dend_add3d_points(dlist, dend_indices, points):
 
@@ -317,11 +320,11 @@ def read_file(fname):
 
 	swc_lines=swc_line(fname)
 	comment_lines, points=comments_and_3dpoints(swc_lines)
-	bpoints, basal_bpoints, apical_bpoints, soma_index=branching_points(points)
+	bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index=branching_points(points)
 	parental_points=parental(points)
 	dlist=d_list(bpoints)
 	dend_indices=dend_point(dlist, points)
-	dend_names, exceptions, basal, apical=dend_name(dlist, points)
+	dend_names, axon, basal, apical, elsep=dend_name(dlist, points)
 	dend_add3d=dend_add3d_points(dlist, dend_indices, points)
 	path=pathways(dlist, points, dend_indices, soma_index)
 	all_terminal, basal_terminal, apical_terminal=terminal(dlist, path, basal, apical)
@@ -332,7 +335,7 @@ def read_file(fname):
 	con=connected(dlist, path)
 	parents=[]
 
-	return (swc_lines, points, comment_lines, parents, bpoints, basal_bpoints, apical_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, exceptions, basal, apical, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
+	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
 
 #points, parents, bpoints, soma_index, dend_indices, dend_names, exceptions, dend_add3d, path
 #hoc_lines - swc_lines
