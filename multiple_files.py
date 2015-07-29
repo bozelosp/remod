@@ -162,7 +162,8 @@ for file_name in file_names:
 	f.close()
 	average_apical_t_length.append(apical_t_length)
 
-	if basal_t_length<50 or apical_t_length<50:
+	if basal_t_length<150 or apical_t_length<150:
+
 		import os
 		os.remove(fdendlist)
 		os.remove(fdendlength)

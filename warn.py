@@ -1,4 +1,5 @@
 import re
+import sys
 
 def shrink_warning(who, dist, amount):
 	not_applicable=[]

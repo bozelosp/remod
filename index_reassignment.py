@@ -18,11 +18,32 @@ def index_reassign(dlist, dend_add3d, bo, con, basal, apical, soma_index):
 
 	mylist=[]
 
-	for i in soma_index:
+	'''for i in soma_index:
 		mylist.append(i)
 		ind=i[0]
 
-	index=ind+1
+	index=ind+1'''
+
+	index=1
+
+	for i in range(len(soma_index)):
+
+		if bo[dend]==1:
+
+			if i==0:
+
+				soma_index[i][0]=1
+				soma_index[i][6]=-1
+				previous=index
+				index+=1
+				mylist.append(soma_index[i])
+
+			else:
+
+				soma_index[i][0]=index
+				soma_index[i][6]=previous
+				index+=1
+				mylist.append(soma_index[i])
 	
 	for dend in bo_sorted_basal_dends:
 

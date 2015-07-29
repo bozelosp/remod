@@ -11,7 +11,7 @@ import os
 #python second_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none none percent 50 percent 50
 #python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none extend percent 20 none none 
 #python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_apical_terminal 0 none none percent none percent 10
-#python second_run.py /Users/bozelosp/Dropbox/remod/swc/ m-2.CNG.swc who_apical_terminal 0 none none none none percent 50 
+#python second_run.py /Users/bozelosp/Dropbox/remod/swc/ m-2.CNG.swc who_apical_terminal 0 none none none none percent 50
 
 if (len(sys.argv)==11):
 	directory=str(sys.argv[1])
@@ -40,9 +40,8 @@ if not os.path.exists(exist_downloads):
 if not os.path.exists(exist_downloads_files):
     os.makedirs(exist_downloads_files)
 
-
 print
-print 'Open file: ' + str(file_name) + ' !'
+print 'Open file: ' + str(file_name)
 print
 
 (swc_lines, points, comment_lines, parents, bpoints, basal_bpoints, apical_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, exceptions, basal, apical, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
@@ -110,14 +109,14 @@ if action == 'shrink' or action == 'remove' :
 
 newfile=comment_lines + newfile
 
-#check_indices(newfile) #check if indices are continuous from 0 and u
+check_indices(newfile) #check if indices are continuous from 0 and u
 
 print_newfile(directory, file_name, newfile, edit)
 
 print
 
 print
-print 'File: ' + str(file_name) + ' succesfully edited!'
+print 'File: ' + str(file_name) + ' was succesfully edited!'
 print
 
 print
