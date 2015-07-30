@@ -244,6 +244,18 @@ def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d 
 	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
 	return dist
 
+def soma_center(soma_index):
+
+	for i in soma_index:
+
+		xlist.append(i[2])
+		ylist.append(i[3])
+		zlist.append(i[4])
+
+	soma_centroid=[np.mean(xlist), np.mean(ylist), np.mean(zlist)]
+
+	return soma_centroid
+
 def dend_length(dend_add3d, dlist, parental_points, points): #returns a list of dendrites' lengths
 
 	dist={}
@@ -328,6 +340,7 @@ def read_file(fname):
 	dend_add3d=dend_add3d_points(dlist, dend_indices, points)
 	path=pathways(dlist, points, dend_indices, soma_index)
 	all_terminal, basal_terminal, apical_terminal=terminal(dlist, path, basal, apical)
+	soma_centroid=soma_center(soma_index)
 	dist=dend_length(dend_add3d, dlist, parental_points, points)
 	area=dend_area(dend_add3d, dlist, parental_points, points)
 	max_index=index(points)

@@ -17,13 +17,6 @@ def total_length(dlist, dist, soma_index): #soma_included
 
 	t_length=0
 
-	for k in range(len(soma_index)-1):
-
-		current=soma_index[k]
-		next=soma_index[k+1]
-
-		t_length+=distance(next[2], current[2], next[3], current[3], next[4], current[4])
-
 	for dend in dlist:
 		t_length+=dist[dend]
 	return t_length
@@ -32,7 +25,7 @@ def total_area(dlist, area, soma_index): #soma_included
 
 	t_area=0
 
-	n=0
+'''	n=0
 	for k in range(len(soma_index)-1):
 
 		current=soma_index[k]
@@ -46,7 +39,7 @@ def total_area(dlist, area, soma_index): #soma_included
 		if n>0:
 			circle_surface=-pi*(diam**2)
 			t_area+=circle_surface
-		n+=1
+		n+=1'''
 
 	for dend in dlist:
 		t_area+=area[dend]
