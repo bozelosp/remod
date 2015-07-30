@@ -1,4 +1,5 @@
 import re
+import numpy as np
 #import matplotlib as mpl
 #from mpl_toolkits.mplot3d import Axes3D
 #import matplotlib.pyplot as plt
@@ -245,6 +246,10 @@ def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d 
 	return dist
 
 def soma_center(soma_index):
+
+	xlist=[]
+	ylist=[]
+	zlist=[]
 
 	for i in soma_index:
 

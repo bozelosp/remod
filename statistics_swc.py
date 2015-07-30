@@ -25,7 +25,7 @@ def total_area(dlist, area, soma_index): #soma_included
 
 	t_area=0
 
-'''	n=0
+	'''	n=0
 	for k in range(len(soma_index)-1):
 
 		current=soma_index[k]
