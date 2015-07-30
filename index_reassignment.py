@@ -1,8 +1,10 @@
 from statistics_swc import *
 
-def index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index):
+def index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action):
 
-	(bo_freq, bo_max)=bo_frequency(dlist, bo)
+
+	if action == 'branch':
+		bo_max+=1
 
 	bo_sorted_axon_dends=[]
 	for i in range(1,bo_max+1):

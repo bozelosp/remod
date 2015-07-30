@@ -48,14 +48,17 @@ def createP(length, angle, p1, p2, flag): #returns new pt3dadd lines formatted i
 
 	r=radians(angle)
 
+	axis_origin=[0,0,1]
+	if p2[0]==p2[0] and p2[1]==p1[1]:
+		axis_origin=[0,1,0]
+
 	p1=np.matrix([float(p1[0]), float(p1[1]), float(p1[2])])
 	p2=np.matrix([float(p2[0]), float(p2[1]), float(p2[2])])
 
-	axis=p2-p1
-
+	axis = p2-p1
+		
 	axis = axis / np.linalg.norm(axis) # monadiaio vector me tin idia kateuthinsi kai arxi tin arxi ton axonwn
-
-	tmp = np.cross(axis,[0,0,1])
+	tmp = np.cross(axis, axis_origin)
 	tmp = tmp/np.linalg.norm(tmp)
 
 	xt = tmp[0,0]
