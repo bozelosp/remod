@@ -19,7 +19,8 @@ if (len(sys.argv)==11):
 	fname=str(sys.argv[1])+str(sys.argv[2])
 
 	who=str(sys.argv[3])
-	who_random_variable=int(str(sys.argv[4]))/float(100)
+	if who == 'who_random_all' or who=='who_random_apical' or who=='who_random_basal':
+		who_random_variable=int(str(sys.argv[4]))/float(100)
 	who_manual_variable=str(sys.argv[5])
 	action=str(sys.argv[6])
 	hm_choice=str(sys.argv[7])

@@ -75,7 +75,7 @@ average_num_all_bpoints=[]
 average_bo_frequency={k: [] for k in range(0,200)}
 average_bo_dlength={k: [] for k in range(0,200)}
 
-radius=50
+radius=20
 average_sholl_all_bp={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_basal_bp={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_apical_bp={k: [] for k in np.arange(0, 10000, radius)}
@@ -107,7 +107,7 @@ for file_name in file_names:
 	fname=directory+file_name
 
 	print
-	print 'Open file: ' + str(file_name) + ' !'
+	print 'Extracting morphometric statistics for file: ' + str(file_name)
 	print
 
 	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
@@ -162,7 +162,7 @@ for file_name in file_names:
 	f.close()
 	average_apical_t_length.append(apical_t_length)
 
-	if basal_t_length<150 or apical_t_length<150:
+	'''if basal_t_length<150 or apical_t_length<150:
 
 		import os
 		os.remove(fdendlist)
@@ -171,7 +171,7 @@ for file_name in file_names:
 		os.remove(ftotlength)
 		os.remove(ftotblength)
 		os.remove(ftotalength)
-		continue
+		continue'''
 
 	t_area=total_area(dlist, area, soma_index)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_total_area.txt'
@@ -204,19 +204,19 @@ for file_name in file_names:
 		print >>f, str(order) + ' ' + str(bo_freq[order])
 	f.close()
 
-	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'number_of_basal_bpoints.txt'
+	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_bpoints.txt'
 	f = open(fnum_basal_bpoints, 'w+')
 	print >>f, len(basal_bpoints)
 	f.close()
 	average_num_basal_bpoints.append(len(basal_bpoints))
 
-	fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'number_of_apical_bpoints.txt'
+	fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_apical_bpoints.txt'
 	f = open(fnum_apical_bpoints, 'w+')
 	print >>f, len(apical_bpoints)
 	f.close()
 	average_num_apical_bpoints.append(len(apical_bpoints))
 
-	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'number_of_all_bpoints.txt'
+	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_bpoints.txt'
 	f = open(fnum_all_bpoints, 'w+')
 	print >>f, len(bpoints)
 	f.close()
@@ -432,24 +432,24 @@ print >>f, str(average_list(average_apical_t_area))
 f.close()
 
 print
-print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints))
+print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints)/2)
 f_average_num_all_bpoints=directory+'downloads/statistics/average/average_number_all_bpoints.txt'
 f = open(f_average_num_all_bpoints, 'w+')
-print >>f, str(average_list(average_num_all_bpoints))
+print >>f, str(average_list(average_num_all_bpoints)/2)
 f.close()
 
 print
-print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints))
+print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints)/2)
 f_average_num_basal_bpoints=directory+'downloads/statistics/average/average_number_basal_bpoints.txt'
 f = open(f_average_num_basal_bpoints, 'w+')
-print >>f, str(average_list(average_num_basal_bpoints))
+print >>f, str(average_list(average_num_basal_bpoints)/2)
 f.close()
 
 print
-print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints))
+print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints)/2)
 f_average_num_apical_bpoints=directory+'downloads/statistics/average/average_number_apical_bpoints.txt'
 f = open(f_average_num_apical_bpoints, 'w+')
-print >>f, str(average_list(average_num_apical_bpoints))
+print >>f, str(average_list(average_num_apical_bpoints)/2)
 f.close()
 
 print
