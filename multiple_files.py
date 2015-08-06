@@ -27,16 +27,25 @@ def round_to(x, rounder): #returns the nearest number to the multiplied "rounder
 
 def average_list(l):
 	my_sum=0
-	average=sum(l)/float(number_of_files)
-	return round_to(average, 0.01)
+	arr=np.array(l)
+	average=np.mean(arr)
+	#average=sum(l)/float(number_of_files)
+	arr=np.array(l)
+	st_error=np.std(arr)
+	return round_to(average, 0.01), round_to(st_error, 0.01)
 
 def average_dict(d):
 	for i in d:
 		yours_sum=0
+		l=[]
 		for k in d[i]:
 			yours_sum+=k
-		average=yours_sum/float(number_of_files)
-		d[i]=round_to(average, 0.01)
+			l.append(k)
+		arr=np.array(l)
+		average=np.mean(arr)
+		#average=yours_sum/float(number_of_files)
+		st_error=np.std(arr)
+		d[i]=[round_to(average, 0.01), round_to(st_error, 0.01)]
 	return d
 
 #python second_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc
@@ -75,7 +84,7 @@ average_num_all_bpoints=[]
 average_bo_frequency={k: [] for k in range(0,200)}
 average_bo_dlength={k: [] for k in range(0,200)}
 
-radius=20
+radius=50
 average_sholl_all_bp={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_basal_bp={k: [] for k in np.arange(0, 10000, radius)}
 average_sholl_apical_bp={k: [] for k in np.arange(0, 10000, radius)}
@@ -432,31 +441,31 @@ print >>f, str(average_list(average_apical_t_area))
 f.close()
 
 print
-print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints)/2)
+print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints)[0]/2), str(average_list(average_num_all_bpoints)[1]/2)
 f_average_num_all_bpoints=directory+'downloads/statistics/average/average_number_all_bpoints.txt'
 f = open(f_average_num_all_bpoints, 'w+')
-print >>f, str(average_list(average_num_all_bpoints)/2)
+print >>f, str(average_list(average_num_all_bpoints)[0]/2), str(average_list(average_num_all_bpoints)[1]/2)
 f.close()
 
 print
-print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints)/2)
+print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints)[0]/2), str(average_list(average_num_basal_bpoints)[1]/2)
 f_average_num_basal_bpoints=directory+'downloads/statistics/average/average_number_basal_bpoints.txt'
 f = open(f_average_num_basal_bpoints, 'w+')
-print >>f, str(average_list(average_num_basal_bpoints)/2)
+print >>f, str(average_list(average_num_basal_bpoints)[0]/2), str(average_list(average_num_basal_bpoints)[1]/2)
 f.close()
 
 print
-print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints)/2)
+print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints)[0]/2), str(average_list(average_num_apical_bpoints)[1]/2)
 f_average_num_apical_bpoints=directory+'downloads/statistics/average/average_number_apical_bpoints.txt'
 f = open(f_average_num_apical_bpoints, 'w+')
-print >>f, str(average_list(average_num_apical_bpoints)/2)
+print >>f, str(average_list(average_num_apical_bpoints)[0]/2), str(average_list(average_num_apical_bpoints)[1]/2)
 f.close()
 
 print
 print "Average Number of Dendrites per Branch Order: " +  str(average_dict(average_bo_frequency))
 f_average_bo_frequency=directory+'downloads/statistics/average/average_branch_order_frequency.txt'
 f = open(f_average_bo_frequency, 'w+')
-mylist=average_bo_frequency
+mylist=average_dict(average_bo_frequency)
 for i in mylist:
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
@@ -466,7 +475,7 @@ print
 print "Average Dendritic Length per Branch Order: " +str(average_dict(average_bo_dlength))
 f_average_bo_dlength=directory+'downloads/statistics/average/average_dendritic_length_per_branch_order.txt'
 f = open(f_average_bo_dlength, 'w+')
-mylist=average_bo_dlength
+mylist=average_dict(average_bo_dlength)
 for i in mylist:
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
@@ -476,7 +485,7 @@ print
 print 'Sholl analysis (branch points) for all' + str(average_dict(average_sholl_all_bp))
 f_average_sholl_all_bp=directory+'downloads/statistics/average/average_sholl_all_bp.txt'
 f = open(f_average_sholl_all_bp, 'w+')
-mylist=average_sholl_all_bp
+mylist=average_dict(average_sholl_all_bp)
 for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
@@ -486,7 +495,7 @@ print
 print 'Sholl analysis (branch points) for basal' + str(average_dict(average_sholl_basal_bp))
 f_average_sholl_basal_bp=directory+'downloads/statistics/average/average_sholl_basal_bp.txt'
 f = open(f_average_sholl_basal_bp, 'w+')
-mylist=average_sholl_basal_bp
+mylist=average_dict(average_sholl_basal_bp)
 for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
@@ -495,7 +504,7 @@ print
 print 'Sholl analysis (branch points) for apical' + str(average_dict(average_sholl_apical_bp))
 f_average_sholl_apical_bp=directory+'downloads/statistics/average/average_sholl_apical_bp.txt'
 f = open(f_average_sholl_apical_bp, 'w+')
-mylist=average_sholl_apical_bp
+mylist=average_dict(average_sholl_apical_bp)
 for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
@@ -505,7 +514,7 @@ print
 print 'Sholl analysis (dendritic length) for basal' + str(average_dict(average_sholl_basal_length))
 f_average_sholl_basal_length=directory+'downloads/statistics/average/average_sholl_basal_length.txt'
 f = open(f_average_sholl_basal_length, 'w+')
-mylist=average_sholl_basal_length
+mylist=average_dict(average_sholl_basal_length)
 for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]
@@ -515,7 +524,7 @@ print
 print 'Sholl analysis (dendritic length) for apical' + str(average_dict(average_sholl_apical_length))
 f_average_sholl_apical_length=directory+'downloads/statistics/average/average_sholl_apical_length.txt'
 f = open(f_average_sholl_apical_length, 'w+')
-mylist=average_sholl_apical_length
+mylist=average_dict(average_sholl_apical_length)
 for i in sorted(mylist):
 	print i,  mylist[i]
 	print >>f, i,  mylist[i]

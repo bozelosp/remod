@@ -296,8 +296,8 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 	mylist=[]
 
-	for i in soma_index:
-		mylist.append(i)
+#	for i in soma_index:
+#		mylist.append(i)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
@@ -494,8 +494,8 @@ def remove(who, action, dend_add3d, soma_index): #returns the new lines of the .
 
 	mylist=[]
 
-	for i in soma_index:
-		mylist.append(i)
+	#for i in soma_index:
+	#	mylist.append(i)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
@@ -583,8 +583,8 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
 	mylist=[]
 
-	for i in soma_index:
-		mylist.append(i)
+	#for i in soma_index:
+	#	mylist.append(i)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
@@ -661,8 +661,8 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
 		mylist=[]
 
-		for i in soma_index:
-			mylist.append(i)
+		#for i in soma_index:
+		#	mylist.append(i)
 
 		for i in dend_add3d:
 			for k in dend_add3d[i]:
@@ -691,8 +691,8 @@ def diameter_change(who, diam_change, dend_add3d, dlist, soma_index):
 
 	mylist=[]
 
-	for i in soma_index:
-		mylist.append(i)
+	#for i in soma_index:
+	#	mylist.append(i)
 			
 	for i in dlist:
 		for k in dend_add3d[i]:

@@ -80,7 +80,7 @@ def branching_points(points):
 	bpoints=list(bpoints)
 	bpoints.sort()
 
-	print bpoints
+	print "These are the segments that serve as branchpoints: ", bpoints
 
 	axon_bpoints=[]
 	basal_bpoints=[]

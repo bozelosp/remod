@@ -11,34 +11,34 @@ for i in file_list:
 	string=string+i+','
 file_string=string[:-1]
 
-str_command="python multiple_files.py /Users/bozelosp/Downloads/bla_cells_remodeled/ " + file_string 
+str_command="python multiple_files.py /Users/bozelosp/Downloads/bla_cells/ " + file_string 
 print str_command
 os.system(str_command)
 
-'''for i in range(1):
+for i in range(1):
 
 	for j in range(1):
 
 		for f in file_list:
 
-			str_command="python second_run.py /Users/bozelosp/Downloads/bla_cells_remodeled/ %s who_random_basal 20 none branch percent 20 none none" % (f)#,i,j)
+			str_command="python second_run.py /Users/bozelosp/Downloads/bla_cells/copy/ %s who_random_basal 50 none branch percent 80 none none" % (f)#,i,j)
 			print str_command
 			os.system(str_command)
 
-			str_command="python second_run.py /Users/bozelosp/Downloads/bla_cells_remodeled/ %s who_random_basal 10 none extend percent 10 none none" % (f)#,i,j)
+			str_command="python second_run.py /Users/bozelosp/Downloads/bla_cells/copy/ %s who_random_basal 40 none extend percent 81 none none" % (f)#,i,j)
 			print str_command
 			os.system(str_command)
 
-str_command="python multiple_files.py /Users/bozelosp/Downloads/bla_cells_remodeled/ " + file_string 
+str_command="python multiple_files.py /Users/bozelosp/Downloads/bla_cells/copy/ " + file_string 
 print str_command
 os.system(str_command)
 
-str_command='cp /Users/bozelosp/Downloads/bla_cells/copy/*.CNG.swc /Users/bozelosp/Downloads/bla_cells_remodeled'
+str_command='cp /Users/bozelosp/Downloads/bla_cells/*.CNG.swc /Users/bozelosp/Downloads/bla_cells/copy'
 print str_command
-os.system(str_command)
+#os.system(str_command)
 
 elapsed_time = time.time() - start_time
 
 print
 print len(file_list)
-print elapsed_time'''
+print elapsed_time

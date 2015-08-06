@@ -26,5 +26,3 @@ def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, 
 		newfile=diameter_change(who, diam_change, dend_add3d, dlist, soma_index)
 
 	return (newfile, dlist, mylist)
-
-	'''print_newfile(fname, newfile) #prints the lines of the modified tree to a '*_new.hoc' file'''

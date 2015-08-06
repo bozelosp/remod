@@ -62,17 +62,38 @@ elif who=='who_basal_terminal':
 elif who=='who_random_all':
 	num=len(all_terminal)*float(who_random_variable)
 	num=int(round_to(num, 1))
-	who=random.sample(all_terminal, num)
+	check_nseg=False
+	while check_nseg==False:
+		who=random.sample(all_terminal, num)
+		for dend in who:
+			check_nseg=True
+			if len(dend_add3d[dend])<3:
+				check_nseg=False
+				break
 	which_dendrites='random (basal & apical) terminal (' + str(who_random_variable*100) + '%) '
 elif who=='who_random_apical':
 	num=len(apical_terminal)*float(who_random_variable)
 	num=int(round_to(num, 1))
-	who=random.sample(apical_terminal, num)
+	check_nseg=False
+	while check_nseg==False:
+		who=random.sample(apical_terminal, num)
+		for dend in who:
+			check_nseg=True
+			if len(dend_add3d[dend])<3:
+				check_nseg=False
+				break
 	which_dendrites='random apical (' + str(who_random_variable*100) + '%) '
 elif who=='who_random_basal':
 	num=len(basal_terminal)*float(who_random_variable)
 	num=int(round_to(num, 1))
-	who=random.sample(basal_terminal, num)
+	check_nseg=False
+	while check_nseg==False:
+		who=random.sample(basal_terminal, num)
+		for dend in who:
+			check_nseg=True
+			if len(dend_add3d[dend])<3:
+				check_nseg=False
+				break
 	which_dendrites='random basal (' + str(who_random_variable*100) + '%) '
 elif who=='who_manual':
 	who=[int(x) for x in who_manual_variable.split(',')]
