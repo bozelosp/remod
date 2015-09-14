@@ -516,6 +516,10 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 	new_dist=dict() #saves the legth [value] of the new dendrite to its name [key]
 	add_these_lines=dict() #saves the list of lines [value] of the newly grolwn dendrite to its name [key]
 
+	mylist=[]
+	for i in soma_index:
+		mylist.append(i)
+
 	for dend in who:
 
 		num_seg_1=len(dend_add3d[dend])
@@ -573,18 +577,12 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 		for j in range(len(dend_add3d[dend])):
 
 			if j>=new_ns[n] and j<new_ns[n+1]:
-				#print j, new_ns[n], new_ns[n+1]
 				my_diam=d[n][1]
 				dend_add3d[dend][j][5]=my_diam
 			else:
 				n+=1
 				my_diam=d[n][1]
 				dend_add3d[dend][j][5]=my_diam
-
-	mylist=[]
-
-	#for i in soma_index:
-	#	mylist.append(i)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
@@ -607,17 +605,15 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 	new_dist=dict() #saves the legth [value] of the new dendrite to its name [key]
 	add_these_lines=dict() #saves the list of lines [value] of the newly grown dendrite to its name [key]
 
-	for dend in who:
+	mylist=[]
+	for i in soma_index:
+		mylist.append(i)
 
-		#print
-		#print '>', dend
+	for dend in who:
 
 		(new_dend_a, new_dend_b, max_index)=new_dend(max_index)
 		dlist.append(new_dend_a)
 		dlist.append(new_dend_b)
-
-		#print new_dend_a, new_dend_b
-		#print
 
 		point1=dend_add3d[dend][-1]
 		point2=dend_add3d[dend][-2]
@@ -638,8 +634,6 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
 		(max_index, add_these_lines[new_dend_a])=extend_dendrite(new_dend_a, new_dist, point1, point2, max_index, 1)
 		add_these_lines[new_dend_a].insert(0, new_point_a)
-		#for j in add_these_lines[new_dend_a]:
-			#print j[0], j[6]
 		dend_add3d[new_dend_a]=dend_add3d[dend]+add_these_lines[new_dend_a]
 
 		if hm_choice=='percent':
@@ -651,18 +645,9 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 		point1=new_point_b
 		point2=dend_add3d[dend][-1]
 
-		#print
-
 		(max_index, add_these_lines[new_dend_b])=extend_dendrite(new_dend_b, new_dist, point1, point2, max_index, 1)
 		add_these_lines[new_dend_b].insert(0, new_point_b)
-		#for j in add_these_lines[new_dend_b]:
-			#print j[0], j[6]
 		dend_add3d[new_dend_b]=dend_add3d[dend]+add_these_lines[new_dend_b]
-
-		mylist=[]
-
-		#for i in soma_index:
-		#	mylist.append(i)
 
 		for i in dend_add3d:
 			for k in dend_add3d[i]:

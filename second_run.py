@@ -104,7 +104,8 @@ else:
 
 who.sort()
 
-print 'The dendrites stemming from this segment list will be edited: ' + str(who)
+print 'The dendrites stemming from this segment list will be edited: '
+print str(who)
 
 #else:
 #	print 'Did you define any dendrites to remodel?'
@@ -127,8 +128,8 @@ edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str
 
 (newfile, dlist, mylist)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
-#if action == 'shrink' or action == 'remove' :
-newfile=index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
+if action == 'shrink' or action == 'remove':
+	newfile=index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
 
 newfile=comment_lines + newfile
 

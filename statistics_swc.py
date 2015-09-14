@@ -96,7 +96,6 @@ def bo_dlength(dlist, bo, bo_max, dist):
 
 	bo_dlen={}
 	for i in range(1, bo_max+1):
-
 		k=0
 		add_length=0
 
@@ -217,7 +216,7 @@ def sholl_bp(bpoints, points, soma_index, radius):
 
 		sholl_list[next_dist]=oc
 
-	sholl_list=remove_trailing_zeros(sholl_list, values, radius)
+	#sholl_list=remove_trailing_zeros(sholl_list, values, radius)
 
 	return sholl_list
 
@@ -283,7 +282,7 @@ def sholl_length(points, parental_points, soma_index, radius, parameter):
 
 		sholl_list[next_dist]=sum_length
 
-	sholl_list=remove_trailing_zeros(sholl_list, values, radius)
+	#sholl_list=remove_trailing_zeros(sholl_list, values, radius)
 
 	return sholl_list
 
