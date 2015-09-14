@@ -534,6 +534,7 @@ average_sholl_apical_intersections=remove_empty_keys(average_sholl_apical_inters
 
 print
 print "Average statistics:"
+print
 
 print
 print "Number of All Dendrites: " + str(average_list(average_number_of_all_dendrites))
