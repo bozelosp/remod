@@ -241,23 +241,26 @@ for file_name in file_names:
 	f.close()
 	average_apical_t_area.append(apical_t_area)
 
+	print list(set([parental_points[x] for x in bpoints]))
+	print len(list(set([parental_points[x] for x in bpoints])))
+
 	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_bpoints.txt'
 	f = open(fnum_all_bpoints, 'w+')
-	print >>f, len(bpoints)
+	print >>f, len(list(set([parental_points[x] for x in bpoints])))
 	f.close()
-	average_num_all_bpoints.append(len(bpoints))
+	average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints]))))
 
 	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_bpoints.txt'
 	f = open(fnum_basal_bpoints, 'w+')
-	print >>f, len(basal_bpoints)
+	print >>f, len(list(set([parental_points[x] for x in basal_bpoints])))
 	f.close()
-	average_num_basal_bpoints.append(len(basal_bpoints))
+	average_num_basal_bpoints.append(len(list(set([parental_points[x] for x in basal_bpoints]))))
 
 	fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_apical_bpoints.txt'
 	f = open(fnum_apical_bpoints, 'w+')
-	print >>f, len(apical_bpoints)
+	print >>f, len(list(set([parental_points[x] for x in apical_bpoints])))
 	f.close()
-	average_num_apical_bpoints.append(len(apical_bpoints))
+	average_num_apical_bpoints.append(len(list(set([parental_points[x] for x in apical_bpoints]))))
 
 	fdendlist=directory+'downloads/statistics/'+file_name+'_all_dendritic_list.txt'
 	f = open(fdendlist, 'w+')
@@ -621,24 +624,24 @@ print >>f, str(average_list(average_apical_t_area))
 f.close()
 
 print
-print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints)[0]/2), str(average_list(average_num_all_bpoints)[1]/2)
+print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints)[0]), str(average_list(average_num_all_bpoints)[1])
 f_average_num_all_bpoints=directory+'downloads/statistics/average/average_number_of_all_bpoints.txt'
 f = open(f_average_num_all_bpoints, 'w+')
-print >>f, str(average_list(average_num_all_bpoints)[0]/2), str(average_list(average_num_all_bpoints)[1]/2)
+print >>f, str(average_list(average_num_all_bpoints)[0]), str(average_list(average_num_all_bpoints)[1])
 f.close()
 
 print
-print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints)[0]/2), str(average_list(average_num_basal_bpoints)[1]/2)
+print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints)[0]), str(average_list(average_num_basal_bpoints)[1])
 f_average_num_basal_bpoints=directory+'downloads/statistics/average/average_number_of_basal_bpoints.txt'
 f = open(f_average_num_basal_bpoints, 'w+')
-print >>f, str(average_list(average_num_basal_bpoints)[0]/2), str(average_list(average_num_basal_bpoints)[1]/2)
+print >>f, str(average_list(average_num_basal_bpoints)[0]), str(average_list(average_num_basal_bpoints)[1])
 f.close()
 
 print
-print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints)[0]/2), str(average_list(average_num_apical_bpoints)[1]/2)
+print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints)[0]), str(average_list(average_num_apical_bpoints)[1])
 f_average_num_apical_bpoints=directory+'downloads/statistics/average/average_number_of_apical_bpoints.txt'
 f = open(f_average_num_apical_bpoints, 'w+')
-print >>f, str(average_list(average_num_apical_bpoints)[0]/2), str(average_list(average_num_apical_bpoints)[1]/2)
+print >>f, str(average_list(average_num_apical_bpoints)[0]), str(average_list(average_num_apical_bpoints)[1])
 f.close()
 
 print
