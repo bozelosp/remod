@@ -157,45 +157,6 @@ for file_name in file_names:
 
 	file_name=file_name.replace('.swc','')
 
-	fdendlist=directory+'downloads/statistics/'+file_name+'_all_dendritic_list.txt'
-	f = open(fdendlist, 'w+')
-	for dend in dlist:
-		print >>f, dend
-	f.close()
-
-	fdendlist=directory+'downloads/statistics/'+file_name+'_basal_dendritic_list.txt'
-	f = open(fdendlist, 'w+')
-	for dend in basal:
-		print >>f, dend
-	f.close()
-
-	fdendlist=directory+'downloads/statistics/'+file_name+'_apical_dendritic_list.txt'
-	f = open(fdendlist, 'w+')
-	for dend in apical:
-		print >>f, dend
-	f.close()
-
-	fdendlength=directory+'downloads/statistics/'+file_name+'_all_dendritic_lengths.txt' # <--------- temporary
-	#fdendlength=directory+file_name+'_dendritic_lengths.txt'
-	f = open(fdendlength, 'w+')
-	for dend in dlist:
-		print >>f, str(dend) + ' ' + str(dist[dend])
-	f.close()
-
-	fdendlength=directory+'downloads/statistics/'+file_name+'_basal_dendritic_lengths.txt' # <--------- temporary
-	#fdendlength=directory+file_name+'_dendritic_lengths.txt'
-	f = open(fdendlength, 'w+')
-	for dend in basal:
-		print >>f, str(dend) + ' ' + str(dist[dend])
-	f.close()
-
-	fdendlength=directory+'downloads/statistics/'+file_name+'_apical_dendritic_lengths.txt' # <--------- temporary
-	#fdendlength=directory+file_name+'_dendritic_lengths.txt'
-	f = open(fdendlength, 'w+')
-	for dend in apical:
-		print >>f, str(dend) + ' ' + str(dist[dend])
-	f.close()
-
 	fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
 	#fnumdend=directory+file_name+'_number_of_dendrites.txt'
 	f = open(fnumdend, 'w+')
@@ -259,17 +220,6 @@ for file_name in file_names:
 	f.close()
 	average_apical_t_length.append(apical_t_length)
 
-	'''if basal_t_length<150 or apical_t_length<150:
-
-		import os
-		os.remove(fdendlist)
-		os.remove(fdendlength)
-		os.remove(fnumdend)
-		os.remove(ftotlength)
-		os.remove(ftotblength)
-		os.remove(ftotalength)
-		continue'''
-
 	t_area=total_area(dlist, area, soma_index)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_all_total_area.txt'
 	f = open(fdendlist, 'w+')
@@ -290,6 +240,74 @@ for file_name in file_names:
 	print >>f, apical_t_area
 	f.close()
 	average_apical_t_area.append(apical_t_area)
+
+	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_bpoints.txt'
+	f = open(fnum_all_bpoints, 'w+')
+	print >>f, len(bpoints)
+	f.close()
+	average_num_all_bpoints.append(len(bpoints))
+
+	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_bpoints.txt'
+	f = open(fnum_basal_bpoints, 'w+')
+	print >>f, len(basal_bpoints)
+	f.close()
+	average_num_basal_bpoints.append(len(basal_bpoints))
+
+	fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_apical_bpoints.txt'
+	f = open(fnum_apical_bpoints, 'w+')
+	print >>f, len(apical_bpoints)
+	f.close()
+	average_num_apical_bpoints.append(len(apical_bpoints))
+
+	fdendlist=directory+'downloads/statistics/'+file_name+'_all_dendritic_list.txt'
+	f = open(fdendlist, 'w+')
+	for dend in dlist:
+		print >>f, dend
+	f.close()
+
+	fdendlist=directory+'downloads/statistics/'+file_name+'_basal_dendritic_list.txt'
+	f = open(fdendlist, 'w+')
+	for dend in basal:
+		print >>f, dend
+	f.close()
+
+	fdendlist=directory+'downloads/statistics/'+file_name+'_apical_dendritic_list.txt'
+	f = open(fdendlist, 'w+')
+	for dend in apical:
+		print >>f, dend
+	f.close()
+
+	fdendlength=directory+'downloads/statistics/'+file_name+'_all_dendritic_lengths.txt' # <--------- temporary
+	#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+	f = open(fdendlength, 'w+')
+	for dend in dlist:
+		print >>f, str(dend) + ' ' + str(dist[dend])
+	f.close()
+
+	fdendlength=directory+'downloads/statistics/'+file_name+'_basal_dendritic_lengths.txt' # <--------- temporary
+	#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+	f = open(fdendlength, 'w+')
+	for dend in basal:
+		print >>f, str(dend) + ' ' + str(dist[dend])
+	f.close()
+
+	fdendlength=directory+'downloads/statistics/'+file_name+'_apical_dendritic_lengths.txt' # <--------- temporary
+	#fdendlength=directory+file_name+'_dendritic_lengths.txt'
+	f = open(fdendlength, 'w+')
+	for dend in apical:
+		print >>f, str(dend) + ' ' + str(dist[dend])
+	f.close()
+
+	'''if basal_t_length<150 or apical_t_length<150:
+
+		import os
+		os.remove(fdendlist)
+		os.remove(fdendlength)
+		os.remove(fnumdend)
+		os.remove(ftotlength)
+		os.remove(ftotblength)
+		os.remove(ftotalength)
+		continue'''
 
 	bo=branch_order(dlist, path)
 	(bo_freq, bo_max)=bo_frequency(dlist, bo)
@@ -320,24 +338,6 @@ for file_name in file_names:
 		average_apical_bo_frequency[order].append(bo_freq[order])
 		print >>f, str(order) + ' ' + str(bo_freq[order])
 	f.close()
-	
-	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_bpoints.txt'
-	f = open(fnum_all_bpoints, 'w+')
-	print >>f, len(bpoints)
-	f.close()
-	average_num_all_bpoints.append(len(bpoints))
-
-	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_bpoints.txt'
-	f = open(fnum_basal_bpoints, 'w+')
-	print >>f, len(basal_bpoints)
-	f.close()
-	average_num_basal_bpoints.append(len(basal_bpoints))
-
-	fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_apical_bpoints.txt'
-	f = open(fnum_apical_bpoints, 'w+')
-	print >>f, len(apical_bpoints)
-	f.close()
-	average_num_apical_bpoints.append(len(apical_bpoints))
 
 	bo_dlen=bo_dlength(dlist, bo, bo_max, dist)
 	fbo_dlen=directory+'downloads/statistics/'+file_name+'_bo_average_all_dlength.txt'
@@ -396,35 +396,6 @@ for file_name in file_names:
 		print >>f, str(order) + ' ' + str(bo_plen[order])
 	f.close()
 
-	sholl_all_bp=sholl_bp(bpoints, points, soma_index, radius)
-	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_bp.txt'
-	f = open(f_sholl, 'w+')
-	for length in sorted(sholl_all_bp):
-		average_sholl_all_bp[length].append(sholl_all_bp[length])
-		print >>f, "%s %s" % (length, sholl_all_bp[length])
-	f.close()
-
-	sholl_basal_bp=sholl_bp(basal_bpoints, points, soma_index, radius)
-	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_basal_bp.txt'
-	f = open(f_sholl, 'w+')
-	for length in sorted(sholl_basal_bp):
-		average_sholl_basal_bp[length].append(sholl_basal_bp[length])
-		print >>f, "%s %s" % (length, sholl_basal_bp[length])
-	f.close()
-
-	sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_index, radius)
-	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_apical_bp.txt'
-	f = open(f_sholl, 'w+')
-	for length in sorted(sholl_apical_bp):
-		average_sholl_apical_bp[length].append(sholl_apical_bp[length])
-		print >>f, "%s %s" % (length, sholl_apical_bp[length])
-	f.close
-
-	'''f_vector=directory+'downloads/statistics/average/sholl_basal_vector.txt'
-	f = open(f_vector, 'a+')
-	print >>f, file_name, vector
-	f.close'''
-
 	sholl_all_length=sholl_length(points, parental_points, soma_index, radius, [3,4])
 	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_length.txt'
 	f = open(f_sholl, 'w+')
@@ -455,6 +426,35 @@ for file_name in file_names:
 	for length in sorted(sholl_median_basal_length):
 		average_sholl_median_basal_length[length].append(sholl_median_basal_length[length])
 		print >>f, "%s %s" % (length, sholl_median_basal_length[length])
+	f.close'''
+
+	sholl_all_bp=sholl_bp(bpoints, points, soma_index, radius)
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_bp.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_all_bp):
+		average_sholl_all_bp[length].append(sholl_all_bp[length])
+		print >>f, "%s %s" % (length, sholl_all_bp[length])
+	f.close()
+
+	sholl_basal_bp=sholl_bp(basal_bpoints, points, soma_index, radius)
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_basal_bp.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_basal_bp):
+		average_sholl_basal_bp[length].append(sholl_basal_bp[length])
+		print >>f, "%s %s" % (length, sholl_basal_bp[length])
+	f.close()
+
+	sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_index, radius)
+	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_apical_bp.txt'
+	f = open(f_sholl, 'w+')
+	for length in sorted(sholl_apical_bp):
+		average_sholl_apical_bp[length].append(sholl_apical_bp[length])
+		print >>f, "%s %s" % (length, sholl_apical_bp[length])
+	f.close
+
+	'''f_vector=directory+'downloads/statistics/average/sholl_basal_vector.txt'
+	f = open(f_vector, 'a+')
+	print >>f, file_name, vector
 	f.close'''
 
 	vector=[]
