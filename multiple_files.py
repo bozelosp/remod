@@ -76,14 +76,9 @@ else:
 	sys.exit(0)
 
 exist_stat=str(directory)+'/downloads/statistics'
-exist_average=str(directory)+'/downloads/statistics/average'
 
 if not os.path.exists(exist_stat):
     os.makedirs(exist_stat)
-
-if not os.path.exists(exist_average):
-    os.makedirs(exist_average)
-
 
 average_number_of_all_dendrites=[]
 average_number_of_all_terminal_dendrites=[]
@@ -499,7 +494,7 @@ for i in km:
 
 kmeans_file.close()
 
-if len(file_names)<2:
+if len(file_names)==1:
 	print "Average statistics are not available for only one file"
 	import sys
 	sys.exit(0)
@@ -508,7 +503,6 @@ import collections
 from random_sampling import *
 from actions_swc import *
 from statistics_swc import *
-import os
 
 average_all_bo_frequency=remove_empty_keys(average_all_bo_frequency)
 average_basal_bo_frequency=remove_empty_keys(average_basal_bo_frequency)
@@ -536,114 +530,111 @@ average_sholl_all_intersections=remove_empty_keys(average_sholl_all_intersection
 average_sholl_basal_intersections=remove_empty_keys(average_sholl_basal_intersections)
 average_sholl_apical_intersections=remove_empty_keys(average_sholl_apical_intersections)
 
-if not os.path.exists(str(directory)+'downloads/statistics/average/'):
-   		os.makedirs(str(directory)+'downloads/statistics/average')
-
 print
 print "Average statistics:"
 print
 
 print
 print "Number of All Dendrites: " + str(average_list(average_number_of_all_dendrites))
-f_average_number_of_all_dendrites=directory+'downloads/statistics/average/average_number_of_all_dendrites.txt'
+f_average_number_of_all_dendrites=directory+'downloads/statistics/average_number_of_all_dendrites.txt'
 f = open(f_average_number_of_all_dendrites, 'w+')
 print >>f, str(average_list(average_number_of_all_dendrites))
 f.close()
 
 print
 print "Number of All Terminal Dendrites: " + str(average_list(average_number_of_all_terminal_dendrites))
-f_average_number_of_all_terminal_dendrites=directory+'downloads/statistics/average/average_number_of_all_terminal_dendrites.txt'
+f_average_number_of_all_terminal_dendrites=directory+'downloads/statistics/average_number_of_all_terminal_dendrites.txt'
 f = open(f_average_number_of_all_terminal_dendrites, 'w+')
 print >>f, str(average_list(average_number_of_all_terminal_dendrites))
 f.close()
 
 print
 print "Number of Basal Dendrites: " + str(average_list(average_number_of_basal_dendrites))
-f_average_number_of_basal_dendrites=directory+'downloads/statistics/average/average_number_of_basal_dendrites.txt'
+f_average_number_of_basal_dendrites=directory+'downloads/statistics/average_number_of_basal_dendrites.txt'
 f = open(f_average_number_of_basal_dendrites, 'w+')
 print >>f, str(average_list(average_number_of_basal_dendrites))
 f.close()
 
 print
 print "Number of Basal Terminal Dendrites: " + str(average_list(average_number_of_basal_terminal_dendrites))
-f_average_number_of_basal_terminal_dendrites=directory+'downloads/statistics/average/average_number_of_basal_terminal_dendrites.txt'
+f_average_number_of_basal_terminal_dendrites=directory+'downloads/statistics/average_number_of_basal_terminal_dendrites.txt'
 f = open(f_average_number_of_basal_terminal_dendrites, 'w+')
 print >>f, str(average_list(average_number_of_basal_terminal_dendrites))
 f.close()
 
 print
 print "Number of Apical Dendrites: " + str(average_list(average_number_of_apical_dendrites))
-f_average_number_of_apical_dendrites=directory+'downloads/statistics/average/average_number_of_apical_dendrites.txt'
+f_average_number_of_apical_dendrites=directory+'downloads/statistics/average_number_of_apical_dendrites.txt'
 f = open(f_average_number_of_apical_dendrites, 'w+')
 print >>f, str(average_list(average_number_of_apical_dendrites))
 f.close()
 
 print
 print "Number of Apical Terminal Dendrites: " + str(average_list(average_number_of_apical_terminal_dendrites))
-f_average_number_of_apical_terminal_dendrites=directory+'downloads/statistics/average/average_number_of_apical_terminal_dendrites.txt'
+f_average_number_of_apical_terminal_dendrites=directory+'downloads/statistics/average_number_of_apical_terminal_dendrites.txt'
 f = open(f_average_number_of_apical_terminal_dendrites, 'w+')
 print >>f, str(average_list(average_number_of_apical_terminal_dendrites))
 f.close()
 
 print
 print "Total Length (all dendrites): " + str(average_list(average_t_length))
-f_average_total_length=directory+'downloads/statistics/average/average_total_length.txt'
+f_average_total_length=directory+'downloads/statistics/average_total_length.txt'
 f = open(f_average_total_length, 'w+')
 print >>f, str(average_list(average_t_length))
 f.close()
 
 print
 print "Total Length (basal dendrites): " + str(average_list(average_basal_t_length))
-f_average_total_basal_length=directory+'downloads/statistics/average/average_total_basal_length.txt'
+f_average_total_basal_length=directory+'downloads/statistics/average_total_basal_length.txt'
 f = open(f_average_total_basal_length, 'w+')
 print >>f, str(average_list(average_basal_t_length))
 f.close()
 
 print
 print "Total Length (apical dendrites): " + str(average_list(average_apical_t_length))
-f_average_total_apical_length=directory+'downloads/statistics/average/average_total_apical_length.txt'
+f_average_total_apical_length=directory+'downloads/statistics/average_total_apical_length.txt'
 f = open(f_average_total_apical_length, 'w+')
 print >>f, str(average_list(average_apical_t_length))
 f.close()
 
 print
 print "Total Area (all dendrites): " + str(average_list(average_t_area))
-f_average_total_area=directory+'downloads/statistics/average/average_total_area.txt'
+f_average_total_area=directory+'downloads/statistics/average_total_area.txt'
 f = open(f_average_total_area, 'w+')
 print >>f, str(average_list(average_t_area))
 f.close()
 
 print
 print "Total Area (basal dendrites): " + str(average_list(average_basal_t_area))
-f_average_total_basal_area=directory+'downloads/statistics/average/average_total_basal_area.txt'
+f_average_total_basal_area=directory+'downloads/statistics/average_total_basal_area.txt'
 f = open(f_average_total_basal_area, 'w+')
 print >>f, str(average_list(average_basal_t_area))
 f.close()
 
 print
 print "Total Area (apical dendrites): " + str(average_list(average_apical_t_area))
-f_average_total_apical_area=directory+'downloads/statistics/average/average_total_apical_area.txt'
+f_average_total_apical_area=directory+'downloads/statistics/average_total_apical_area.txt'
 f = open(f_average_total_apical_area, 'w+')
 print >>f, str(average_list(average_apical_t_area))
 f.close()
 
 print
 print "Number of all Branch Points: " + str(average_list(average_num_all_bpoints)[0]), str(average_list(average_num_all_bpoints)[1])
-f_average_num_all_bpoints=directory+'downloads/statistics/average/average_number_of_all_branchpoints.txt'
+f_average_num_all_bpoints=directory+'downloads/statistics/average_number_of_all_branchpoints.txt'
 f = open(f_average_num_all_bpoints, 'w+')
 print >>f, str(average_list(average_num_all_bpoints)[0]), str(average_list(average_num_all_bpoints)[1])
 f.close()
 
 print
 print "Number of all Basal Branch Points: " + str(average_list(average_num_basal_bpoints)[0]), str(average_list(average_num_basal_bpoints)[1])
-f_average_num_basal_bpoints=directory+'downloads/statistics/average/average_number_of_basal_branchpoints.txt'
+f_average_num_basal_bpoints=directory+'downloads/statistics/average_number_of_basal_branchpoints.txt'
 f = open(f_average_num_basal_bpoints, 'w+')
 print >>f, str(average_list(average_num_basal_bpoints)[0]), str(average_list(average_num_basal_bpoints)[1])
 f.close()
 
 print
 print "Number of all Apical Branch Points: " + str(average_list(average_num_apical_bpoints)[0]), str(average_list(average_num_apical_bpoints)[1])
-f_average_num_apical_bpoints=directory+'downloads/statistics/average/average_number_of_apical_branchpoints.txt'
+f_average_num_apical_bpoints=directory+'downloads/statistics/average_number_of_apical_branchpoints.txt'
 f = open(f_average_num_apical_bpoints, 'w+')
 print >>f, str(average_list(average_num_apical_bpoints)[0]), str(average_list(average_num_apical_bpoints)[1])
 f.close()
@@ -651,7 +642,7 @@ f.close()
 print
 print "Average Number of All Dendrites per Branch Order: " 
 average_dict(average_all_bo_frequency)
-f_average_bo_frequency=directory+'downloads/statistics/average/average_number_of_all_dendrites_per_branch_order.txt'
+f_average_bo_frequency=directory+'downloads/statistics/average_number_of_all_dendrites_per_branch_order.txt'
 f = open(f_average_bo_frequency, 'w+')
 for i in average_all_bo_frequency:
 	print i,  average_all_bo_frequency[i]
@@ -661,7 +652,7 @@ f.close()
 print
 print "Average Number of Basal Dendrites per Branch Order: "
 average_dict(average_basal_bo_frequency)
-f_average_bo_frequency=directory+'downloads/statistics/average/average_number_of_basal_dendrites_per_branch_order.txt'
+f_average_bo_frequency=directory+'downloads/statistics/average_number_of_basal_dendrites_per_branch_order.txt'
 f = open(f_average_bo_frequency, 'w+')
 for i in average_basal_bo_frequency:
 	print i, average_basal_bo_frequency[i]
@@ -671,7 +662,7 @@ f.close()
 print
 print "Average Number of Apical Dendrites per Branch Order: "
 average_dict(average_apical_bo_frequency)
-f_average_bo_frequency=directory+'downloads/statistics/average/average_number_of_apical_dendrites_per_branch_order.txt'
+f_average_bo_frequency=directory+'downloads/statistics/average_number_of_apical_dendrites_per_branch_order.txt'
 f = open(f_average_bo_frequency, 'w+')
 for i in average_apical_bo_frequency:
 	print i, average_apical_bo_frequency[i]
@@ -681,7 +672,7 @@ f.close()
 print
 print "Average All Dendritic Length per Branch Order: "
 average_dict(average_all_bo_dlength)
-f_average_bo_dlength=directory+'downloads/statistics/average/average_all_dendritic_length_per_branch_order.txt'
+f_average_bo_dlength=directory+'downloads/statistics/average_all_dendritic_length_per_branch_order.txt'
 f = open(f_average_bo_dlength, 'w+')
 for i in average_all_bo_dlength:
 	print i, average_all_bo_dlength[i]
@@ -691,7 +682,7 @@ f.close()
 print
 print "Average Basal Dendritic Length per Branch Order: "
 average_dict(average_basal_bo_dlength)
-f_average_bo_dlength=directory+'downloads/statistics/average/average_basal_dendritic_length_per_branch_order.txt'
+f_average_bo_dlength=directory+'downloads/statistics/average_basal_dendritic_length_per_branch_order.txt'
 f = open(f_average_bo_dlength, 'w+')
 for i in average_basal_bo_dlength:
 	print i, average_basal_bo_dlength[i]
@@ -701,7 +692,7 @@ f.close()
 print
 print "Average Apical Dendritic Length per Branch Order: "
 average_dict(average_apical_bo_dlength)
-f_average_bo_dlength=directory+'downloads/statistics/average/average_apical_dendritic_length_per_branch_order.txt'
+f_average_bo_dlength=directory+'downloads/statistics/average_apical_dendritic_length_per_branch_order.txt'
 f = open(f_average_bo_dlength, 'w+')
 for i in average_apical_bo_dlength:
 	print i, average_apical_bo_dlength[i]
@@ -711,7 +702,7 @@ f.close()
 print
 print "Average All Path Length per Branch Order: "
 average_dict(average_all_bo_plength)
-f_average_bo_plength=directory+'downloads/statistics/average/average_all_path_length_per_branch_order.txt'
+f_average_bo_plength=directory+'downloads/statistics/average_all_path_length_per_branch_order.txt'
 f = open(f_average_bo_plength, 'w+')
 for i in average_all_bo_plength:
 	print i, average_all_bo_plength[i]
@@ -721,7 +712,7 @@ f.close()
 print
 print "Average Basal Path Length per Branch Order: "
 average_dict(average_basal_bo_plength)
-f_average_bo_plength=directory+'downloads/statistics/average/average_basal_path_length_per_branch_order.txt'
+f_average_bo_plength=directory+'downloads/statistics/average_basal_path_length_per_branch_order.txt'
 f = open(f_average_bo_plength, 'w+')
 for i in average_basal_bo_plength:
 	print i, average_basal_bo_plength[i]
@@ -731,7 +722,7 @@ f.close()
 print
 print "Average Apical Path Length per Branch Order: "
 average_dict(average_apical_bo_plength)
-f_average_bo_plength=directory+'downloads/statistics/average/average_apical_path_length_per_branch_order.txt'
+f_average_bo_plength=directory+'downloads/statistics/average_apical_path_length_per_branch_order.txt'
 f = open(f_average_bo_plength, 'w+')
 for i in average_apical_bo_plength:
 	print i, average_apical_bo_plength[i]
@@ -741,7 +732,7 @@ f.close()
 print
 print 'Sholl analysis (branch points) for all dendrites'
 average_dict(average_sholl_all_bp)
-f_average_sholl_all_bp=directory+'downloads/statistics/average/average_sholl_all_branchpoints.txt'
+f_average_sholl_all_bp=directory+'downloads/statistics/average_sholl_all_branchpoints.txt'
 f = open(f_average_sholl_all_bp, 'w+')
 for i in sorted(average_sholl_apical_bp):
 	print i, average_sholl_all_bp[i]
@@ -751,7 +742,7 @@ f.close()
 print
 print 'Sholl analysis (branch points) for basal dendrites'
 average_dict(average_sholl_basal_bp)
-f_average_sholl_basal_bp=directory+'downloads/statistics/average/average_sholl_basal_branchpoints.txt'
+f_average_sholl_basal_bp=directory+'downloads/statistics/average_sholl_basal_branchpoints.txt'
 f = open(f_average_sholl_basal_bp, 'w+')
 for i in sorted(average_sholl_basal_bp):
 	print i, average_sholl_basal_bp[i]
@@ -760,7 +751,7 @@ for i in sorted(average_sholl_basal_bp):
 print
 print 'Sholl analysis (branch points) for apical dendrites'
 average_dict(average_sholl_apical_bp)
-f_average_sholl_apical_bp=directory+'downloads/statistics/average/average_sholl_apical_branchpoints.txt'
+f_average_sholl_apical_bp=directory+'downloads/statistics/average_sholl_apical_branchpoints.txt'
 f = open(f_average_sholl_apical_bp, 'w+')
 for i in sorted(average_sholl_apical_bp):
 	print i, average_sholl_apical_bp[i]
@@ -770,7 +761,7 @@ f.close()
 print
 print 'Sholl analysis (dendritic length) for all dendrites'
 average_dict(average_sholl_all_length)
-f_average_sholl_all_length=directory+'downloads/statistics/average/average_sholl_all_length.txt'
+f_average_sholl_all_length=directory+'downloads/statistics/average_sholl_all_length.txt'
 f = open(f_average_sholl_all_length, 'w+')
 for i in sorted(average_sholl_all_length):
 	print i, average_sholl_all_length[i]
@@ -780,7 +771,7 @@ f.close()
 print
 print 'Sholl analysis (dendritic length) for basal dendrites'
 average_dict(average_sholl_basal_length)
-f_average_sholl_basal_length=directory+'downloads/statistics/average/average_sholl_basal_length.txt'
+f_average_sholl_basal_length=directory+'downloads/statistics/average_sholl_basal_length.txt'
 f = open(f_average_sholl_basal_length, 'w+')
 for i in sorted(average_sholl_basal_length):
 	print i, average_sholl_basal_length[i]
@@ -790,7 +781,7 @@ f.close()
 print
 print 'Sholl analysis (dendritic length) for apical dendrites'
 average_dict(average_sholl_apical_length)
-f_average_sholl_apical_length=directory+'downloads/statistics/average/average_sholl_apical_length.txt'
+f_average_sholl_apical_length=directory+'downloads/statistics/average_sholl_apical_length.txt'
 f = open(f_average_sholl_apical_length, 'w+')
 for i in sorted(average_sholl_apical_length):
 	print i, average_sholl_apical_length[i]
@@ -800,7 +791,7 @@ f.close()
 print
 print 'Sholl analysis (number of intersections) for all dendrites'
 average_dict(average_sholl_all_intersections)
-f_average_sholl_all_intersections=directory+'downloads/statistics/average/average_sholl_all_intersections.txt'
+f_average_sholl_all_intersections=directory+'downloads/statistics/average_sholl_all_intersections.txt'
 f = open(f_average_sholl_all_intersections, 'w+')
 for i in sorted(average_sholl_all_intersections):
 	print i, average_sholl_all_intersections[i]
@@ -810,7 +801,7 @@ f.close()
 print
 print 'Sholl analysis (number of intersections) for basal dendrites'
 average_dict(average_sholl_basal_intersections)
-f_average_sholl_basal_intersections=directory+'downloads/statistics/average/average_sholl_basal_intersections.txt'
+f_average_sholl_basal_intersections=directory+'downloads/statistics/average_sholl_basal_intersections.txt'
 f = open(f_average_sholl_basal_intersections, 'w+')
 for i in sorted(average_sholl_basal_intersections):
 	print i, average_sholl_basal_intersections[i]
@@ -820,7 +811,7 @@ f.close()
 print
 print 'Sholl analysis (number of intersections) for apical dendrites'
 average_dict(average_sholl_apical_intersections)
-f_average_sholl_apical_intersections=directory+'downloads/statistics/average/average_sholl_apical_intersections.txt'
+f_average_sholl_apical_intersections=directory+'downloads/statistics/average_sholl_apical_intersections.txt'
 f = open(f_average_sholl_apical_intersections, 'w+')
 for i in sorted(average_sholl_apical_intersections):
 	print i, average_sholl_apical_intersections[i]
@@ -829,7 +820,7 @@ f.close()
 
 '''print
 print 'Sholl analysis (dendritic length) for apical' + str(median_dict(average_sholl_median_basal_length))
-f_average_sholl_median_basal_length=directory+'downloads/statistics/average/average_sholl_median_basal_length.txt'
+f_average_sholl_median_basal_length=directory+'downloads/statistics/average_sholl_median_basal_length.txt'
 f = open(f_average_sholl_median_basal_length, 'w+')
 mylist=average_sholl_median_basal_length
 for i in sorted(mylist):
