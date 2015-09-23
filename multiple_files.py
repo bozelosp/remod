@@ -153,7 +153,7 @@ for file_name in file_names:
 
 	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 
-	#first_graph(swc_lines, dlist, dend_add3d, directory, file_name) #plots the original and modified tree (overlaying one another)
+	first_graph(swc_lines, dlist, dend_add3d, directory, file_name) #plots the original and modified tree (overlaying one another)
 
 	file_name=file_name.replace('.swc','')
 
@@ -499,14 +499,16 @@ for i in km:
 
 kmeans_file.close()
 
-if len(file_names)>1:
+if len(file_names)<2:
 	print "Average statistics are not available for only one file"
+	import sys
 	sys.exit(0)
 
 import collections
 from random_sampling import *
 from actions_swc import *
 from statistics_swc import *
+import os
 
 average_all_bo_frequency=remove_empty_keys(average_all_bo_frequency)
 average_basal_bo_frequency=remove_empty_keys(average_basal_bo_frequency)

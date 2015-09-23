@@ -69,7 +69,7 @@ def plot_(my_file, my_plot, dlist):
 
 			#print ' %d %d %.2f %.2f %.2f %.2f %d - %.2f' % (plist[i][0], plist[i][1], plist[i][2], plist[i][3], plist[i][4], plist[i][5], plist[i][6], dsu)
 			d=plist[i][5]
-			rameters=[x, y, z, d]
+			parameters=[x, y, z, d]
 
 			my_plot.append(parameters)
 
@@ -88,8 +88,6 @@ def first_graph(initial_file, dlist, dend_add3d, abs_path, file_name):
 	fname=file_name.replace('.swc','') + '_neuron.txt'
 	name=abs_path+fname
 
-	print '>' + str(name)
-	
 	f = open(name, 'w')
 
 	for i in plot_before:
