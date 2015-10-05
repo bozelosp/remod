@@ -45,3 +45,14 @@ scale_down.py
 test.py
 trash
 tree_graph.txt
+actions_swc.pyc
+extract_swc_morphology.pyc
+graph.pyc
+index_reassignment.pyc
+neuron_before_swc.pyc
+plot_individual_data.pyc
+print_file.pyc
+random_sampling.pyc
+statistics_swc.pyc
+take_action_swc.pyc
+warn.pyc
