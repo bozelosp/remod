@@ -105,6 +105,7 @@ def parental(points):
 	for i in points:
 		c=points[i][0]
 		parental_points[c]=points[i][6]
+
 	return parental_points
 
 def d_list(bpoints):
@@ -222,9 +223,6 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 
 		path[i]=pathway
 
-	#print dend_indices
-	#print
-	#print path
 	return path
 
 def terminal(dlist, path, basal, apical): #returns a list of the terminal dendrites
@@ -247,6 +245,25 @@ def terminal(dlist, path, basal, apical): #returns a list of the terminal dendri
 	apical_terminal = [x for x in all_terminal if x in apical]
 
 	return all_terminal, basal_terminal, apical_terminal
+
+def descend(dlist, all_terminal, path):
+
+	descendants={}
+	for dend in dlist:
+		if dend not in all_terminal:
+			descendants[dend]=[]
+			for n in dlist:
+				if dend in path[n]:
+					tmp_list=path[n][::-1]
+					allow=False
+					for k in tmp_list:
+						if dend==k:
+							allow=True
+						if allow==True:
+							if k not in descendants[dend]:
+								descendants[dend].append(k)
+			descendants[dend].remove(dend)
+	return descendants
 
 def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
 
@@ -353,6 +370,7 @@ def read_file(fname):
 	dend_add3d=dend_add3d_points(dlist, dend_indices, points)
 	path=pathways(dlist, points, dend_indices, soma_index)
 	all_terminal, basal_terminal, apical_terminal=terminal(dlist, path, basal, apical)
+	descendants=descend(dlist, all_terminal, path)
 	soma_centroid=soma_center(soma_index)
 	dist=dend_length(dend_add3d, dlist, parental_points, points)
 	area=dend_area(dend_add3d, dlist, parental_points, points)
@@ -361,7 +379,13 @@ def read_file(fname):
 	con=connected(dlist, path)
 	parents=[]
 
-	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
+	for i in dlist:
+
+		if i not in all_terminal:
+
+			print i, path[i], descendants[i]
+
+	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
 
 #points, parents, bpoints, soma_index, dend_indices, dend_names, exceptions, dend_add3d, path
 #hoc_lines - swc_lines

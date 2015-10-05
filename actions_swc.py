@@ -1,6 +1,7 @@
 import re
 from math import sqrt
 from random import randint
+import copy
 import sys
 
 import numpy as np
@@ -124,6 +125,26 @@ def add_point(point1, point2, flag): #returns 1 or 2 new points
 
 	return npoint, length
 
+def transpose(vec, dend, descendants, dend_add3d):
+
+	x=vec[0]
+	y=vec[1]
+	z=vec[2]
+
+	for d in descendants[dend]:
+
+		print sqrt(x**2+y**2+z**2)
+
+		print dend, d 
+
+		for i in range(len(dend_add3d[d])):
+
+			dend_add3d[d][i][2]=dend_add3d[d][i][2]-x
+			dend_add3d[d][i][3]=dend_add3d[d][i][3]-y
+			dend_add3d[d][i][4]=dend_add3d[d][i][4]-z
+
+	return dend_add3d
+
 
 def new_dend(max_index): #it returns two new dendrites for branching
 
@@ -190,13 +211,18 @@ def extend_dendrite(dend, new_dist, point1, point2, max_index, flag): #grows the
 
 	return max_index, new_lines
 
-def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
+def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
 	amount=int(amount)
 
 	new_dist=dict()
 
 	for dend in who:
+
+		if dend not in all_terminal:
+
+			initial_position=dend_add3d[dend][-1]
+
 
 		mylist=[]
 		dist_sum=0
@@ -212,7 +238,10 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 		y=next_point[3]
 		z=next_point[4]
 
+		print
+		print next_point, current_point
 		dist_sum+=distance(x,xp,y,yp,z,zp)
+		print dist_sum, dist[dend]
 
 		if hm_choice=='percent':
 			new_dist[dend]=dist[dend]*((100-amount)/100)
@@ -234,7 +263,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 				point=[current_point[0], current_point[1], xp, yp, zp, dp, current_point[6]]
 				mylist.append(point)
-
+				
 				x=next_point[2]
 				y=next_point[3]
 				z=next_point[4]
@@ -243,6 +272,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 				dist_sum+=distance(x,xp,y,yp,z,zp)
 
 				if dist_sum>new_dist[dend]:
+					print dist_sum, dist[dend]
 
 					diff=dist_sum-float(new_dist[dend])
 				
@@ -258,8 +288,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 					# 1202 3 -43.5 27 19 0.15 1201
 					mylist[-1]=[current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]]
-					
-					dend_add3d[dend]=mylist	
+					dend_add3d[dend]=mylist
 
 					break
 
@@ -290,14 +319,19 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 			yn='%.2f' % (round_to((yp+per*yn),0.01))
 			zn='%.2f' % (round_to((zp+per*zn),0.01))
 
-			# 1202 3 -43.5 27 19 0.15 1201
 			mylist.append([current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]])
-			dend_add3d[dend]=mylist
+			dend_add3d[dend]=mylists
+
+		if dend not in all_terminal:
+
+			final_position=dend_add3d[dend][-1]
+
+			vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
+			my_vec=tuple(vec)
+			print initial_position, final_position, my_vec, dend, descendants[dend]
+			dend_add3d=transpose(my_vec, dend, descendants, dend_add3d)
 
 	mylist=[]
-
-#	for i in soma_index:
-#		mylist.append(i)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
@@ -485,11 +519,12 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 	return newfile'''
 
-def remove(who, action, dend_add3d, soma_index): #returns the new lines of the .hoc file with the selected dendrites shrinked
+def remove(who, action, dend_add3d, soma_index, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
 	new_lines=[]
 
 	for dend in who:
+
 		dend_add3d[dend]=[]
 
 	mylist=[]
@@ -509,7 +544,7 @@ def remove(who, action, dend_add3d, soma_index): #returns the new lines of the .
 
 	return newfile
 
-def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites extended
+def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal): #returns the new lines of the .hoc file with the selected dendrites extended
 
 	amount=int(amount)
 
@@ -521,6 +556,8 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 		mylist.append(i)
 
 	for dend in who:
+
+		initial_position=dend_add3d[dend][-1]
 
 		num_seg_1=len(dend_add3d[dend])
 
@@ -583,6 +620,14 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 				n+=1
 				my_diam=d[n][1]
 				dend_add3d[dend][j][5]=my_diam
+
+		final_position=dend_add3d[dend][-1]
+
+		vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
+
+		if dend not in all_terminal:
+
+			dend_add3d=transpose(vec, dend, descendants, dend_add3d)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:

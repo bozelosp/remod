@@ -1,10 +1,16 @@
 import re
 from math import sqrt
-from random import randint
 import sys
 import numpy as np
-from random import uniform, randrange
+from random import randint, uniform
 from math import cos, sin, pi, sqrt, radians, degrees
+
+
+import matplotlib as mpl
+mpl.use('TKAgg')
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import animation
+import matplotlib.pyplot as plt
 
 def round_to(x, rounder): #returns the nearest number to the multiplied "rounder"
 
@@ -14,6 +20,75 @@ def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d 
 
 	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
 	return dist
+
+def local_plot(my_file):
+
+	fig = plt.figure()
+	ax = Axes3D(fig)
+	ax = fig.gca(projection='3d')
+
+	x_points=[]
+	y_points=[]
+	z_points=[]
+	diameter=[]
+
+	plist={}
+	mylist=[]
+
+	for line in my_file:
+	
+		comment=re.search(r'#', line)
+		p=re.search(r'(\d+) (\d+) (.*?) (.*?) (.*?) (.*?) (-?\d+)', line)
+
+		if comment:
+			continue
+		elif p:
+
+			i=int(p.group(1))
+			l=int(p.group(2))
+			x=round_to(float(p.group(3)),0.01)
+			y=round_to(float(p.group(4)),0.01)
+			z=round_to(float(p.group(5)),0.01)
+			d=float(p.group(6))
+			c=int(p.group(7))
+
+			plist[i]=[i, l, x, y, z, d, c]
+			mylist.append(i)
+
+	for i in mylist:
+
+		con=plist[i][6]
+
+		if con!=-1:
+
+			x=[ plist[i][2], plist[con][2] ]
+			y=[ plist[i][3], plist[con][3] ]
+			z=[ plist[i][4], plist[con][4] ]
+
+			d=plist[i][5]
+			
+			parameters=[x, y, z, d]
+
+			ax.plot(parameters[0], parameters[1], parameters[2], linewidth=parameters[3], c='b', alpha=1)
+
+	ax.tick_params(labelsize=8)
+
+	# Create an init function and the animate functions.
+	# Both are explained in the tutorial. Since we are changing
+	# the the elevation and azimuth and no objects are really
+	# changed on the plot we don't have to return anything from
+	# the init and animate function. (return value is explained
+	# in the tutorial.
+
+	def animate(i):
+	    ax.view_init(elev=20., azim=i)
+
+	# Animate
+	#anim = animation.FuncAnimation(fig, animate, frames=1080, blit=True)
+	# Save
+	#anim.save('ca3_after.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+	
+	plt.show()
 
 def plot_(my_file, my_plot, dlist):
 

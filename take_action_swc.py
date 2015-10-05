@@ -1,7 +1,7 @@
 from actions_swc import *
 from print_file import *
 
-def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points):
+def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points, descendants, all_terminal):
 	
 	mylist=[]
 
@@ -10,13 +10,13 @@ def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, 
 	if action != 'none':
 
 		if action == 'shrink':
-			newfile=shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points)
+			newfile=shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal)
 
 		if action == 'remove':
-			newfile=remove(who, action, dend_add3d, soma_index)
+			newfile=remove(who, action, dend_add3d, soma_index, points, parental_points, all_terminal, descendants)
 
 		if action == 'extend':
-			newfile=extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points)
+			newfile=extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal)
 
 		if action == 'branch':
 			(newfile,dlist,mylist)=branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dlist)
