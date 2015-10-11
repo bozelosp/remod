@@ -65,7 +65,7 @@ def median_dict(d):
 		d[i]=[round_to(med, 0.01), round_to(p25, 0.01), round_to(p75, 0.01)]
 	return d
 
-#python second_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc
+#python first_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc
 
 if (len(sys.argv)==3):
 
@@ -73,18 +73,17 @@ if (len(sys.argv)==3):
 	file_names=str(sys.argv[2]).split(',')
 
 else:
+	print "The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. "
 	sys.exit(0)
 
-print 
-print 'D: ' + str(directory)
-print 
-print 'FN: ' + str(file_names)
-print
+exist_downloads=str(directory)+'downloads'
+exist_statistics=str(directory)+'downloads/statistics'
 
-exist_stat=str(directory)+'/downloads/statistics'
+if not os.path.exists(exist_downloads):
+    os.makedirs(exist_downloads)
 
-if not os.path.exists(exist_stat):
-    os.makedirs(exist_stat)
+if not os.path.exists(exist_statistics):
+    os.makedirs(exist_statistics)
 
 average_number_of_all_dendrites=[]
 average_number_of_all_terminal_dendrites=[]
@@ -154,7 +153,7 @@ for file_name in file_names:
 
 	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 
-	first_graph(swc_lines, dlist, dend_add3d, directory, file_name) #plots the original and modified tree (overlaying one another)
+	first_graph(directory, file_name, dlist, dend_add3d, points, parental_points) #plots the original and modified tree (overlaying one another)
 
 	file_name=file_name.replace('.swc','')
 
@@ -313,23 +312,27 @@ for file_name in file_names:
 		print >>f, str(order) + ' ' + str(bo_freq[order])
 	f.close()
 
-	bo_basal=branch_order(basal, path)
-	(bo_freq, bo_max_basal)=bo_frequency(basal, bo)
-	fbo=directory+'downloads/statistics/'+file_name+'_number_of_basal_dendrites_per_branch_order.txt'
-	f = open(fbo, 'w+')
-	for order in bo_freq:
-		average_basal_bo_frequency[order].append(bo_freq[order])
-		print >>f, str(order) + ' ' + str(bo_freq[order])
-	f.close()
+	if len(basal)>0:
 
-	bo_apical=branch_order(apical, path)
-	(bo_freq, bo_max_apical)=bo_frequency(apical, bo)
-	fbo=directory+'downloads/statistics/'+file_name+'_number_of_apical_dendrites_per_branch_order.txt'
-	f = open(fbo, 'w+')
-	for order in bo_freq:
-		average_apical_bo_frequency[order].append(bo_freq[order])
-		print >>f, str(order) + ' ' + str(bo_freq[order])
-	f.close()
+		bo_basal=branch_order(basal, path)
+		(bo_freq, bo_max_basal)=bo_frequency(basal, bo)
+		fbo=directory+'downloads/statistics/'+file_name+'_number_of_basal_dendrites_per_branch_order.txt'
+		f = open(fbo, 'w+')
+		for order in bo_freq:
+			average_basal_bo_frequency[order].append(bo_freq[order])
+			print >>f, str(order) + ' ' + str(bo_freq[order])
+		f.close()
+
+	if len(apical)>0:
+
+		bo_apical=branch_order(apical, path)
+		(bo_freq, bo_max_apical)=bo_frequency(apical, bo)
+		fbo=directory+'downloads/statistics/'+file_name+'_number_of_apical_dendrites_per_branch_order.txt'
+		f = open(fbo, 'w+')
+		for order in bo_freq:
+			average_apical_bo_frequency[order].append(bo_freq[order])
+			print >>f, str(order) + ' ' + str(bo_freq[order])
+		f.close()
 
 	bo_dlen=bo_dlength(dlist, bo, bo_max, dist)
 	fbo_dlen=directory+'downloads/statistics/'+file_name+'_all_dendritic_length_per_branch_order.txt'
@@ -339,21 +342,31 @@ for file_name in file_names:
 		print >>f, str(order) + ' ' + str(bo_dlen[order])
 	f.close()
 
-	bo_dlen=bo_dlength(basal, bo_basal, bo_max_basal, dist)
-	fbo_dlen=directory+'downloads/statistics/'+file_name+'_basal_dendritic_length_per_branch_order.txt'
-	f = open(fbo_dlen, 'w+')
-	for order in bo_dlen:
-		average_basal_bo_dlength[order].append(bo_dlen[order])
-		print >>f, str(order) + ' ' + str(bo_dlen[order])
-	f.close()
+	try:
+		bo_basal
+	except NameError:
+		pass
+	else:
+		bo_dlen=bo_dlength(basal, bo_basal, bo_max_basal, dist)
+		fbo_dlen=directory+'downloads/statistics/'+file_name+'_basal_dendritic_length_per_branch_order.txt'
+		f = open(fbo_dlen, 'w+')
+		for order in bo_dlen:
+			average_basal_bo_dlength[order].append(bo_dlen[order])
+			print >>f, str(order) + ' ' + str(bo_dlen[order])
+		f.close()
 
-	bo_dlen=bo_dlength(apical, bo_apical, bo_max_apical, dist)
-	fbo_dlen=directory+'downloads/statistics/'+file_name+'_apical_dendritic_length_per_branch_order.txt'
-	f = open(fbo_dlen, 'w+')
-	for order in bo_dlen:
-		average_apical_bo_dlength[order].append(bo_dlen[order])
-		print >>f, str(order) + ' ' + str(bo_dlen[order])
-	f.close()
+	try:
+		bo_apical
+	except NameError:
+		pass
+	else:
+		bo_dlen=bo_dlength(apical, bo_apical, bo_max_apical, dist)
+		fbo_dlen=directory+'downloads/statistics/'+file_name+'_apical_dendritic_length_per_branch_order.txt'
+		f = open(fbo_dlen, 'w+')
+		for order in bo_dlen:
+			average_apical_bo_dlength[order].append(bo_dlen[order])
+			print >>f, str(order) + ' ' + str(bo_dlen[order])
+		f.close()
 
 	plength=path_length(dlist, path, dist)
 	bo_plen=bo_plength(dlist, bo, bo_max, plength)
@@ -364,23 +377,33 @@ for file_name in file_names:
 		print >>f, str(order) + ' ' + str(bo_plen[order])
 	f.close()
 
-	plength=path_length(basal, path, dist)
-	bo_plen=bo_plength(basal, bo_basal, bo_max_basal, plength)
-	fbo_plen=directory+'downloads/statistics/'+file_name+'_basal_path_length_per_branch_order.txt'
-	f = open(fbo_plen, 'w+')
-	for order in bo_plen:
-		average_basal_bo_plength[order].append(bo_plen[order])
-		print >>f, str(order) + ' ' + str(bo_plen[order])
-	f.close()
+	try:	
+		bo_basal
+	except NameError:
+		pass
+	else:
+		plength=path_length(basal, path, dist)
+		bo_plen=bo_plength(basal, bo_basal, bo_max_basal, plength)
+		fbo_plen=directory+'downloads/statistics/'+file_name+'_basal_path_length_per_branch_order.txt'
+		f = open(fbo_plen, 'w+')
+		for order in bo_plen:
+			average_basal_bo_plength[order].append(bo_plen[order])
+			print >>f, str(order) + ' ' + str(bo_plen[order])
+		f.close()
 
-	plength=path_length(apical, path, dist)
-	bo_plen=bo_plength(apical, bo_apical, bo_max_apical, plength)
-	fbo_plen=directory+'downloads/statistics/'+file_name+'_apical_path_length_per_branch_order.txt'
-	f = open(fbo_plen, 'w+')
-	for order in bo_plen:
-		average_apical_bo_plength[order].append(bo_plen[order])
-		print >>f, str(order) + ' ' + str(bo_plen[order])
-	f.close()
+	try:
+		bo_apical
+	except NameError:
+		pass
+	else:	
+		plength=path_length(apical, path, dist)
+		bo_plen=bo_plength(apical, bo_apical, bo_max_apical, plength)
+		fbo_plen=directory+'downloads/statistics/'+file_name+'_apical_path_length_per_branch_order.txt'
+		f = open(fbo_plen, 'w+')
+		for order in bo_plen:
+			average_apical_bo_plength[order].append(bo_plen[order])
+			print >>f, str(order) + ' ' + str(bo_plen[order])
+		f.close()
 
 	sholl_all_length=sholl_length(points, parental_points, soma_index, radius, [3,4])
 	f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_length.txt'
@@ -501,7 +524,7 @@ for i in km:
 kmeans_file.close()
 
 if len(file_names)==1:
-	print "Average statistics are not available for only one file"
+	print "Average statistics are not available if only one file provided (obviously)."
 	import sys
 	sys.exit(0)
 

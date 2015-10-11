@@ -81,12 +81,12 @@ def local_plot(my_file):
 	# in the tutorial.
 
 	def animate(i):
-	    ax.view_init(elev=20., azim=i)
+	    ax.view_init(elev=10., azim=i)
 
-	# Animate
-	#anim = animation.FuncAnimation(fig, animate, frames=1080, blit=True)
-	# Save
-	#anim.save('ca3_after.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+	 #Animate
+	#anim = animation.FuncAnimation(fig, animate, frames=800, blit=True)
+	 #Save
+	#anim.save('ca3.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 	
 	plt.show()
 

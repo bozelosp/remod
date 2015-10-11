@@ -33,6 +33,7 @@ if (len(sys.argv)==11):
 	var_choice=str(sys.argv[9])
 	diam_change=sys.argv[10]
 else:
+	print "The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n11 arguments are needed."
 	sys.exit(0)
 
 exist_downloads=str(directory)+'/downloads'

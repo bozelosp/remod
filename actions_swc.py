@@ -133,10 +133,6 @@ def transpose(vec, dend, descendants, dend_add3d):
 
 	for d in descendants[dend]:
 
-		print sqrt(x**2+y**2+z**2)
-
-		print dend, d 
-
 		for i in range(len(dend_add3d[d])):
 
 			dend_add3d[d][i][2]=dend_add3d[d][i][2]-x
@@ -217,16 +213,10 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 	new_dist=dict()
 
+	step=dict()
+
 	for dend in who:
-
-		if dend not in all_terminal:
-
-			initial_position=dend_add3d[dend][-1]
-
-
-		mylist=[]
-		dist_sum=0
-
+	
 		current_point=dend_add3d[dend][0]
 		next_point=points[parental_points[current_point[0]]]
 
@@ -238,16 +228,22 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 		y=next_point[3]
 		z=next_point[4]
 
-		print
-		print next_point, current_point
-		dist_sum+=distance(x,xp,y,yp,z,zp)
-		print dist_sum, dist[dend]
+		step[dend]=distance(x,xp,y,yp,z,zp)
+
+	for dend in who:
+
+		if dend not in all_terminal:
+
+			initial_position=dend_add3d[dend][-1]
+
+		mylist=[]
+		dist_sum=step[dend]
 
 		if hm_choice=='percent':
-			new_dist[dend]=dist[dend]*((100-amount)/100)
+			new_dist[dend]=dist[dend]*((100-float(amount))/100)
 
 		if hm_choice=='micrometers':
-			new_dist[dend]=dist[dend]-amount
+			new_dist[dend]=dist[dend]-float(amount)
 
 		if len(dend_add3d[dend])>1:
 
@@ -272,7 +268,6 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 				dist_sum+=distance(x,xp,y,yp,z,zp)
 
 				if dist_sum>new_dist[dend]:
-					print dist_sum, dist[dend]
 
 					diff=dist_sum-float(new_dist[dend])
 				
@@ -328,7 +323,6 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 			vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
 			my_vec=tuple(vec)
-			print initial_position, final_position, my_vec, dend, descendants[dend]
 			dend_add3d=transpose(my_vec, dend, descendants, dend_add3d)
 
 	mylist=[]
@@ -519,9 +513,16 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 	return newfile'''
 
-def remove(who, action, dend_add3d, soma_index, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
+def remove(who, action, dend_add3d, soma_index, parental_points, all_terminal): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
 	new_lines=[]
+
+	for dend in who:
+
+		if d in all_terminal:
+			for d in descendants[dend]:
+				if d not in who:
+					who.append(d)
 
 	for dend in who:
 
@@ -549,7 +550,7 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 	amount=int(amount)
 
 	new_dist=dict() #saves the legth [value] of the new dendrite to its name [key]
-	add_these_lines=dict() #saves the list of lines [value] of the newly grolwn dendrite to its name [key]
+	add_these_lines=dict() #saves the list of lines [value] of the newly grown dendrite to its name [key]
 
 	mylist=[]
 	for i in soma_index:
@@ -557,7 +558,15 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
 	for dend in who:
 
-		initial_position=dend_add3d[dend][-1]
+		if dend not in all_terminal:
+
+			change_these=[]
+			initial_position=dend_add3d[dend][-1]
+			will_not_be_bp_anymore=initial_position[0]
+			for mine in parental_points:
+				if parental_points[mine]==will_not_be_bp_anymore:
+					change_these.append(mine)
+
 
 		num_seg_1=len(dend_add3d[dend])
 
@@ -581,10 +590,10 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 				k+=1
 
 		if hm_choice=='percent':
-			new_dist[dend]=dist[dend]*amount/100
+			new_dist[dend]=dist[dend]*float(amount)/100
 
 		if hm_choice=='micrometers':
-			new_dist[dend]=amount
+			new_dist[dend]=float(amount)
 
 		if len(dend_add3d[dend])==1:
 			point1=dend_add3d[dend][-1]
@@ -621,13 +630,16 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 				my_diam=d[n][1]
 				dend_add3d[dend][j][5]=my_diam
 
-		final_position=dend_add3d[dend][-1]
-
-		vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-
 		if dend not in all_terminal:
 
-			dend_add3d=transpose(vec, dend, descendants, dend_add3d)
+			final_position=add_these_lines[dend][-1]
+
+			vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
+			my_vec=tuple(vec)
+			dend_add3d=transpose(my_vec, dend, descendants, dend_add3d)
+
+			dend_add3d[change_these[0]][0][6]=dend_add3d[dend][-1][0]
+			dend_add3d[change_these[1]][0][6]=dend_add3d[dend][-1][0]
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
