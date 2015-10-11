@@ -97,6 +97,8 @@ def branching_points(points):
 		else:
 			else_bpoints.append(i)
 
+	bpoints=basal_bpoints+apical_bpoints
+
 	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index
 
 def parental(points):
@@ -320,9 +322,9 @@ def dend_area(dend_add3d, dlist, parental_points, points): #returns a list of de
 		area_sum=[]
 		current=dend_add3d[i][0]
 		next=points[parental_points[current[0]]]
-		diam=next[5]
+		diam=current[5]
 		di=distance(next[2], current[2], next[3], current[3], next[4], current[4])
-		a=2*pi*diam*di+2*pi*(diam**2)
+		a=2*pi*diam*di
 		area_sum.append(a)
 		if len(dend_add3d[i])-1>0:
 			for k in range(len(dend_add3d[i])-1):
@@ -330,17 +332,15 @@ def dend_area(dend_add3d, dlist, parental_points, points): #returns a list of de
 				next=dend_add3d[i][k+1]
 				diam=next[5]
 				di=distance(next[2], current[2], next[3], current[3], next[4], current[4])
-				a=2*pi*diam*di+2*pi*(diam**2)
+				a=2*pi*diam*di
 				area_sum.append(a)
-				if len(area_sum)>0:
-					circle_surface=-pi*(diam**2)
-					area_sum.append(a)
 			sum_area=sum(area_sum)
 
 		else:
 			sum_area=area_sum[0]
 
 		area[i]=sum_area
+
 	return area
 
 def branch_order(dlist, path):
