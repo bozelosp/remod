@@ -748,3 +748,33 @@ def diameter_change(who, diam_change, dend_add3d, dlist, soma_index):
 		newfile.append(m)
 
 	return newfile
+
+def scale(who, soma_index, dend_add3d, amount): #returns the new lines of the .hoc file with the selected dendrites shrinked
+
+	amount=float(amount)/100
+
+	mylist=[]
+
+	for i in soma_index:
+		mylist.append(i)
+
+	for dend in who:
+
+		for i in dend_add3d[dend]:
+
+			i[2]=i[2]*amount
+			i[3]=i[3]*amount
+			i[4]=i[4]*amount
+			i[5]=i[5]*amount
+
+	for i in dend_add3d:
+		for k in dend_add3d[i]:
+			if k not in mylist:
+				mylist.append(k)
+	mylist.sort(key=lambda x: x[0])
+
+	newfile=[]
+	for k in mylist:
+		newfile.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
+
+	return newfile

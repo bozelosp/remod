@@ -8,9 +8,28 @@ from random import uniform, randrange
 from math import cos, sin, pi, sqrt, radians, degrees
 
 
-def first_graph(abs_path, file_name, dlist, dend_add3d, points, parental_points):
+def first_graph(abs_path, file_name, dlist, dend_add3d, points, parental_points, soma_index):
 
 	my_plot=[]
+
+	for point in soma_index:
+
+		for k in soma_index:
+
+			i=point[0]
+			x=point[2]
+			y=point[3]
+			z=point[4]
+			d=point[5]
+			c=point[6]
+	
+			if c==k[0]:
+
+				xp=k[2]
+				yp=k[3]
+				zp=k[4]
+
+				my_plot.append([x, y, z, xp, yp, zp, d, 0, '0x0000FF'])
 
 	for dend in dlist:
 

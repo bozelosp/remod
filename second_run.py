@@ -51,8 +51,10 @@ print
 
 (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 
-from graph import *
-local_plot(swc_lines)
+print '\nSWC parsing is completed!\n'
+
+#from graph import *
+#local_plot(swc_lines)
 
 #regex_who=re.search('(.*)', choices[0])
 #who=regex_who.group(1)
@@ -60,9 +62,15 @@ local_plot(swc_lines)
 if who=='who_all_terminal':
 	who=all_terminal
 	which_dendrites='all terminal '
+elif who=='who_all_apical':
+	who=apical
+	which_dendrites='all apical '
 elif who=='who_apical_terminal':
 	who=apical_terminal
 	which_dendrites='apical terminal '
+elif who=='who_all_basal':
+	who=basal
+	which_dendrites='all basal '
 elif who=='who_basal_terminal':
 	who=basal_terminal
 	which_dendrites='basal terminal '
@@ -114,10 +122,6 @@ who.sort()
 print 'The dendrites stemming from this segment list will be edited: '
 print str(who)
 
-#else:
-#	print 'Did you define any dendrites to remodel?'
-#	sys.exit(0)
-
 (bo_freq, bo_max)=bo_frequency(dlist, bo)
 
 if action == 'shrink':
@@ -131,11 +135,13 @@ if action == 'shrink':
 
 now = datetime .datetime.now()
 
+print '\nRemodeling the neuron begins!\n'
+
 edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
 (newfile, dlist, mylist)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
-if action == 'shrink' or action == 'remove':
+if action in ['shrink', 'remove', 'scale']:
 	newfile=index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
 
 newfile=comment_lines + newfile
@@ -156,17 +162,3 @@ print
 
 
 #graph(swc_lines, newfile, action, dend_add3d, dlist, directory, file_name) #plots the original and modified tree (overlaying one another)
-
-'''for dend in dlist:
-	print dend, dend_indices[dend]
-	print
-
-print
-print
-for dend in dlist:
-	print dend, path[dend]
-
-print
-print
-for dend in all_terminal:
-	print dend, path[dend]'''

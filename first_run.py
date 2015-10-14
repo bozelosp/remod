@@ -71,6 +71,7 @@ if (len(sys.argv)==3):
 
 	directory=str(sys.argv[1])
 	file_names=str(sys.argv[2]).split(',')
+	file_names=[x for x in file_names if x is not '']
 
 else:
 	print "The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. "
@@ -152,9 +153,7 @@ for file_name in file_names:
 	print
 
 	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
-
-	first_graph(directory, file_name, dlist, dend_add3d, points, parental_points) #plots the original and modified tree (overlaying one another)
-
+	first_graph(directory, file_name, dlist, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
 	file_name=file_name.replace('.swc','')
 
 	fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
@@ -193,50 +192,50 @@ for file_name in file_names:
 	f.close()
 	average_number_of_apical_terminal_dendrites.append(len(apical_terminal))
 
-	t_length=total_length(dlist, dist, soma_index)
+	t_length=total_length(dlist, dist)
 	ftotlength=directory+'downloads/statistics/'+file_name+'_all_total_length.txt'
 	f = open(ftotlength, 'w+')
 	print >>f, t_length
 	f.close()
 	average_t_length.append(t_length)
 
-	basal_t_length=total_length(basal, dist, soma_index)
+	basal_t_length=total_length(basal, dist)
 	ftotblength=directory+'downloads/statistics/'+file_name+'_basal_total_length.txt'
 	f = open(ftotblength, 'w+')
 	print >>f, basal_t_length
 	f.close()
 	average_basal_t_length.append(basal_t_length)
 
-	apical_t_length=total_length(apical, dist, soma_index)
+	apical_t_length=total_length(apical, dist)
 	ftotalength=directory+'downloads/statistics/'+file_name+'_apical_total_length.txt'
 	f = open(ftotalength, 'w+')
 	print >>f, apical_t_length
 	f.close()
 	average_apical_t_length.append(apical_t_length)
 
-	t_area=total_area(dlist, area, soma_index)
+	t_area=total_area(dlist, area)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_all_total_area.txt'
 	f = open(fdendlist, 'w+')
 	print >>f, t_area
 	f.close()
 	average_t_area.append(t_area)
 
-	basal_t_area=total_area(basal, area, soma_index)
+	basal_t_area=total_area(basal, area)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_basal_total_area.txt'
 	f = open(fdendlist, 'w+')
 	print >>f, basal_t_area
 	f.close()
 	average_basal_t_area.append(basal_t_area)
 
-	apical_t_area=total_area(apical, area, soma_index)
+	apical_t_area=total_area(apical, area)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_apical_total_area.txt'
 	f = open(fdendlist, 'w+')
 	print >>f, apical_t_area
 	f.close()
 	average_apical_t_area.append(apical_t_area)
 
-	print list(set([parental_points[x] for x in bpoints]))
-	print len(list(set([parental_points[x] for x in bpoints])))
+	#print list(set([parental_points[x] for x in bpoints]))
+	#print len(list(set([parental_points[x] for x in bpoints])))
 
 	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_branchpoints.txt'
 	f = open(fnum_all_bpoints, 'w+')
@@ -509,11 +508,13 @@ for file_name in file_names:
 	prefix=directory+'downloads/statistics/'+file_name+'_'
 	plot_the_data(prefix)
 
-	km.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
+	print "Successful parsing and calculation of morphometric statistics!\n\n------------------------------------------\n"
+
+	#km.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
 
 	clearall()
 
-print km
+'''print km
 
 kmeans_path=directory+'downloads/statistics/'+'kmeans.txt'
 kmeans_file = open(kmeans_path, 'w+')
@@ -521,7 +522,7 @@ kmeans_file = open(kmeans_path, 'w+')
 for i in km:
 	print >>kmeans_file, i
 
-kmeans_file.close()
+kmeans_file.close()'''
 
 if len(file_names)==1:
 	print "Average statistics are not available if only one file provided (obviously)."

@@ -13,34 +13,16 @@ from math import cos, sin, pi, sqrt, radians, degrees
 
 import collections
 
-def total_length(dlist, dist, soma_index): #soma_included
+def total_length(dlist, dist): #soma_included
 
 	t_length=0
-
 	for dend in dlist:
 		t_length+=dist[dend]
 	return t_length
 
-def total_area(dlist, area, soma_index): #soma_included
+def total_area(dlist, area): #soma_included
 
 	t_area=0
-
-	'''	n=0
-	for k in range(len(soma_index)-1):
-
-		current=soma_index[k]
-		next=soma_index[k+1]
-
-		diam=next[5]*2
-		di=distance(next[2], current[2], next[3], current[3], next[4], current[4])
-		a=2*pi*diam*di+2*pi*(diam**2)
-		t_area+=a
-
-		if n>0:
-			circle_surface=-pi*(diam**2)
-			t_area+=circle_surface
-		n+=1'''
-
 	for dend in dlist:
 		t_area+=area[dend]
 
@@ -103,8 +85,7 @@ def bo_dlength(dlist, bo, bo_max, dist):
 			if i==bo[dend]:
 				k+=1
 				add_length+=dist[dend]
-				#print str(dend) + ' ' + str(bo[dend]) + ' ' + str(dist[dend])
-
+	
 		if k!=0:
 			bo_dlen[i]=add_length/k
 
@@ -122,8 +103,7 @@ def bo_plength(dlist, bo, bo_max, plength):
 			if i==bo[dend]:
 				k+=1
 				add_length+=plength[dend]
-				#print str(dend) + ' ' + str(bo[dend]) + ' ' + str(dist[dend])
-
+	
 		if k!=0:
 			bo_plen[i]=add_length/k
 

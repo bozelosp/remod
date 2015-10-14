@@ -61,16 +61,15 @@ def branching_points(points):
 
 	for i in points:
 		if points[i][6]==1:
-			if points[i][1] not in [10]:
+			if points[i][1] not in [1,0]:
 				bpoints.append(points[i][0])
 
 	for i in points:
 		c=points[i][6]
 		count=0
-		#print i
 		for k in points:
 			if points[k][6]==c:
-				if points[i][1] not in [10]:
+				if points[i][1] not in [1,0]:
 					count+=1
 		if count>1:
 			if points[i][0] not in bpoints:
@@ -80,7 +79,7 @@ def branching_points(points):
 	bpoints=list(bpoints)
 	bpoints.sort()
 
-	print "These are the segments that serve as branchpoints: ", bpoints
+	#print "These are the segments that serve as branchpoints: ", bpoints
 
 	axon_bpoints=[]
 	basal_bpoints=[]
@@ -94,10 +93,10 @@ def branching_points(points):
 			basal_bpoints.append(i)
 		elif points[i][1]==4:
 			apical_bpoints.append(i)
-		else:
+		elif points[i][1]==1:
 			else_bpoints.append(i)
 
-	bpoints=basal_bpoints+apical_bpoints
+	bpoints=basal_bpoints+apical_bpoints+axon_bpoints+else_bpoints
 
 	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index
 
@@ -378,12 +377,6 @@ def read_file(fname):
 	bo=branch_order(dlist, path)
 	con=connected(dlist, path)
 	parents=[]
-
-	for i in dlist:
-
-		if i not in all_terminal:
-
-			print i, path[i], descendants[i]
 
 	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
 

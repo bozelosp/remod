@@ -21,6 +21,9 @@ def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, 
 		if action == 'branch':
 			(newfile,dlist,mylist)=branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dlist)
 
+		if action == 'scale':
+			newfile=scale(who, soma_index, dend_add3d, amount)
+
 	if diam_change != 'none':
 
 		newfile=diameter_change(who, diam_change, dend_add3d, dlist, soma_index)
