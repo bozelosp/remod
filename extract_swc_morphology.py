@@ -61,7 +61,7 @@ def branching_points(points):
 
 	for i in points:
 		if points[i][6]==1:
-			if points[i][1] not in [1,0]:
+			if points[i][1] not in [10]:
 				bpoints.append(points[i][0])
 
 	for i in points:
@@ -69,14 +69,13 @@ def branching_points(points):
 		count=0
 		for k in points:
 			if points[k][6]==c:
-				if points[i][1] not in [1,0]:
+				if points[i][1] not in [10]:
 					count+=1
 		if count>1:
 			if points[i][0] not in bpoints:
 				bpoints.append(points[i][0])
 
-	bpoints=set(bpoints)
-	bpoints=list(bpoints)
+	bpoints=list(set(bpoints))
 	bpoints.sort()
 
 	#print "These are the segments that serve as branchpoints: ", bpoints
@@ -96,7 +95,9 @@ def branching_points(points):
 		elif points[i][1]==1:
 			else_bpoints.append(i)
 
-	bpoints=basal_bpoints+apical_bpoints+axon_bpoints+else_bpoints
+	'''bpoints=basal_bpoints+apical_bpoints+axon_bpoints
+	bpoints=list(set(bpoints))
+	bpoints.sort()'''
 
 	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index
 
@@ -202,6 +203,7 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 		soma.append(k[0])
 
 	for i in dlist:
+
 		word=i
 		pathway=[]
 		pathway.append(word)

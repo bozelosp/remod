@@ -119,7 +119,7 @@ else:
 
 who.sort()
 
-print 'The dendrites stemming from this segment list will be edited: '
+print 'The dendrites stemming from these segments will be edited: '
 print str(who)
 
 (bo_freq, bo_max)=bo_frequency(dlist, bo)

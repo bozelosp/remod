@@ -73,6 +73,20 @@ if (len(sys.argv)==3):
 	file_names=str(sys.argv[2]).split(',')
 	file_names=[x for x in file_names if x is not '']
 
+	parsed_files=[]
+
+	pvar=0
+	if os.path.isfile(directory+'log_parsed_files.txt'):
+
+		for line in open(directory+'log_parsed_files.txt'):
+			parsed_files.append(line.rstrip('\n'))
+
+		parsed_files=list(set(parsed_files))
+
+		file_names=[ x for x in file_names if x not in parsed_files ]
+
+		pvar=len(parsed_files)
+
 else:
 	print "The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. "
 	sys.exit(0)
@@ -137,6 +151,17 @@ number_of_files=len(file_names)
 
 km=[]
 
+import pickle, os
+
+if pvar>0:
+
+	print
+	print 'Retrieving previously calculated morphometric statistics'
+	print
+
+	fpickle=directory+'current_average_statistics.p'
+	(average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections) = pickle.load(open(fpickle, "rb"))
+
 for file_name in file_names:
 
 	from extract_swc_morphology import *
@@ -148,13 +173,14 @@ for file_name in file_names:
 
 	fname=directory+file_name
 
+	file_name=file_name.replace('.swc','')
+
 	print
-	print 'Extracting morphometric statistics for file: ' + str(file_name)
+	print 'Extracting morphometric statistics for file: ' + str(file_name+'.swc')
 	print
 
 	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 	first_graph(directory, file_name, dlist, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
-	file_name=file_name.replace('.swc','')
 
 	fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
 	f = open(fnumdend, 'w+')
@@ -239,9 +265,9 @@ for file_name in file_names:
 
 	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_branchpoints.txt'
 	f = open(fnum_all_bpoints, 'w+')
-	print >>f, len(list(set([parental_points[x] for x in bpoints])))
+	print >>f, len(list(set([parental_points[x] for x in bpoints])))+1
 	f.close()
-	average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints]))))
+	average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints])))+1)
 
 	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_branchpoints.txt'
 	f = open(fnum_basal_bpoints, 'w+')
@@ -508,11 +534,17 @@ for file_name in file_names:
 	prefix=directory+'downloads/statistics/'+file_name+'_'
 	plot_the_data(prefix)
 
+	with open(directory+"log_parsed_files.txt", "a") as myfile: myfile.write(file_name+'.swc\n')
+
 	print "Successful parsing and calculation of morphometric statistics!\n\n------------------------------------------\n"
 
 	#km.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
 
 	clearall()
+
+import pickle, os
+fpickle=directory+'current_average_statistics.p'
+pickle.dump([average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections], open(fpickle, "wb"))
 
 '''print km
 
