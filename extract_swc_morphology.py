@@ -380,6 +380,9 @@ def read_file(fname):
 	con=connected(dlist, path)
 	parents=[]
 
+	dlist=basal+apical
+	bpoints=basal_bpoints+apical_bpoints
+
 	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
 
 #points, parents, bpoints, soma_index, dend_indices, dend_names, exceptions, dend_add3d, path

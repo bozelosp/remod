@@ -265,21 +265,23 @@ for file_name in file_names:
 
 	fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_branchpoints.txt'
 	f = open(fnum_all_bpoints, 'w+')
-	print >>f, len(list(set([parental_points[x] for x in bpoints])))+1
+
+	soma=[x[0] for x in soma_index]
+	print >>f, len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma])))
 	f.close()
-	average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints])))+1)
+	average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma]))))
 
 	fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_branchpoints.txt'
 	f = open(fnum_basal_bpoints, 'w+')
-	print >>f, len(list(set([parental_points[x] for x in basal_bpoints])))
+	print >>f, len(list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma])))
 	f.close()
-	average_num_basal_bpoints.append(len(list(set([parental_points[x] for x in basal_bpoints]))))
+	average_num_basal_bpoints.append(len(list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma]))))
 
 	fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_apical_branchpoints.txt'
 	f = open(fnum_apical_bpoints, 'w+')
-	print >>f, len(list(set([parental_points[x] for x in apical_bpoints])))
+	print >>f, len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma])))
 	f.close()
-	average_num_apical_bpoints.append(len(list(set([parental_points[x] for x in apical_bpoints]))))
+	average_num_apical_bpoints.append(len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma]))))
 
 	fdendlist=directory+'downloads/statistics/'+file_name+'_list_of_all_dendrites.txt'
 	f = open(fdendlist, 'w+')
