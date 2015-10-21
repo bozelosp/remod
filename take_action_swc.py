@@ -13,7 +13,7 @@ def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, 
 			newfile=shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal)
 
 		if action == 'remove':
-			newfile=remove(who, action, dend_add3d, soma_index, points, parental_points, all_terminal, descendants, all_terminal)
+			newfile=remove(who, action, dend_add3d, soma_index, points, parental_points, descendants, all_terminal)
 
 		if action == 'extend':
 			newfile=extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal)

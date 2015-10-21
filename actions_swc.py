@@ -13,6 +13,8 @@ def length_distribution(): #parses the length distribution
 	length=[]
 	frequency=[]
 	for line in open('/var/www/cgi-bin/length_distribution.txt'):
+	#for line in open('length_distribution.txt'):
+
 		line=line.rstrip('\n')
 		if re.search(r'(\S+)\s-\s(\S+)', line):
 			regex=re.search(r'(\S+)\s-\s(\S+)', line)
@@ -513,13 +515,14 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
 	return newfile'''
 
-def remove(who, action, dend_add3d, soma_index, parental_points, all_terminal): #returns the new lines of the .hoc file with the selected dendrites shrinked
+def remove(who, action, dend_add3d, soma_index, points, parental_points, descendants, all_terminal): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
 	new_lines=[]
 
-	for dend in who:
+	print all_terminal
 
-		if d in all_terminal:
+	for dend in who:
+		if dend not in all_terminal:
 			for d in descendants[dend]:
 				if d not in who:
 					who.append(d)
