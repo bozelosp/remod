@@ -1318,6 +1318,9 @@ def plot_average_data(d):
 
 def plot_compare_data(d):
 
+    from pylab import rcParams
+    rcParams['figure.figsize'] = 30, 15
+
    #plots the total number of all the dendrites vs the terminal ones for all the tree, as well as from the basal and apical region
 
     f=open(d+"compare_number_of_basal_dendrites.txt")
