@@ -671,8 +671,6 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
 	for dend in who:
 
-		print dend
-
 		(new_dend_a, new_dend_b, max_index)=new_dend(max_index)
 		dlist.append(new_dend_a)
 		dlist.append(new_dend_b)
