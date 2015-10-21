@@ -89,3 +89,5 @@ if not os.path.exists(fwi+'comparison/'):
 plot_compare_data(fwi+'comparison/')
 
 # print "Kalispera, kalispera"
+# print "Kalispera, kalispera"
+# print "Kalispera, kalispera"
