@@ -12,8 +12,8 @@ def length_distribution(): #parses the length distribution
 
 	length=[]
 	frequency=[]
-	for line in open('/var/www/cgi-bin/length_distribution.txt'):
-	#for line in open('length_distribution.txt'):
+	#for line in open('/var/www/cgi-bin/length_distribution.txt'):
+	for line in open('length_distribution.txt'):
 
 		line=line.rstrip('\n')
 		if re.search(r'(\S+)\s-\s(\S+)', line):
@@ -670,6 +670,8 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 		mylist.append(i)
 
 	for dend in who:
+
+		print dend
 
 		(new_dend_a, new_dend_b, max_index)=new_dend(max_index)
 		dlist.append(new_dend_a)
