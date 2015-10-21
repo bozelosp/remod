@@ -12,7 +12,7 @@ def length_distribution(): #parses the length distribution
 
 	length=[]
 	frequency=[]
-	for line in open('length_distribution.txt'):
+	for line in open('./length_distribution.txt'):
 		line=line.rstrip('\n')
 		if re.search(r'(\S+)\s-\s(\S+)', line):
 			regex=re.search(r'(\S+)\s-\s(\S+)', line)
