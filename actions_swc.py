@@ -533,8 +533,8 @@ def remove(who, action, dend_add3d, soma_index, points, parental_points, descend
 
 	mylist=[]
 
-	#for i in soma_index:
-	#	mylist.append(i)
+	for i in soma_index:
+		mylist.append(i)
 
 	for i in dend_add3d:
 		for k in dend_add3d[i]:
@@ -736,8 +736,8 @@ def diameter_change(who, diam_change, dend_add3d, dlist, soma_index):
 
 	mylist=[]
 
-	#for i in soma_index:
-	#	mylist.append(i)
+	for i in soma_index:
+		mylist.append(i)
 			
 	for i in dlist:
 		for k in dend_add3d[i]:
