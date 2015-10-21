@@ -13,6 +13,9 @@ def autolabel(rects):
 
 def plot_the_data(d):
 
+    from pylab import rcParams
+    rcParams['figure.figsize'] = 30, 15
+
     #plots the total number of all the dendrites vs the terminal ones for all the tree, as well as from the basal and apical region
 
     f=open(d+"number_of_basal_dendrites.txt")
@@ -641,6 +644,9 @@ def plot_the_data(d):
     plt.close()
 
 def plot_average_data(d):
+
+    from pylab import rcParams
+    rcParams['figure.figsize'] = 30, 15
 
     #plots the total number of all the dendrites vs the terminal ones for all the tree, as well as from the basal and apical region
 
