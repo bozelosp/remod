@@ -1,10 +1,11 @@
-from os import listdir
+from plot_individual_data import *
+import os
 import re
 import sys
 
 def read_files(directory):
 
-	stat_files=listdir(directory)
+	stat_files=os.listdir(directory)
 	stat_files = [x for x in stat_files if re.search(r"txt", x)]
 
 	return stat_files
@@ -26,22 +27,19 @@ if (len(sys.argv)==4):
 	fwi=str(sys.argv[3])
 
 else:
-	print "Hi"
+	print "error"
 	sys.exit(0)
 
-#before_files=read_files(before_dir)
-#after_files=read_files(after_dir)
+before_files=read_files(before_dir)
+before_files=[x for x in before_files if re.search('average', x)]
 
-#to_merge_files=[x for x in before_files if x in after_files]
+after_files=read_files(after_dir)
+after_files=[x for x in after_files if re.search('average', x)]
+
+to_merge_files=[x for x in before_files if x in after_files]
 
 #to_merge_files=["average_branch_order_frequency.txt","average_total_apical_length.txt","average_total_basal_length.txt","average_number_of_basal_dendrites.txt","average_number_of_apical_dendrites.txt","average_number_of_apical_dendrites.txt","average_sholl_apical_bp.txt", "average_sholl_apical_length.txt", "average_sholl_basal_bp.txt", "average_sholl_basal_length.txt"]#,"average_dendritic_length_per_branch_order.txt"]
-to_merge_files=["sholl_apical_length.txt","sholl_basal_length.txt","branch_order_frequency.txt"]#,"average_dendritic_length_per_branch_order.txt"]
-
-#DH052814X100_
-
-#print before_files
-#print after_files
-#print to_merge_files
+#to_merge_files=["sholl_apical_length.txt","sholl_basal_length.txt","branch_order_frequency.txt"]#,"average_dendritic_length_per_branch_order.txt"]
 
 for f in to_merge_files:
 
@@ -60,9 +58,12 @@ for f in to_merge_files:
 		min_len=len(lines_before)
 		k=1
 	
+	f=f.replace('average','comparison/compare')
 	fw=fwi+f
 
 	f_write = open(fw, 'w+')
+
+	print fw
 
 	if k==0:
 
@@ -81,3 +82,9 @@ for f in to_merge_files:
 				print >>f_write, re.sub(r'\s(\S+)',r' 0',lines_after[i]), lines_after[i].rstrip('\n')
 
 	f_write.close()
+
+if not os.path.exists(fwi+'comparison/'):
+    os.makedirs(fwi+'comparison/')
+
+plot_compare_data(fwi+'comparison/')
+#plot_compare_data(fwi)

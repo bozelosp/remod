@@ -1,5 +1,5 @@
 from extract_swc_morphology import *
-from neuron_before_swc import *
+from neuron_visualization import *
 from statistics_swc import *
 from random_sampling import *
 from actions_swc import *
@@ -167,7 +167,7 @@ for file_name in file_names:
 	from extract_swc_morphology import *
 	from random_sampling import *
 	from actions_swc import *
-	from neuron_before_swc import *
+	from neuron_visualization import *
 	from statistics_swc import *
 	import sys
 

@@ -1,6 +1,7 @@
 import random
 from extract_swc_morphology import *
 from take_action_swc import *
+from neuron_visualization import *
 from warn import *
 from graph import *
 from index_reassignment import *
@@ -9,6 +10,9 @@ import datetime
 import os
 
 #python second_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none none percent 50 percent 50
+#python second_run.py /home/bozelosp/Dropbox/remod/swc/ filename.swc who random_ratio manually_selected_dendrites action percent_or micrometers extent_of_the_action percent_or micrometers_for_diam_change extent_of_the_diam_change
+
+
 #python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none extend percent 20 none none 
 #python second_run.py /Users/bozelosp/Dropbox/remod/swc/ 0-2.swc who_apical_terminal 0 none none percent none percent 10
 #python second_run.py /Users/bozelosp/Dropbox/remod/swc/ m-2.CNG.swc who_apical_terminal 0 none none none none percent 50
@@ -145,16 +149,15 @@ if action in ['shrink', 'remove', 'scale']:
 	newfile=index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
 
 newfile=comment_lines + newfile
-
 check_indices(newfile) #check if indices are continuous from 0 and u
-
 print_newfile(directory, file_name, newfile, edit)
 
-print
+fname=directory+'downloads/files/'+file_name.replace('.swc','') + '_new.swc'
+(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname)
+second_graph(directory, file_name, dlist, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
 
 print
 print 'File: ' + str(file_name) + ' was succesfully edited!'
-print
 
 print
 print '--------------------------------'

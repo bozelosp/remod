@@ -97,7 +97,7 @@ def branching_points(points):
 
 	'''bpoints=basal_bpoints+apical_bpoints+axon_bpoints
 	bpoints=list(set(bpoints))
-	bpoints.sort()'''
+	bpoints.sort()''' # if we want the axon included
 
 	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index
 
