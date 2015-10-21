@@ -100,7 +100,7 @@ def second_graph(abs_path,file_name, dlist, dend_add3d, points, parental_points,
 			to_whom_is_connected=parental_points[c]
 	
 			if to_whom_is_connected==-1:
-				break
+				continue
 
 			xp=points[to_whom_is_connected][2]
 			yp=points[to_whom_is_connected][3]
