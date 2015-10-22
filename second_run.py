@@ -115,7 +115,10 @@ elif who=='who_random_basal':
 				break
 	which_dendrites='random basal (' + str(who_random_variable*100) + '%) '
 elif who=='who_manual':
-	who=[int(x) for x in who_manual_variable.split(',')]
+	if len(who)>1:
+		who=[int(x) for x in who_manual_variable.split(',')]
+	else:
+		who=int(who)
 	which_dendrites='manually selected '
 else:
 	print 'No dendrites are defined to be remodeled!'
@@ -140,6 +143,8 @@ if action == 'shrink':
 now = datetime .datetime.now()
 
 print '\nRemodeling the neuron begins!\n'
+
+print [x for x in dlist if x not in all_terminal]
 
 edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 

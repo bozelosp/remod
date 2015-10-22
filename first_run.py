@@ -182,6 +182,8 @@ for file_name in file_names:
 	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 	first_graph(directory, file_name, dlist, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
 
+	print dlist
+
 	fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
 	f = open(fnumdend, 'w+')
 	print >>f, str(len(dlist))

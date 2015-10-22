@@ -3,6 +3,7 @@ from math import sqrt
 from random import randint
 import copy
 import sys
+import os 
 
 import numpy as np
 from random import uniform, randrange
@@ -12,8 +13,9 @@ def length_distribution(): #parses the length distribution
 
 	length=[]
 	frequency=[]
-	#for line in open('/var/www/cgi-bin/length_distribution.txt'):
-	for line in open('length_distribution.txt'):
+	cd=os.getcwd()
+	fname=cd+'/length_distribution.txt'
+	for line in open(fname):
 
 		line=line.rstrip('\n')
 		if re.search(r'(\S+)\s-\s(\S+)', line):
