@@ -55,8 +55,8 @@ def plot_the_data(d):
     width = 0.4       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects1 = ax.bar(3.2+ind, bar1, width, color='blue')
-    rects2 = ax.bar(3.2+ind+width, bar2, width, color='green')
+    rects1 = ax.bar(3.2+ind, bar1, width, color='#406cbe')
+    rects2 = ax.bar(3.2+ind+width, bar2, width, color='#40be72')
 
     ax.set_ylabel('Total Number of Dendrites')
     ax.set_xlabel('Dendritic Region')
@@ -90,7 +90,7 @@ def plot_the_data(d):
     bar_width = 0.35
 
     rects1 = plt.bar(index, bars, bar_width,
-                     color='blue')
+                     color='#406cbe')
 
     plt.xlabel('Dendritic Region')
     plt.ylabel('Total Number of Branchpoints')
@@ -121,7 +121,7 @@ def plot_the_data(d):
     bar_width = 0.35
 
     rects1 = plt.bar(index, bars, bar_width,
-                     color='blue')
+                     color='#406cbe')
 
     plt.xlabel('Dendritic Region')
     plt.ylabel('Total Dendritic Length')
@@ -152,7 +152,7 @@ def plot_the_data(d):
     bar_width = 0.35
 
     rects1 = plt.bar(index, bars, bar_width,
-                     color='blue')
+                     color='#406cbe')
 
     plt.xlabel('Dendritic Region')
     plt.ylabel('Total Dendritic Area')
@@ -178,7 +178,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Number of All Dendrites')
     ax.set_xlabel('Branch Order')
@@ -205,7 +205,7 @@ def plot_the_data(d):
         width = 0.5       # the width of the bars
 
         fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='blue')
+        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
         ax.set_ylabel('Number of Basal Dendrites')
         ax.set_xlabel('Branch Order')
@@ -232,7 +232,7 @@ def plot_the_data(d):
         width = 0.5       # the width of the bars
 
         fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='blue')
+        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
         ax.set_ylabel('Number of Apical Dendrites')
         ax.set_xlabel('Branch Order')
@@ -259,7 +259,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Dendritic Length (um)')
     ax.set_xlabel('Branch Order')
@@ -288,7 +288,7 @@ def plot_the_data(d):
         width = 0.5       # the width of the bars
 
         fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='blue')
+        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
         ax.set_ylabel('Average Basal Dendritic Length (um)')
         ax.set_xlabel('Branch Order')
@@ -315,7 +315,7 @@ def plot_the_data(d):
         width = 0.5       # the width of the bars
 
         fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='blue')
+        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
         ax.set_ylabel('Average Apical Dendritic Length (um)')
         ax.set_xlabel('Branch Order')
@@ -342,7 +342,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Path Length (um)')
     ax.set_xlabel('Branch Order')
@@ -369,7 +369,7 @@ def plot_the_data(d):
         width = 0.5       # the width of the bars
 
         fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='blue')
+        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
         ax.set_ylabel('Average Basal Path Length (um)')
         ax.set_xlabel('Branch Order')
@@ -396,7 +396,7 @@ def plot_the_data(d):
         width = 0.5       # the width of the bars
 
         fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='blue')
+        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
         ax.set_ylabel('Average Apical Path Length (um)')
         ax.set_xlabel('Branch Order')
@@ -424,7 +424,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Dendritic Length (um)')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -449,7 +449,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Basal Dendritic Length (um)')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -477,7 +477,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Apical Dendritic Length (um)')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -502,7 +502,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Number of Branchpoints')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -527,7 +527,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Number of Basal Branchpoints')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -552,7 +552,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Number of Apical Branchpoints')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -580,7 +580,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Number of Intersections')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -605,7 +605,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Number of Basal Intersections')
     ax.set_xlabel('Radial Distance from the Soma (um)')
@@ -633,7 +633,7 @@ def plot_the_data(d):
     width = 0.5       # the width of the bars
 
     fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='blue')
+    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
 
     ax.set_ylabel('Average Number of Apical Intersections')
     ax.set_xlabel('Radial Distance from the Soma (um)')

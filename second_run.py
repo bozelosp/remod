@@ -144,7 +144,7 @@ now = datetime .datetime.now()
 
 print '\nRemodeling the neuron begins!\n'
 
-print [x for x in dlist if x not in all_terminal]
+#print [x for x in dlist if x not in all_terminal]
 
 edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 

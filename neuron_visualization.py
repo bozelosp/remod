@@ -108,6 +108,8 @@ def second_graph(abs_path,file_name, dlist, dend_add3d, points, parental_points,
 
 			my_plot.append([x, y, z, xp, yp, zp, d, dend, '0x0000FF'])
 
+	print '>>' + str(len(my_plot))
+
 	print file_name
 	fname=file_name.replace('.swc','') + '_after.txt'
 	name=abs_path+fname
