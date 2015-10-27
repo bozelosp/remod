@@ -151,8 +151,8 @@ number_of_files=len(file_names)
 
 km=[]
 
-
-print 'The following list of files want be parsed again. Morphometric statistics already have been save for them: ' + str(parsed_files)
+if len(parsed_files)>0:
+	print 'The following list of files want be parsed again. Morphometric statistics already have been save for them: ' + str(parsed_files)
 
 import pickle, os
 

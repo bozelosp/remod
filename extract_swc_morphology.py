@@ -83,7 +83,7 @@ def branching_points(points):
 	axon_bpoints=[]
 	basal_bpoints=[]
 	apical_bpoints=[]
-	else_bpoints=[]
+	soma_bpoints=[]
 
 	for i in bpoints:
 		if points[i][1]==2:
@@ -93,13 +93,12 @@ def branching_points(points):
 		elif points[i][1]==4:
 			apical_bpoints.append(i)
 		elif points[i][1]==1:
-			else_bpoints.append(i)
+			soma_bpoints.append(i)
 
 	bpoints=basal_bpoints+apical_bpoints
 	bpoints=list(set(bpoints))
-	bpoints.sort() # if we want the axon included
-
-	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index
+	bpoints.sort()
+	return bpoints, axon_bpoints, basal_bpoints, apical_bpoints, soma_bpoints, soma_index
 
 def parental(points):
 
@@ -142,9 +141,6 @@ def dend_point(dlist, points):
 						dendrite.append(next)
 						
 		dend_indices[i]=dendrite
-
-#	for i in dlist:
-#		print i, dend_indices[i]
 		
 	return dend_indices
 
@@ -209,7 +205,8 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 		pathway.append(word)
 		con=points[word][6]
 		r=0
-		while points[con][1]!=1:
+		for num in range(int(i)+10):
+			#points[con][1]!=1:
 			con=points[word][6]
 			for k in dlist:
 				if con in dend_indices[k]:
@@ -217,12 +214,6 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 					pathway.append(word)
 					break
 			u=points[con][6]
-
-			if r>50000 and points[u][0] in soma:
-				word=dend_indices[k][0]
-				pathway.append(word)
-				break
-			r+=1
 
 		path[i]=pathway
 
