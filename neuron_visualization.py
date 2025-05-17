@@ -6,19 +6,12 @@ from itertools import chain
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Sequence
 
+from file_utils import write_lines
+
 
 Color = str
 DEFAULT_COLOR: Color = "0x0000FF"
 
-
-def _write_lines(path: Path, lines: Iterable[Sequence]) -> None:
-    """Write formatted ``lines`` to ``path`` as space separated values."""
-    # Helper used by ``first_graph`` and ``second_graph``
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for line in lines:
-            print(*line, file=f)
 
 
 def _soma_connections(soma_points: Sequence[Sequence]) -> Iterator[List]:
@@ -111,7 +104,7 @@ def _export_graph(
         print(file_name)
 
     out_path = Path(abs_path) / f"{file_name.replace('.swc', '')}_{suffix}.txt"
-    _write_lines(out_path, segments)
+    write_lines(out_path, segments)
 
 
 def first_graph(
