@@ -6,11 +6,13 @@ from statistics import mean, pstdev
 
 def distance(x1, x2, y1, y2, z1, z2):
     """Return the Euclidean distance between two 3D points."""
+    # Basic geometric helper used throughout the package
     return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
 
 
 def round_to(x, rounder):
     """Return the nearest multiple of ``rounder``."""
+    # Avoids floating point rounding issues when formatting output
     return round(x / rounder) * rounder
 
 
@@ -23,12 +25,14 @@ def write_json(path, data):
 
 def write_value(path, value):
     """Write ``value`` to ``path`` using ``w+`` mode."""
+    # Convenience wrapper for small numeric results
     with open(path, "w+") as f:
         f.write(f"{value}\n")
 
 
 def read_values(path):
     """Return a list of floats from the first line of ``path``."""
+    # Used by the plotting utilities to parse generated statistics
     with open(path) as f:
         return [float(x) for x in f.readline().split()]
 
