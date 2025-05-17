@@ -31,12 +31,14 @@ def _mean_by_branch_order(dendrite_list, branch_order, values):
 
     return {k: sum(v) / len(v) for k, v in acc.items() if v}
 
-def total_length(dendrite_list, dist):  # soma_included
+def total_length(dendrite_list, dist):
+        # soma_included
         """Return the total length of *dendrite_list* using ``dist`` mapping."""
         # Each dendrite's precomputed length is summed
         return sum(dist[d] for d in dendrite_list)
 
-def total_area(dendrite_list, area):  # soma_included
+def total_area(dendrite_list, area):
+        # soma_included
         """Return the total surface area of *dendrite_list* using ``area`` mapping."""
         # Aggregates surface areas returned by ``dendrite_areas``
         return sum(area[d] for d in dendrite_list)
@@ -195,7 +197,8 @@ def dist_angle_frequency(dist_angle, radius):
 
         return dist_freq, angle_f
 
-def axis(apical, dend_add3d, soma_index): #weighted linear regression
+def axis(apical, dend_add3d, soma_index):
+        # weighted linear regression
         """Return principal axis and soma location using weighted regression."""
         # Weighted by diameter so thicker dendrites influence the fit
 
