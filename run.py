@@ -1,189 +1,1038 @@
 import argparse
-import base64
-import gzip
 import sys
+import os
+import time
+import random
+import datetime
+import numpy as np
+import collections
+from pathlib import Path
 
-# Compressed and base64-encoded contents of the original scripts
-FIRST_RUN_B64 = """
-H4sICLIXKGgAA2ZpcnN0X3J1bi5weQDVPe9z47aO3/1X8GWnY7t1XWe3220z553pm7tvd+869/rN
-9XgUS07UtS2dJGeT6+z/fiRFSgQJ/pKV9i4fdhMSBEEABEEShA5VcSLZc1Ml+2ZXf97vTkVVPhbH
-4uGF5KeyqBpSZUm6O+THbHJgwOfsUhXn3VNeX5Jj/j9JkxdnCXrIq7rZPVRJ+dgC1w2tr5t8XzPk
-Emw2IfSnKZrkuDtm54fmcaGUJLTD9u/7KjnvH3dFlWbV7lBl/33JzvsXpC5VsYCaUq0pk+YRdFjT
-kR6RkvtS/Ss/N1lVZ3s20trsYzGZt4O9NPmx7rhWXM7prikW5HOVN9nu97o4y9+fkuMlmwjA+qWW
-v54vp/KFJDU5l7KoqFvcjPRjfi+x/0L/lCBNfsomLRSlKi1Ouzo5lcf8/CChv3YJ42uJZ0/HKgY5
-SbMDlfupeMp22alsXnafspd6ls7v+OgPRUU+kfxMjhTdLF3yyrmoZD98gDVZk3TzaduV5oe2QVs7
-J+s12ay25GtCBSALexzyJ82OPZoqay7VmaQTTmHylFXJQ7ZTsd6p3Z2LRtBi4hWoVguymnSVSVVR
-qs/lMqnpr8mLxNoDtF22QKcsOc8oXF9NtT+rqkIgqZsUVos+pW7MBDZKwnJ1O1/0FRKPqIHDTfN9
-08lCyiNfSK5TuaRLqmYnKhNz2B6udFzf5FvC5EMp2Fqh9sW5yc9Ulw0ILyMDGRrIWJ3saA5vJ7qQ
-hI6dsjRPzn86z1+b7XRYkuVsfDg3y7fvW6Ayq/YZ7fOYMcAFefseAf5gAf6AABtyomSYMqL9I4Uf
-3rtkNnlDlzNm/zJyqank70j50jzSJapdm6rLeUlt7HfMnn7XFN9RQ/gdWX37dkl/aeWd5IwbD0/r
-fxTnjAqzXQiapGp2zNJSqtl/S/bPrB0YFS9rQPKasDZQwLxmzaz8kv26ub3bykbM7LGy+Xr9FjZK
-84pa4qJ6oS2Zqedg1FZCRrI1eXdOTlm9rpuqhbndzpc1Nf7NbLqYWsE3z1x/n5ne9sWMpmfytzWZ
-TlsaQfMyoWtg6whQBHaAPRVUs16BKupO8IZsReiG9h2ZsnIV77J5bqagJSWpqJdMWsu8ZjAziUvM
-M3SSfM6bR1KUlL8dNFtWD/a5xxlEWUKXzYxzxQ2KMWWZlLTHdMZQLKmuVXk5m/52ns7ndkIBU/ky
-VmfNTC11tVYlShwiZcaHFqtoCSJAjahWkExJAT19u+xYa8peVtRXmt38+pjRXwvqB57IIaGt0uVv
-Z1ZIHZz7rCIFnzCXE7USM+oHPORP2ZnNnhvyDWGa3E2MOS24oW3fdvA1/Y3iybI0S+8UZWIaQqj3
-w8dO2NiXN1D92QzMnunEWKlDeKY836XF5/OxSNJa18+uYqpA926UHZz91cNNpQ1parqQMAutY+op
-EmuFRtiS/w0WFx3i9ImiZqJiXFr/Wl2yuQVr360VrQLixCtdklawu+KwS6jDnNJpwBzdzk7gYNSr
-PuXnJAj+ni5oEYAxqJMy30dB+pE3Yk+hlwviLLUSvaW64TsjG0qsrkOIVdJhicb3ZZEz2SIAAoML
-4mhUQxpYPbqPW//x6Y5stv1ugkI9ZLPV4u1qNf+CDPJqNHI0Q/G4ByY2odcNKx4JNqhwLO4hlWMM
-KR4JNqRwLO1GMUnzS71+uzJH2W7qW7010DHXWaIktyv6sxC4NBrFQYGYQNfi6eZZPCLL2CzsGjS+
-cXCJMYYjM4f5BmIUe7PriLTwDxz6jMPGUVEKbl6Jk/+TshWfQh3F9JV2XClvewMGvl8WhfdKnbbe
-8VR8hFYwVFjUI97DRUJsgoB/+XFl9SkPdODFZ3awxVxl5ka2vuzn4jxtyH0mPFeSPNBN3JL8Bz/K
-bPtVDr9IcmRHmi/kkXKUtqK+Z01/SznbmsfsdNc5ojZHXJyYUaZ8OmYLdkjXVclxqU60HBIyrjlS
-Nv0vRnL2xAZaVvT/4lIfXwgVwP5yTBpK6Qkf2RTDhuwfDi3huvu6v1TMydt1itY7gSXclfX7q4Pk
-wU11f2PbZHHPl/bWwi6Zvzo7zOHpRaiLyPbSDN3ygW6UpqGtpgs6L+aeDm2uo69LW7ugTq0+pXeg
-toZh3R4jeTqElZEcHMS4WH6FdCI9cBylrHUggH4+jgbCOJBp2wIcmwbkHBzbDdiGxuoCBmZHoUKE
-DMqOCYC4VULdhVj1QAXyoAP7IjtCAOajEOykHEQCOBcHrRsrCzut8LQTp1ftUoUYClwthtHg3NA5
-tWpUKiw7wUA5pN2UHUcKzt7t8ONJwD18e4ORuF9Gcb8cmfvO3u3w43HfPXx7g2EU6BtOvFsdCunL
-tVVxda1u/lydq3Ajdg82tc7Bq4BjEsAXNR/b78vRWe7uVMKMz2rPYCXQyCwG+2wftwHw6IwPJgUB
-H18c4YxB4AeRo5zaULRVVl+O3KH6QznSYOi6wwh4JYZsxQ0c8ufAm8NtcocJ2VfLqnX327LKymOy
-z2ZTdsM8XUynyH7ccRTwb21oFjsKsGz6u7Hekak4tuh6/6btdR54LjAzd+6f9zt2nynCngAW7qCa
-5fvixC7qrM3aiySzQqxJNrTJc3GWXjHSWPXEkcbAqTbr2U2mvbYuTgnV2zR7NutOybOtSu40eXgS
-Vl3vKUSCdsnaMrz5HuMhr+XKjPPJwh8bX3B+lJZ+kzR9l2JylSF0oAPlNMYmNXu9dsSBEIRytg8g
-BJ2pPs8pQYa3xzjX6iulAtOOObUNXXjkjFuLOSFvZEClDAakMmbIz8zqPeXNC7+o7gIt2RhJmjSJ
-Zku6UMpZZ34WvYlZaPqlCkfOTYP4XpPn5E15LCiFzWNGiip/YAwWdKX5Ic9S0lRZRmYFNeLH5IUZ
-oOKcUYiCtqgQ4yGM6GZqOzdiAT/stBfQHXVO1UVYGFjC6UHOyyRhanUIXSYqlUCALYw+/RhMEsbL
-I4/cVFLa9jE0OLgEAYaeqRrkxfLKOM7rpMgrYk8PgeRaDFF0uNQKQgw+EDZJdPKsCyNQ46xnutEw
-pmA3RK6/SlM+HonUeWwqCZV/I8RpgRCAxHatcpEmWuvEQaQBB7OSUFiKkKtHZgB6xSLq5KVor1Os
-4Q05/pU0a8WoAvCwjz6oXhc+K/MKnx++tqJnvzqOlHux94hRoetkCYE7yFEF3hGkovMeVuuitpAI
-I2YUGqWQXTxThdxRCTD6j8IN8VoIfcOdeNKFDG60pX7zvO3jAYFrvdV2AxITC5YchA27YNQjg2QM
-5+/0z1kXCKe4M3TnMtWW17afFgEPDNXi+agvs948sxcEHWm9fwODp5VnF+YeRyfW9AEH8kZcA+vA
-IhqT0cq4p3mUIVcc6krwanTFuAuqqLp1z2RjGKng7iWE1EAGAsQDWBhNV5wHMSYPtcumEZkIMcdz
-cQBlTjayXvGtBljsAjBgzjcvC+kdc0bbwjja871Yz1sUf6Bb8DvuamzYry1n2W/8CYoxZPnzJZYB
-1xHS8y2GAMjF6yhQmO8gYTqdUg2E7t+/3L5f0R2x7puxYseLg/65HlZLl7/2NZ1Y+/iyxxZE82UM
-BD+w8agengOUTk8G7YWjDkogRgp5Hw6auEDlkyXKccQxVI9mureD+oGNvQm7v13o8M86iu6WV/eD
-ke4tLp7lXGJX0kIVS2s89M6hi0RVjFcpy3MPir8+8V/lb/jf287b1YFEPeacq6B8RtAhsOdMdih2
-9mmFFKF97dED+UhWd+ZrNWu/aqHcHtinS4AuoJgVjRB9eDXBoRHa+jFEJ67RDfkTEmwxkpa0FjJI
-Teyg8h1ce+YSqigdPqApcpN2naqguBVdkb1coyy6w/BXa4szKmYkdWHrmD6oFD+WQlhrCsp7eqU7
-EgFMZvQEmmkGGmmmxWhd/GQgdn4yZ8W0l3nNPWbz7Wm0GDAziJV1FhWTgSEL3LEcIo1rpKJLxx4J
-NZ58hCkZT0Co7UELe0sWJCOL7/1XC8kRLTZcSvIpkZIORDdA/DYT4ZsROLXGQqkGmrMSc6CBRVMo
-DpBMGW7MynhjVvrFUL6GMcOkp7iILm0PlN4AK4iKzhBha3KuFOI1wtSFao9HHE+soTYQk6vq0I0g
-2GHWM0y2wlL9HxKuI9ZzuHSNB4ZqCqWZLe5ADaER0VwLsnm3+H5rMXZGwChjnV5o2DYRhcmPDqsm
-S2d6CyQ3i8oxHXzT/tfxyVZv5RN4mXgNp9x8ArGtPafU4lBeqW2CuKU2wPmFQdg1CzwSvYJlPtUC
-4biKdqnlwQqmNgrTMbWFRc0wEIRv0+nU/hp2RJ07tKQHXuVZSUJu8g6U++1jwrbZgkw/f6PD2LmP
-dBIkA6QdLgkHIL4otDeqHz8eFuTmq5p8Vd+Qr8isbbIgkUgPy/2xqPGDU/CUXaauk+a8E7dVyl7j
-a9xJqR3GmN/7Mtj03pd2s9vXeUwuYAeIDR3KDstFJ+w0zsoGMkUCu6xrAGP6FAMdZ7Sw2MGaYrnA
-1PqNtKahKiOhnVbUyR86tQ67Jx5habVuMpj9O5XrbRu3RWthGALdpClWQonqbOGDLYAge7O12AWY
-HwDJZ/kaPhuM8Yd2A9TFmBDQMNiagFZ2w4KC4cad7m9Y+Lyv7d/WK7ebXiY1flkotCqGxmCVwBJR
-jKAUIe6pTSmQ2jgzGq8YSDuXcR2qHK7W46qHl85wm4GlFbleQ8K8cavdQKojV5MB1gNp6FxjBtsQ
-V/ORzYiXUshWnnn4WDT8KcpTnl7YEXHSJF0CFFbXPGY74/lCWWWH/Dlws6AvjCrWWYvJ+mrq5p+X
-/T6r68PlyHOusIcK7BmDzJbCslMXB9vjqb/9dv7t/G3wz2/nGywWU5z3iAw3kuUb8BRrvuBPs7p4
-3fZPLfK4LdRDexddUkQRyN8XyFB1THrK67hNR8aWv1jhhQB4f8ySirZQn4X1WV7U9283WNLOG7rT
-Sb5BE8B4n+IZGs3lqrhE7Nf1QSEMT78zOKsNls3ms5nNRmSvSS+nEsblmaFJ4Xlp7oLflphhqTGp
-aLB+bMBBPdnfPaBDskGH9XUMYdkQToUwaBBfgtgRgrnL6HJH9CJHKy25zJ0RE+/FoCeUuTPj1b04
-ROoWlXL8bR6ePcak2tMaZoxBKPa015PE3BFLjQcHzAsDsXheqrpywWjkeN60hiR+ubNf72mfW3BI
-y4vbBeaXpp90F1wMX1JT1S0gcTwx8dqBIvmBkGyHiuFF6edFOYQXJl47UCQvEJLtUA7cxt3THXKu
-EIgF3MzoeNRKPz3gwsIgSa0NGtt9iY7rHnkXbUvtgY8nAEOfpMMyjhAcxjkTNhwAETgyN1YEJnS8
-HnIRIIj5C/zz0P+p+MbT6bR70KVsSnqAT+wjGzW/qLafdrZAysmmaCWS+HNnWUGk3ti0vjj7Ogb/
-QgygAsnsST5+VHAvSG5QysrbE9DZHJyBitBRJenoen2LJg/9ueU0SALK0sgXDRVCkh+Tezos9qmB
-8/GFP3Pn4yyrgu55s5TMinuRhHOuZ5VXPuKjFqPJ5v1r7dr85o6/0Rwgdy22DvSuZrADdxJtxwBc
-7UK4JJNaR/AIPJ3wL75x/EGRO5bfSN4A9G7OlPGcKQM540dtb+TnTADh9lYIZ8B9qB0puJdEEHR3
-iD4U3T0eRkV33+YlpLvwco3Iyyoj2MU6skBU4EbdPsJQwkCQRD/SgJzePtRYBICLlfB0O4Sj8PjY
-ytg4xNj1hZ3NkURjx949T9QUUNY18u5mbgAbBcnTQ7c7VnPxSnL4s1DPgQ2g4x/dN2J+Ph7Jv0qY
-Pik32qN4JHrYebryXvBac8/0vhD6mtzbc++tHW7+QMewWW2/EEvV7fbLDUfgEIN6bhgmAfM8ziGK
-XyVqi0yQhDc2piBfUImUC5IeZaCAXGeSQlIqWC8kUBoiH+040S8irYFFNn/ncdMWoego7HLRIGME
-oqceGiAJ61GrEIFW30tBrwgXRPhUsR2UOwXimy5o1iM7a66bMtY0TINFFTBtIKAusqipox+YB5g3
-rYXNsLXR6TaTpiNxmDUNNMqg6cmohpgy65WCNGIagGLI9JoIiUSsN7YrILdkvKsOmgnLwaEr1x5r
-dq7hMgtZgSCkIbuoyaSmobLJDeaVkt9gYQ3Jv7cNWYI70gsRSkXtwhCJWunnvZ6HzMJoHP1CMlAt
-7LkHShnrvFxT9xg23mHpxFAOti+e3DwEmxqck2Cv5OWnmksriqPguBryFUQxa9wFdUE8BjtFG5PR
-/Ge4nraGxM1muDvF+Qz3u37FNZO+BXIanuZDVsNnARqvYWUYs9vvb1iMQJ99DLD2Z9YowADw5hZm
-sgRrEZOfJ0cLZB+75dW4RosMZrGyiEnv4pSZVg7hV/h0d/CtB4ib6hH867tApznGS6UmZoq7WIpk
-wMN0MGJyu7Sxh4ic2DF62XeCT2pUS5UqD2vhR3Bs7pgKZnG92MT+Oz9xJb9wOHOjLxCwb1Iv0Irb
-LeaKBSUFtGz51fcFUd4WHrmh7O37wShb+34gX24WYTvKAOYDQBf7ua1wCAEggmKAVRZBAKD4reRw
-YVgCYMCe0RCIPqQAkWiZ5lwTAkA6hCK2JK6pAVBpswPW2SYIgBqwNblimlgiiuAexJws+rg8wtHO
-my3nvaSkhYLT/8mufSij5/BAP833ynLhuR/th2q5uRx6MGw881aZ3keWeroXN+iW+Fl+le4fqSue
-Nl8QMiXTdninpKRDpIPz49zkXYpXK+LBeJHY3iBN0Y48UV2xq4r/rntMZdEOKP90dXGNdrjCuLBe
-pzJezEOVRj/qi9SagPiFUW2ML0PYq5sZ13ivsDTOTGPXGRsv6jjVUdajfC+PEyKVxhmRYpFWGnM0
-5s3YFKMnMlD0isVIoPAoSMSKIdM9jbsOqVjjtAKsPUP1whdOdK1mgEXnr9IN+yAHa4cd5eiLznAN
-gQvNYNPhiwm72noEpnx7ZQNiH+ZwG+LIGjf6CnOFntD15RcqopGWljJAOcqYpcWVyypGKcrrV5Vy
-7FWlfJVVpbxyVRmuDb4ozGv1wZ+67nU1wj6+MdeSUbTCg3fQWnKFmfAF0F5tKfyJ717ZWNhHOOoK
-Mo7J8CAO0o7pP1mMJ0nOyfGlzmsiMj6J/D1zziJwOTd1KIgZDN1LBsRTezUBzxvlET54euQXusjt
-oLX2ZAwKkAvIMXWVhA1Mo4lUuz/0CxWGp+s876LcAwXrPvi3irZ7FTZQuJ5cWcES6RJljSBdgGu8
-KavdZQbMWvhywJhV3ROE0LnrvkKwT9/u2d5fPoO7fF9jTGKAbJicu+2VeAo32Drja7bxPiTCSpsx
-KU77HLww4xLuhzCCkR5jKUaxjSnkgfbaJei4UC+zTYTFvk7cYCijWO7xRG7gG3VmDzXizvkdF3mG
-NIox41dOdDCcccz5iNPdQDhM+OfuWikHT6yGWvfcfKiF2WAAFmPrQcNgkw9aXWP584D0a1EmGyAc
-ax0wkb6CcgxcFQIUBHuDGLVGxCsJlg3hqhVjVEXB0iKOtn78KcoyeDUJsSfYu9K4tWWAVcGyXFy3
-0oxrW7AMieOtO0FKE5Z2sdMBmXrRk3Kxk6CQkYHEzLRYX06npHoBX98MSs+GvGBd+DBYMsnBd5ZO
-LFhKN+OBYAAGKyWw2j0iLA2c+dQqBIedMbAewQU+OH9nPP6xtjDSFmGPOaytzVRF6PsEe3uZvU2N
-1PfQarRRgtg9dJrdKXHaqHzM3Pi9phrRk1hmOLOpJSoWTQeHdGyJ3Bw/B9zr5H57rZxv4+Z6Gz/H
-22vkdhs3p9v4udxeI4fbsPxmw/OaXZPP7Lo8c9fnlxsjr9yYudjGzsE2bu415aPhv9fFmV9zsgRo
-NidLuExLBgwi71nBrEOxkL6V4m2JtMzeLgScpQsVy0LNAa30JHPE9dsSEnW6NRUvHkTeHWQXgmXk
-wXchWL6fwE2I++tCyjc4vM3U/HV19nBi+aLZM5G1t2XblbZNUVFoG5KW2yxEVgWiOwEEin8axAZ6
-QFPivXoypTctaWF86f/JjknJEoY3+YnlD2T/Ldk/szn5lmUcqhpe5do4qyjmkwkddtsf9YzW71YT
-MYXZX7eryYS12eclc+Oe83q9eb/86fbtD9//9OHd6sfb1bsP3/+0ILffL7+/pWU/vP9x9dPbDx/e
-/rAg375brn74Sf35cTvhnzSoiqJZb35Y8pbvlgL2w3YySbMDSRM6Zah4uBciPvuZnB+OWa2WsH8Z
-iXPlG9fHhH2JofuTIymLkrfgucxVpEsusDmEPlQW4PZToxTcBr95Jl+T29WKa/Az02AVQKWKeqDF
-U7Fj1evPWf7wSPV8VycnuhTPAMkLgEIZco+smy4qVnPfbhQIfsqe1jp/6dTQ+aM1FVShLU1m4Y1R
-tkGQrYlDDpUDGhzURrbQ8FGFQ8g6Jt2XBqiRAB1sVtut0qLKmkt1pg0mE0VJ+fSBWsqL5msOw8uV
-z54rhaKl/DSUgrOdhRBpW+bHKttKtJNj0va0TpMAshekswdz1rRFB9vayVuQ3oDMW/NBF0U28afd
-Xxx/96ekbjLpk52KImV28x3Zek+3kk32yyyngqEmfXNL/4UWSnw3hRkZLu2uPe+LY6FtefPuj1v1
-j7fbjk6xSCuEtiWQ0rbsryGVrVmTN9SFuOypZjKjXmVZ/5UJ8EEs9Xsy2neV2Z+7JE3fpe2CMLMS
-Ol+zgu4DsH1DFf98ouu4qrPSNZKfBzZwtAyBJACUUiMRnFbCcKT/f2Yxl3R+IDsuzd2OrNfkZrc7
-Jfl5t7tpjT77g9rd/wXRTZLBi8AAAA==
-"""
-SECOND_RUN_B64 = """
-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
-"""
+from extract_swc_morphology import *
+from neuron_visualization import *
+from statistics_swc import (
+    total_length,
+    total_area,
+    branch_order_frequency,
+    branch_order_dlength,
+    branch_order_plength,
+    path_length,
+    sholl_length,
+    sholl_bp,
+    sholl_intersections,
+    branch_order,
+)
+from utils import round_to, write_json, write_value
+from random_sampling import *
+from statistics_swc import *
+from take_action import execute_action
+from print_file import print_newfile
+from warn import *
+from graph import *
+from index_reassignment import *
 
-def _load_first_run():
-    source = gzip.decompress(base64.b64decode(FIRST_RUN_B64)).decode('utf-8')
-    namespace = {}
-    exec(source, namespace)
-    return namespace['main']
+def analyze_main(argv=None):
+    
+        start_time = time.time()
+        if argv is None:
+                argv = sys.argv[1:]
+        if len(argv)==2:
+                directory = Path(argv[0])
+                file_names=str(argv[1]).split(',')
+                file_names=[x for x in file_names if x != '']
+        
+                parsed_files=[]
+        
+                parsed_count=0
+                log_file = directory / 'log_parsed_files.txt'
+                if os.path.isfile(log_file):
+        
+                        with open(log_file) as f:
+                                for line in f:
+                                        parsed_files.append(line.rstrip('\n'))
+        
+                        parsed_files=list(set(parsed_files))
+        
+                        file_names=[ x for x in file_names if x not in parsed_files ]
+        
+                        parsed_count=len(parsed_files)
+        
+        else:
+                print("The program failed.\nThe number of argument(s) given is " + str(len(argv)) + ".\n2 arguments are needed: directory path and file name.")
+                sys.exit(0)
+        
+        exist_downloads = directory / 'downloads'
+        exist_statistics = directory / 'downloads' / 'statistics'
+        stats_dir = exist_statistics
+        
+        if not exist_downloads.exists():
+            exist_downloads.mkdir(parents=True)
+        
+        if not exist_statistics.exists():
+            exist_statistics.mkdir(parents=True)
+        
+        average_number_of_all_dendrites=[]
+        average_number_of_all_terminal_dendrites=[]
+        average_number_of_basal_dendrites=[]
+        average_number_of_basal_terminal_dendrites=[]
+        average_number_of_apical_dendrites=[]
+        average_number_of_apical_terminal_dendrites=[]
+        average_t_length=[]
+        average_basal_t_length=[]
+        average_apical_t_length=[]
+        average_t_area=[]
+        average_basal_t_area=[]
+        average_apical_t_area=[]
+        average_num_basal_bpoints=[]
+        average_num_apical_bpoints=[]
+        average_num_all_bpoints=[]
+        
+        average_all_branch_order_frequency={k: [] for k in range(0,200)}
+        average_basal_branch_order_frequency={k: [] for k in range(0,200)}
+        average_apical_branch_order_frequency={k: [] for k in range(0,200)}
+        
+        average_all_branch_order_dlength={k: [] for k in range(0,200)}
+        average_basal_branch_order_dlength={k: [] for k in range(0,200)}
+        average_apical_branch_order_dlength={k: [] for k in range(0,200)}
+        
+        average_all_branch_order_plength={k: [] for k in range(0,200)}
+        average_basal_branch_order_plength={k: [] for k in range(0,200)}
+        average_apical_branch_order_plength={k: [] for k in range(0,200)}
+        
+        radius=20
+        
+        average_sholl_all_bp={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_basal_bp={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_apical_bp={k: [] for k in np.arange(0, 10000, radius)}
+        
+        average_sholl_all_length={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_basal_length={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_apical_length={k: [] for k in np.arange(0, 10000,radius)}
+        
+        #average_sholl_median_basal_length={k: [] for k in np.arange(0, 10000, radius)}
+        
+        average_sholl_all_intersections={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_basal_intersections={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_apical_intersections={k: [] for k in np.arange(0, 10000, radius)}
+        
+        dist_angle_basal=[]
+        dist_angle_apical=[]
+        
+        number_of_files=len(file_names)
+        
+        length_metrics=[]
+        
+        if len(parsed_files)>0:
+                print("The following list of files won't be parsed again. Morphometric statistics already have been saved for them: " + str(parsed_files))
+        
+        import pickle, os
+        
+        
+        if parsed_count>0:
+        
+                print()
+                print('Retrieving previously calculated morphometric statistics')
+                print()
+        
+                fpickle = directory / 'current_average_statistics.p'
+                with open(fpickle, "rb") as f:
+                    stats = pickle.load(f)
+    
+                average_number_of_all_terminal_dendrites = stats.get('average_number_of_all_terminal_dendrites', [])
+                average_number_of_basal_terminal_dendrites = stats.get('average_number_of_basal_terminal_dendrites', [])
+                average_number_of_apical_terminal_dendrites = stats.get('average_number_of_apical_terminal_dendrites', [])
+                average_number_of_all_dendrites = stats.get('average_number_of_all_dendrites', [])
+                average_number_of_basal_dendrites = stats.get('average_number_of_basal_dendrites', [])
+                average_number_of_apical_dendrites = stats.get('average_number_of_apical_dendrites', [])
+                average_t_length = stats.get('average_t_length', [])
+                average_basal_t_length = stats.get('average_basal_t_length', [])
+                average_apical_t_length = stats.get('average_apical_t_length', [])
+                average_t_area = stats.get('average_t_area', [])
+                average_basal_t_area = stats.get('average_basal_t_area', [])
+                average_apical_t_area = stats.get('average_apical_t_area', [])
+                average_num_all_bpoints = stats.get('average_num_all_bpoints', [])
+                average_num_basal_bpoints = stats.get('average_num_basal_bpoints', [])
+                average_num_apical_bpoints = stats.get('average_num_apical_bpoints', [])
+                average_all_branch_order_frequency = stats.get('average_all_branch_order_frequency', {k: [] for k in range(0,200)})
+                average_basal_branch_order_frequency = stats.get('average_basal_branch_order_frequency', {k: [] for k in range(0,200)})
+                average_apical_branch_order_frequency = stats.get('average_apical_branch_order_frequency', {k: [] for k in range(0,200)})
+                average_all_branch_order_dlength = stats.get('average_all_branch_order_dlength', {k: [] for k in range(0,200)})
+                average_basal_branch_order_dlength = stats.get('average_basal_branch_order_dlength', {k: [] for k in range(0,200)})
+                average_apical_branch_order_dlength = stats.get('average_apical_branch_order_dlength', {k: [] for k in range(0,200)})
+                average_all_branch_order_plength = stats.get('average_all_branch_order_plength', {k: [] for k in range(0,200)})
+                average_basal_branch_order_plength = stats.get('average_basal_branch_order_plength', {k: [] for k in range(0,200)})
+                average_apical_branch_order_plength = stats.get('average_apical_branch_order_plength', {k: [] for k in range(0,200)})
+                average_sholl_all_length = stats.get('average_sholl_all_length', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_basal_length = stats.get('average_sholl_basal_length', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_apical_length = stats.get('average_sholl_apical_length', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_all_bp = stats.get('average_sholl_all_bp', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_basal_bp = stats.get('average_sholl_basal_bp', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_apical_bp = stats.get('average_sholl_apical_bp', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_all_intersections = stats.get('average_sholl_all_intersections', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_basal_intersections = stats.get('average_sholl_basal_intersections', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_apical_intersections = stats.get('average_sholl_apical_intersections', {k: [] for k in np.arange(0, 10000, radius)})
+        
+        
+        all_results = {}
+        
+        for file_name in file_names:
+        
+                results = {}
+                fname = directory / file_name
+        
+                file_name=file_name.replace('.swc','')
+        
+                print()
+                print('Extracting morphometric statistics for file: ' + str(file_name+'.swc'))
+                print()
+        
+                (
+                    swc_lines,
+                    points,
+                    comment_lines,
+                    parents,
+                    branch_points,
+                    axon_bpoints,
+                    basal_bpoints,
+                    apical_bpoints,
+                    else_bpoints,
+                    soma_index,
+                    max_index,
+                    dendrite_list,
+                    descendants,
+                    dend_indices,
+                    dend_names,
+                    axon,
+                    basal,
+                    apical,
+                    elsep,
+                    dend_add3d,
+                    path,
+                    all_terminal,
+                    basal_terminal,
+                    apical_terminal,
+                    dist,
+                    area,
+                    branch_order_map,
+                    con,
+                    parental_points,
+                ) = read_file(fname)  # extracts important connectivity and morphological data
+                first_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
+        
+                results['number_of_all_dendrites'] = len(dendrite_list)
+                average_number_of_all_dendrites.append(len(dendrite_list))
+        
+                results['number_of_all_terminal_dendrites'] = len(all_terminal)
+                average_number_of_all_terminal_dendrites.append(len(all_terminal))
+        
+                results['number_of_basal_dendrites'] = len(basal)
+                average_number_of_basal_dendrites.append(len(basal))
+        
+                results['number_of_basal_terminal_dendrites'] = len(basal_terminal)
+                average_number_of_basal_terminal_dendrites.append(len(basal_terminal))
+        
+                results['number_of_apical_dendrites'] = len(apical)
+                average_number_of_apical_dendrites.append(len(apical))
+        
+                results['number_of_apical_terminal_dendrites'] = len(apical_terminal)
+                average_number_of_apical_terminal_dendrites.append(len(apical_terminal))
+        
+                t_length=total_length(dendrite_list, dist)
+                results['all_total_length'] = t_length
+                average_t_length.append(t_length)
+        
+                basal_t_length=total_length(basal, dist)
+                results['basal_total_length'] = basal_t_length
+                average_basal_t_length.append(basal_t_length)
+        
+                apical_t_length=total_length(apical, dist)
+                results['apical_total_length'] = apical_t_length
+                average_apical_t_length.append(apical_t_length)
+        
+                t_area=total_area(dendrite_list, area)
+                results['all_total_area'] = t_area
+                average_t_area.append(t_area)
+        
+                basal_t_area=total_area(basal, area)
+                results['basal_total_area'] = basal_t_area
+                average_basal_t_area.append(basal_t_area)
+        
+                apical_t_area=total_area(apical, area)
+                results['apical_total_area'] = apical_t_area
+                average_apical_t_area.append(apical_t_area)
+        
+                #print list(set([parental_points[x] for x in branch_points]))
+                #print len(list(set([parental_points[x] for x in branch_points])))
+        
+                fnum_all_bpoints=os.path.join(stats_dir, file_name + '_number_of_all_branchpoints.txt')
+                soma=[x[0] for x in soma_index]
+                write_value(
+                    fnum_all_bpoints,
+                    len(list(set([parental_points[x] for x in branch_points if parental_points[x] not in soma]))),
+                )
+                average_num_all_bpoints.append(len(list(set([parental_points[x] for x in branch_points if parental_points[x] not in soma]))))
+        
+                results['number_of_basal_branchpoints'] = len(
+                    list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma]))
+                )
+                average_num_basal_bpoints.append(len(list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma]))))
+        
+                results['number_of_apical_branchpoints'] = len(
+                    list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma]))
+                )
+                average_num_apical_bpoints.append(len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma]))))
+        
+                results['list_of_all_dendrites'] = dendrite_list
+        
+                results['list_of_basal_dendrites'] = basal
+        
+                results['list_of_apical_dendrites'] = apical
+        
+                results['list_of_all_dendritic_lengths'] = {
+                    dend: dist[dend] for dend in dendrite_list
+                }
+        
+                results['list_of_basal_dendritic_lengths'] = {
+                    dend: dist[dend] for dend in basal
+                }
+        
+                results['list_of_apical_dendritic_lengths'] = {
+                    dend: dist[dend] for dend in apical
+                }
+        
+                '''if basal_t_length<150 or apical_t_length<150:
+        
+                        import os
+                        os.remove(stats_file_path)
+                        os.remove(fdendlength)
+                        os.remove(fnumdend)
+                        os.remove(ftotlength)
+                        os.remove(ftotblength)
+                        os.remove(ftotalength)
+                        continue'''
+        
+                branch_order_values = branch_order_map
+                branch_order_freq, branch_order_max = branch_order_frequency(dendrite_list, branch_order_values)
+                results['number_of_all_dendrites_per_branch_order'] = branch_order_freq
+                for order in branch_order_freq:
+                        average_all_branch_order_frequency[order].append(branch_order_freq[order])
+        
+                branch_order_basal = None
+                branch_order_max_basal = None
+                if len(basal) > 0:
+    
+                        branch_order_basal = branch_order(basal, path)
+                        branch_order_freq, branch_order_max_basal = branch_order_frequency(basal, branch_order_values)
+                        results['number_of_basal_dendrites_per_branch_order'] = branch_order_freq
+                        for order in branch_order_freq:
+                                average_basal_branch_order_frequency[order].append(branch_order_freq[order])
+        
+                branch_order_apical = None
+                branch_order_max_apical = None
+                if len(apical) > 0:
+    
+                        branch_order_apical = branch_order(apical, path)
+                        branch_order_freq, branch_order_max_apical = branch_order_frequency(apical, branch_order_values)
+                        results['number_of_apical_dendrites_per_branch_order'] = branch_order_freq
+                        for order in branch_order_freq:
+                                average_apical_branch_order_frequency[order].append(branch_order_freq[order])
+        
+                branch_order_dlen = branch_order_dlength(dendrite_list, branch_order_values, branch_order_max, dist)
+                results['all_dendritic_length_per_branch_order'] = branch_order_dlen
+                for order in branch_order_dlen:
+                        average_all_branch_order_dlength[order].append(branch_order_dlen[order])
+        
+                if branch_order_basal is not None:
+                        branch_order_dlen = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, dist)
+                        results['basal_dendritic_length_per_branch_order'] = branch_order_dlen
+                        for order in branch_order_dlen:
+                                average_basal_branch_order_dlength[order].append(branch_order_dlen[order])
+        
+                if branch_order_apical is not None:
+                        branch_order_dlen = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, dist)
+                        results['apical_dendritic_length_per_branch_order'] = branch_order_dlen
+                        for order in branch_order_dlen:
+                                average_apical_branch_order_dlength[order].append(branch_order_dlen[order])
+        
+                plength=path_length(dendrite_list, path, dist)
+                branch_order_plen=branch_order_plength(dendrite_list, branch_order_values, branch_order_max, plength)
+                results['all_path_length_per_branch_order'] = branch_order_plen
+                for order in branch_order_plen:
+                        average_all_branch_order_plength[order].append(branch_order_plen[order])
+        
+                if branch_order_basal is not None:
+                        plength=path_length(basal, path, dist)
+                        branch_order_plen=branch_order_plength(basal, branch_order_basal, branch_order_max_basal, plength)
+                        results['basal_path_length_per_branch_order'] = branch_order_plen
+                        for order in branch_order_plen:
+                                average_basal_branch_order_plength[order].append(branch_order_plen[order])
+        
+                if branch_order_apical is not None:
+                        plength=path_length(apical, path, dist)
+                        branch_order_plen=branch_order_plength(apical, branch_order_apical, branch_order_max_apical, plength)
+                        results['apical_path_length_per_branch_order'] = branch_order_plen
+                        for order in branch_order_plen:
+                                average_apical_branch_order_plength[order].append(branch_order_plen[order])
+        
+                sholl_all_length=sholl_length(points, parental_points, soma_index, radius, [3,4])
+                results['sholl_all_length'] = sholl_all_length
+                for length in sorted(sholl_all_length):
+                        average_sholl_all_length[length].append(sholl_all_length[length])
+        
+                sholl_basal_length=sholl_length(points, parental_points, soma_index, radius, [3])
+                results['sholl_basal_length'] = sholl_basal_length
+                for length in sorted(sholl_basal_length):
+                        average_sholl_basal_length[length].append(sholl_basal_length[length])
+        
+                sholl_apical_length=sholl_length(points, parental_points, soma_index, radius, [4])
+                results['sholl_apical_length'] = sholl_apical_length
+                for length in sorted(sholl_apical_length):
+                        average_sholl_apical_length[length].append(sholl_apical_length[length])
+        
+                '''sholl_median_basal_length=sholl_length(points, parental_points, soma_index, radius, [3])
+                f_sholl=os.path.join(stats_dir, file_name + '_sholl_median_basal_length.txt')
+                f = open(f_sholl, 'w+')
+                for length in sorted(sholl_median_basal_length):
+                        average_sholl_median_basal_length[length].append(sholl_median_basal_length[length])
+                        print >>f, "%s %s" % (length, sholl_median_basal_length[length])
+                f.close'''
+        
+                sholl_all_bp=sholl_bp(branch_points, points, soma_index, radius)
+                results['sholl_all_branchpoints'] = sholl_all_bp
+                for length in sorted(sholl_all_bp):
+                        average_sholl_all_bp[length].append(sholl_all_bp[length])
+        
+                sholl_basal_bp=sholl_bp(basal_bpoints, points, soma_index, radius)
+                results['sholl_basal_branchpoints'] = sholl_basal_bp
+                for length in sorted(sholl_basal_bp):
+                        average_sholl_basal_bp[length].append(sholl_basal_bp[length])
+        
+                sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_index, radius)
+                results['sholl_apical_branchpoints'] = sholl_apical_bp
+                for length in sorted(sholl_apical_bp):
+                        average_sholl_apical_bp[length].append(sholl_apical_bp[length])
+        
+                '''f_vector=os.path.join(stats_dir, 'average/sholl_basal_vector.txt')
+                f = open(f_vector, 'a+')
+                print >>f, file_name, vector
+                f.close'''
+        
+                vector=[]
+                sholl_all_intersections=sholl_intersections(points, parental_points, soma_index, radius, [3,4])
+                results['sholl_all_intersections'] = sholl_all_intersections
+                for length in sorted(sholl_all_intersections):
+                        average_sholl_all_intersections[length].append(sholl_all_intersections[length])
+                        if int(sholl_all_intersections[length])!=0:
+                                pass
+                        vector.append(sholl_all_intersections[length])
+        
+                vector=[]
+                sholl_basal_intersections=sholl_intersections(points, parental_points, soma_index, radius, [3])
+                results['sholl_basal_intersections'] = sholl_basal_intersections
+                for length in sorted(sholl_basal_intersections):
+                        average_sholl_basal_intersections[length].append(sholl_basal_intersections[length])
+                        if int(sholl_basal_intersections[length])!=0:
+                                pass
+                        vector.append(sholl_basal_intersections[length])
+        
+                vector=[]
+                sholl_apical_intersections=sholl_intersections(points, parental_points, soma_index, radius, [4])
+                results['sholl_apical_intersections'] = sholl_apical_intersections
+                for length in sorted(sholl_apical_intersections):
+                        average_sholl_apical_intersections[length].append(sholl_apical_intersections[length])
+                        if int(sholl_apical_intersections[length])!=0:
+                                pass
+                        vector.append(sholl_apical_intersections[length])
+        
+                from plot_individual_data import plot_the_data
+                prefix=os.path.join(stats_dir, file_name + '_')
+                plot_the_data(prefix)
+        
+                print("Successful parsing and calculation of morphometric statistics!\n\n------------------------------------------\n")
+        
+                #length_metrics.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
+        
+                all_results[file_name] = results
+                clearall()
+        
+        with open(directory / "log_parsed_files.txt", "a+") as f:
+                for file_name in file_names:
+                        print(file_name, file=f)
+        
+        import pickle, os
+        fpickle = directory / 'current_average_statistics.p'
+        with open(fpickle, "wb") as f:
+            pickle.dump(
+                {
+                    'average_number_of_all_terminal_dendrites': average_number_of_all_terminal_dendrites,
+                    'average_number_of_basal_terminal_dendrites': average_number_of_basal_terminal_dendrites,
+                    'average_number_of_apical_terminal_dendrites': average_number_of_apical_terminal_dendrites,
+                    'average_number_of_all_dendrites': average_number_of_all_dendrites,
+                    'average_number_of_basal_dendrites': average_number_of_basal_dendrites,
+                    'average_number_of_apical_dendrites': average_number_of_apical_dendrites,
+                    'average_t_length': average_t_length,
+                    'average_basal_t_length': average_basal_t_length,
+                    'average_apical_t_length': average_apical_t_length,
+                    'average_t_area': average_t_area,
+                    'average_basal_t_area': average_basal_t_area,
+                    'average_apical_t_area': average_apical_t_area,
+                    'average_num_all_bpoints': average_num_all_bpoints,
+                    'average_num_basal_bpoints': average_num_basal_bpoints,
+                    'average_num_apical_bpoints': average_num_apical_bpoints,
+                    'average_all_branch_order_frequency': average_all_branch_order_frequency,
+                    'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
+                    'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
+                    'average_all_branch_order_dlength': average_all_branch_order_dlength,
+                    'average_basal_branch_order_dlength': average_basal_branch_order_dlength,
+                    'average_apical_branch_order_dlength': average_apical_branch_order_dlength,
+                    'average_all_branch_order_plength': average_all_branch_order_plength,
+                    'average_basal_branch_order_plength': average_basal_branch_order_plength,
+                    'average_apical_branch_order_plength': average_apical_branch_order_plength,
+                    'average_sholl_all_length': average_sholl_all_length,
+                    'average_sholl_basal_length': average_sholl_basal_length,
+                    'average_sholl_apical_length': average_sholl_apical_length,
+                    'average_sholl_all_bp': average_sholl_all_bp,
+                    'average_sholl_basal_bp': average_sholl_basal_bp,
+                    'average_sholl_apical_bp': average_sholl_apical_bp,
+                    'average_sholl_all_intersections': average_sholl_all_intersections,
+                    'average_sholl_basal_intersections': average_sholl_basal_intersections,
+                    'average_sholl_apical_intersections': average_sholl_apical_intersections,
+                },
+                f,
+            )
+        
+        '''print length_metrics
+        
+        kmeans_path=os.path.join(stats_dir, 'kmeans.txt')
+        kmeans_file = open(kmeans_path, 'w+')
+        
+        for i in length_metrics:
+                print >>kmeans_file, i
+        
+        kmeans_file.close()'''
+        
+        if len(file_names)==1:
+                print("Average statistics are not available if only one file provided (obviously).")
+                import sys
+                sys.exit(0)
+        
+        average_all_branch_order_frequency=remove_empty_keys(average_all_branch_order_frequency)
+        average_basal_branch_order_frequency=remove_empty_keys(average_basal_branch_order_frequency)
+        average_apical_branch_order_frequency=remove_empty_keys(average_apical_branch_order_frequency)
+        
+        average_all_branch_order_dlength=remove_empty_keys(average_all_branch_order_dlength)
+        average_basal_branch_order_dlength=remove_empty_keys(average_basal_branch_order_dlength)
+        average_apical_branch_order_dlength=remove_empty_keys(average_apical_branch_order_dlength)
+        
+        average_all_branch_order_plength=remove_empty_keys(average_all_branch_order_plength)
+        average_basal_branch_order_plength=remove_empty_keys(average_basal_branch_order_plength)
+        average_apical_branch_order_plength=remove_empty_keys(average_apical_branch_order_plength)
+        
+        average_sholl_all_bp=remove_empty_keys(average_sholl_all_bp)
+        average_sholl_basal_bp=remove_empty_keys(average_sholl_basal_bp)
+        average_sholl_apical_bp=remove_empty_keys(average_sholl_apical_bp)
+        
+        average_sholl_all_length=remove_empty_keys(average_sholl_all_length)
+        average_sholl_basal_length=remove_empty_keys(average_sholl_basal_length)
+        average_sholl_apical_length=remove_empty_keys(average_sholl_apical_length)
+        
+        #average_sholl_median_basal_length=remove_empty_keys(average_sholl_median_basal_length)
+        
+        average_sholl_all_intersections=remove_empty_keys(average_sholl_all_intersections)
+        average_sholl_basal_intersections=remove_empty_keys(average_sholl_basal_intersections)
+        average_sholl_apical_intersections=remove_empty_keys(average_sholl_apical_intersections)
+        
+        print()
+        print("Average statistics:")
+        print()
+        
+        print()
+        avg_num_all_dendrites = average_list(average_number_of_all_dendrites)
+        print("Number of All Dendrites: " + str(avg_num_all_dendrites))
+        f_average_number_of_all_dendrites=os.path.join(stats_dir, 'average_number_of_all_dendrites.txt')
+        write_value(
+            f_average_number_of_all_dendrites,
+            f"{avg_num_all_dendrites[0]} {avg_num_all_dendrites[1]}"
+        )
+        
+        print()
+        avg_all_terminal = average_list(average_number_of_all_terminal_dendrites)
+        print("Number of All Terminal Dendrites: " + str(avg_all_terminal))
+        f_average_number_of_all_terminal_dendrites=os.path.join(stats_dir, 'average_number_of_all_terminal_dendrites.txt')
+        write_value(
+            f_average_number_of_all_terminal_dendrites,
+            f"{avg_all_terminal[0]} {avg_all_terminal[1]}"
+        )
+        
+        print()
+        avg_basal_dendrites = average_list(average_number_of_basal_dendrites)
+        print("Number of Basal Dendrites: " + str(avg_basal_dendrites))
+        f_average_number_of_basal_dendrites=os.path.join(stats_dir, 'average_number_of_basal_dendrites.txt')
+        write_value(
+            f_average_number_of_basal_dendrites,
+            f"{avg_basal_dendrites[0]} {avg_basal_dendrites[1]}"
+        )
+        
+        print()
+        avg_basal_terminal = average_list(average_number_of_basal_terminal_dendrites)
+        print("Number of Basal Terminal Dendrites: " + str(avg_basal_terminal))
+        f_average_number_of_basal_terminal_dendrites=os.path.join(stats_dir, 'average_number_of_basal_terminal_dendrites.txt')
+        write_value(
+            f_average_number_of_basal_terminal_dendrites,
+            f"{avg_basal_terminal[0]} {avg_basal_terminal[1]}"
+        )
+        
+        print()
+        avg_apical_dendrites = average_list(average_number_of_apical_dendrites)
+        print("Number of Apical Dendrites: " + str(avg_apical_dendrites))
+        f_average_number_of_apical_dendrites=os.path.join(stats_dir, 'average_number_of_apical_dendrites.txt')
+        write_value(
+            f_average_number_of_apical_dendrites,
+            f"{avg_apical_dendrites[0]} {avg_apical_dendrites[1]}"
+        )
+        
+        print()
+        avg_apical_terminal = average_list(average_number_of_apical_terminal_dendrites)
+        print("Number of Apical Terminal Dendrites: " + str(avg_apical_terminal))
+        f_average_number_of_apical_terminal_dendrites=os.path.join(stats_dir, 'average_number_of_apical_terminal_dendrites.txt')
+        write_value(
+            f_average_number_of_apical_terminal_dendrites,
+            f"{avg_apical_terminal[0]} {avg_apical_terminal[1]}"
+        )
+        
+        print()
+        avg_total_length = average_list(average_t_length)
+        print("Total Length (all dendrites): " + str(avg_total_length))
+        f_average_total_length=os.path.join(stats_dir, 'average_all_total_length.txt')
+        write_value(f_average_total_length, f"{avg_total_length[0]} {avg_total_length[1]}")
+        
+        print()
+        avg_total_basal_length = average_list(average_basal_t_length)
+        print("Total Length (basal dendrites): " + str(avg_total_basal_length))
+        f_average_total_basal_length=os.path.join(stats_dir, 'average_basal_total_length.txt')
+        write_value(f_average_total_basal_length, f"{avg_total_basal_length[0]} {avg_total_basal_length[1]}")
+        
+        print()
+        avg_total_apical_length = average_list(average_apical_t_length)
+        print("Total Length (apical dendrites): " + str(avg_total_apical_length))
+        f_average_total_apical_length=os.path.join(stats_dir, 'average_apical_total_length.txt')
+        write_value(f_average_total_apical_length, f"{avg_total_apical_length[0]} {avg_total_apical_length[1]}")
+        
+        print()
+        avg_total_area = average_list(average_t_area)
+        print("Total Area (all dendrites): " + str(avg_total_area))
+        f_average_total_area=os.path.join(stats_dir, 'average_all_total_area.txt')
+        write_value(f_average_total_area, f"{avg_total_area[0]} {avg_total_area[1]}")
+        
+        print()
+        avg_total_basal_area = average_list(average_basal_t_area)
+        print("Total Area (basal dendrites): " + str(avg_total_basal_area))
+        f_average_total_basal_area=os.path.join(stats_dir, 'average_basal_total_area.txt')
+        write_value(f_average_total_basal_area, f"{avg_total_basal_area[0]} {avg_total_basal_area[1]}")
+        
+        print()
+        avg_total_apical_area = average_list(average_apical_t_area)
+        print("Total Area (apical dendrites): " + str(avg_total_apical_area))
+        f_average_total_apical_area=os.path.join(stats_dir, 'average_apical_total_area.txt')
+        write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
+        
+        print()
+        avg_all_bpoints = average_list(average_num_all_bpoints)
+        print("Number of all Branch Points: " + str(avg_all_bpoints[0]), str(avg_all_bpoints[1]))
+        f_average_num_all_bpoints=os.path.join(stats_dir, 'average_number_of_all_branchpoints.txt')
+        write_value(
+            f_average_num_all_bpoints,
+            f"{avg_all_bpoints[0]} {avg_all_bpoints[1]}",
+        )
+        
+        print()
+        avg_basal_bpoints = average_list(average_num_basal_bpoints)
+        print("Number of all Basal Branch Points: " + str(avg_basal_bpoints[0]), str(avg_basal_bpoints[1]))
+        f_average_num_basal_bpoints=os.path.join(stats_dir, 'average_number_of_basal_branchpoints.txt')
+        write_value(
+            f_average_num_basal_bpoints,
+            f"{avg_basal_bpoints[0]} {avg_basal_bpoints[1]}",
+        )
+        
+        print()
+        avg_apical_bpoints = average_list(average_num_apical_bpoints)
+        print("Number of all Apical Branch Points: " + str(avg_apical_bpoints[0]), str(avg_apical_bpoints[1]))
+        f_average_num_apical_bpoints=os.path.join(stats_dir, 'average_number_of_apical_branchpoints.txt')
+        write_value(
+            f_average_num_apical_bpoints,
+            f"{avg_apical_bpoints[0]} {avg_apical_bpoints[1]}",
+        )
+        
+        print()
+        print("Average Number of All Dendrites per Branch Order: ") 
+        average_dict(average_all_branch_order_frequency)
+        f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_all_dendrites_per_branch_order.txt')
+        with open(f_average_branch_order_frequency, 'w+') as f:
+                for i in average_all_branch_order_frequency:
+                        print(i,  ' '.join(map(str, average_all_branch_order_frequency[i])))
+                        print(i, ' '.join(map(str, average_all_branch_order_frequency[i])), file=f)
+        
+        print()
+        print("Average Number of Basal Dendrites per Branch Order: ")
+        average_dict(average_basal_branch_order_frequency)
+        f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_basal_dendrites_per_branch_order.txt')
+        with open(f_average_branch_order_frequency, 'w+') as f:
+                for i in average_basal_branch_order_frequency:
+                        print(i,  ' '.join(map(str, average_basal_branch_order_frequency[i])))
+                        print(i, ' '.join(map(str, average_basal_branch_order_frequency[i])), file=f)
+        
+        print()
+        print("Average Number of Apical Dendrites per Branch Order: ")
+        average_dict(average_apical_branch_order_frequency)
+        f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_apical_dendrites_per_branch_order.txt')
+        with open(f_average_branch_order_frequency, 'w+') as f:
+                for i in average_apical_branch_order_frequency:
+                        print(i,  ' '.join(map(str, average_apical_branch_order_frequency[i])))
+                        print(i, ' '.join(map(str, average_apical_branch_order_frequency[i])), file=f)
+        
+        print()
+        print("Average All Dendritic Length per Branch Order: ")
+        average_dict(average_all_branch_order_dlength)
+        f_average_branch_order_dlength=os.path.join(stats_dir, 'average_all_dendritic_length_per_branch_order.txt')
+        with open(f_average_branch_order_dlength, 'w+') as f:
+                for i in average_all_branch_order_dlength:
+                        print(i, ' '.join(map(str, average_all_branch_order_dlength[i])))
+                        print(i, ' '.join(map(str, average_all_branch_order_dlength[i])), file=f)
+        
+        print()
+        print("Average Basal Dendritic Length per Branch Order: ")
+        average_dict(average_basal_branch_order_dlength)
+        f_average_branch_order_dlength=os.path.join(stats_dir, 'average_basal_dendritic_length_per_branch_order.txt')
+        with open(f_average_branch_order_dlength, 'w+') as f:
+                for i in average_basal_branch_order_dlength:
+                        print(i, ' '.join(map(str, average_basal_branch_order_dlength[i])))
+                        print(i, ' '.join(map(str, average_basal_branch_order_dlength[i])), file=f)
+        
+        print()
+        print("Average Apical Dendritic Length per Branch Order: ")
+        average_dict(average_apical_branch_order_dlength)
+        f_average_branch_order_dlength=os.path.join(stats_dir, 'average_apical_dendritic_length_per_branch_order.txt')
+        with open(f_average_branch_order_dlength, 'w+') as f:
+                for i in average_apical_branch_order_dlength:
+                        print(i, ' '.join(map(str, average_apical_branch_order_dlength[i])))
+                        print(i, ' '.join(map(str, average_apical_branch_order_dlength[i])), file=f)
+        
+        print()
+        print("Average All Path Length per Branch Order: ")
+        average_dict(average_all_branch_order_plength)
+        f_average_branch_order_plength=os.path.join(stats_dir, 'average_all_path_length_per_branch_order.txt')
+        with open(f_average_branch_order_plength, 'w+') as f:
+                for i in average_all_branch_order_plength:
+                        print(i, ' '.join(map(str, average_all_branch_order_plength[i])))
+                        print(i, ' '.join(map(str, average_all_branch_order_plength[i])), file=f)
+        
+        print()
+        print("Average Basal Path Length per Branch Order: ")
+        average_dict(average_basal_branch_order_plength)
+        f_average_branch_order_plength=os.path.join(stats_dir, 'average_basal_path_length_per_branch_order.txt')
+        with open(f_average_branch_order_plength, 'w+') as f:
+                for i in average_basal_branch_order_plength:
+                        print(i, ' '.join(map(str, average_basal_branch_order_plength[i])))
+                        print(i, ' '.join(map(str, average_basal_branch_order_plength[i])), file=f)
+        
+        print()
+        print("Average Apical Path Length per Branch Order: ")
+        average_dict(average_apical_branch_order_plength)
+        f_average_branch_order_plength=os.path.join(stats_dir, 'average_apical_path_length_per_branch_order.txt')
+        with open(f_average_branch_order_plength, 'w+') as f:
+                for i in average_apical_branch_order_plength:
+                        print(i, ' '.join(map(str, average_apical_branch_order_plength[i])))
+                        print(i, ' '.join(map(str, average_apical_branch_order_plength[i])), file=f)
+        
+        print()
+        print('Sholl analysis (branch points) for all dendrites')
+        average_dict(average_sholl_all_bp)
+        f_average_sholl_all_bp=os.path.join(stats_dir, 'average_sholl_all_branchpoints.txt')
+        with open(f_average_sholl_all_bp, 'w+') as f:
+                for i in sorted(average_sholl_apical_bp):
+                        print(i, ' '.join(map(str, average_sholl_all_bp[i])))
+                        print(i, ' '.join(map(str, average_sholl_all_bp[i])), file=f)
+        
+        print()
+        print('Sholl analysis (branch points) for basal dendrites')
+        average_dict(average_sholl_basal_bp)
+        f_average_sholl_basal_bp=os.path.join(stats_dir, 'average_sholl_basal_branchpoints.txt')
+        with open(f_average_sholl_basal_bp, 'w+') as f:
+                for i in sorted(average_sholl_basal_bp):
+                        print(i, ' '.join(map(str, average_sholl_basal_bp[i])))
+                        print(i, ' '.join(map(str, average_sholl_basal_bp[i])), file=f)
+        
+        print()
+        print('Sholl analysis (branch points) for apical dendrites')
+        average_dict(average_sholl_apical_bp)
+        f_average_sholl_apical_bp=os.path.join(stats_dir, 'average_sholl_apical_branchpoints.txt')
+        with open(f_average_sholl_apical_bp, 'w+') as f:
+                for i in sorted(average_sholl_apical_bp):
+                        print(i, ' '.join(map(str, average_sholl_apical_bp[i])))
+                        print(i, ' '.join(map(str, average_sholl_apical_bp[i])), file=f)
+        
+        print()
+        print('Sholl analysis (dendritic length) for all dendrites')
+        average_dict(average_sholl_all_length)
+        f_average_sholl_all_length=os.path.join(stats_dir, 'average_sholl_all_length.txt')
+        with open(f_average_sholl_all_length, 'w+') as f:
+                for i in sorted(average_sholl_all_length):
+                        print(i, ' '.join(map(str, average_sholl_all_length[i])))
+                        print(i, ' '.join(map(str, average_sholl_all_length[i])), file=f)
+        
+        print()
+        print('Sholl analysis (dendritic length) for basal dendrites')
+        average_dict(average_sholl_basal_length)
+        f_average_sholl_basal_length=os.path.join(stats_dir, 'average_sholl_basal_length.txt')
+        with open(f_average_sholl_basal_length, 'w+') as f:
+                for i in sorted(average_sholl_basal_length):
+                        print(i, ' '.join(map(str, average_sholl_basal_length[i])))
+                        print(i, ' '.join(map(str, average_sholl_basal_length[i])), file=f)
+        
+        print()
+        print('Sholl analysis (dendritic length) for apical dendrites')
+        average_dict(average_sholl_apical_length)
+        f_average_sholl_apical_length=os.path.join(stats_dir, 'average_sholl_apical_length.txt')
+        with open(f_average_sholl_apical_length, 'w+') as f:
+                for i in sorted(average_sholl_apical_length):
+                        print(i, ' '.join(map(str, average_sholl_apical_length[i])))
+                        print(i, ' '.join(map(str, average_sholl_apical_length[i])), file=f)
+        
+        print()
+        print('Sholl analysis (number of intersections) for all dendrites')
+        average_dict(average_sholl_all_intersections)
+        f_average_sholl_all_intersections=os.path.join(stats_dir, 'average_sholl_all_intersections.txt')
+        with open(f_average_sholl_all_intersections, 'w+') as f:
+                for i in sorted(average_sholl_all_intersections):
+                        print(i, ' '.join(map(str, average_sholl_all_intersections[i])))
+                        print(i, ' '.join(map(str, average_sholl_all_intersections[i])), file=f)
+        
+        print()
+        print('Sholl analysis (number of intersections) for basal dendrites')
+        average_dict(average_sholl_basal_intersections)
+        f_average_sholl_basal_intersections=os.path.join(stats_dir, 'average_sholl_basal_intersections.txt')
+        with open(f_average_sholl_basal_intersections, 'w+') as f:
+                for i in sorted(average_sholl_basal_intersections):
+                        print(i, ' '.join(map(str, average_sholl_basal_intersections[i])))
+                        print(i, ' '.join(map(str, average_sholl_basal_intersections[i])), file=f)
+        
+        print()
+        print('Sholl analysis (number of intersections) for apical dendrites')
+        average_dict(average_sholl_apical_intersections)
+        f_average_sholl_apical_intersections=os.path.join(stats_dir, 'average_sholl_apical_intersections.txt')
+        with open(f_average_sholl_apical_intersections, 'w+') as f:
+                for i in sorted(average_sholl_apical_intersections):
+                        print(i, ' '.join(map(str, average_sholl_apical_intersections[i])))
+                        print(i, ' '.join(map(str, average_sholl_apical_intersections[i])), file=f)
+        
+        from plot_individual_data import plot_average_data
+        prefix=os.path.join(stats_dir, 'average_')
+        plot_average_data(prefix)
+        
+        summary = {
+            'average_number_of_all_dendrites': avg_num_all_dendrites,
+            'average_number_of_all_terminal_dendrites': avg_all_terminal,
+            'average_number_of_basal_dendrites': avg_basal_dendrites,
+            'average_number_of_basal_terminal_dendrites': avg_basal_terminal,
+            'average_number_of_apical_dendrites': avg_apical_dendrites,
+            'average_number_of_apical_terminal_dendrites': avg_apical_terminal,
+            'average_total_length': avg_total_length,
+            'average_total_basal_length': avg_total_basal_length,
+            'average_total_apical_length': avg_total_apical_length,
+            'average_total_area': avg_total_area,
+            'average_total_basal_area': avg_total_basal_area,
+            'average_total_apical_area': avg_total_apical_area,
+            'average_num_all_branchpoints': avg_all_bpoints,
+            'average_num_basal_branchpoints': avg_basal_bpoints,
+            'average_num_apical_branchpoints': avg_apical_bpoints,
+            'average_all_branch_order_frequency': average_all_branch_order_frequency,
+            'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
+            'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
+            'average_all_branch_order_dlength': average_all_branch_order_dlength,
+            'average_basal_branch_order_dlength': average_basal_branch_order_dlength,
+            'average_apical_branch_order_dlength': average_apical_branch_order_dlength,
+            'average_all_branch_order_plength': average_all_branch_order_plength,
+            'average_basal_branch_order_plength': average_basal_branch_order_plength,
+            'average_apical_branch_order_plength': average_apical_branch_order_plength,
+            'average_sholl_all_bp': average_sholl_all_bp,
+            'average_sholl_basal_bp': average_sholl_basal_bp,
+            'average_sholl_apical_bp': average_sholl_apical_bp,
+            'average_sholl_all_length': average_sholl_all_length,
+            'average_sholl_basal_length': average_sholl_basal_length,
+            'average_sholl_apical_length': average_sholl_apical_length,
+            'average_sholl_all_intersections': average_sholl_all_intersections,
+            'average_sholl_basal_intersections': average_sholl_basal_intersections,
+            'average_sholl_apical_intersections': average_sholl_apical_intersections,
+        }
+        
+        json_path = os.path.join(stats_dir, 'summary.json')
+        write_json(json_path, summary)
+        
+        results_path = os.path.join(stats_dir, 'results.json')
+        write_json(results_path, all_results)
+        
+        '''print
+        print 'Sholl analysis (dendritic length) for apical' + str(median_dict(average_sholl_median_basal_length))
+        f_average_sholl_median_basal_length=os.path.join(stats_dir, 'average_sholl_median_basal_length.txt')
+        f = open(f_average_sholl_median_basal_length, 'w+')
+        segment_list=average_sholl_median_basal_length
+        for i in sorted(segment_list):
+                print i,  segment_list[i]
+                print >>f, i,  segment_list[i]
+        f.close()'''
+        
+        #average_sholl_median_basal_length=remove_empty_keys(average_sholl_median_basal_length)
+        
+        #print average_sholl_median_basal_length
+        
+        
+        elapsed_time = time.time() - start_time
+        
+        print()
+        print(elapsed_time)
+    
+    
 
-def _load_second_run():
-    source = gzip.decompress(base64.b64decode(SECOND_RUN_B64)).decode('utf-8')
-    namespace = {}
-    exec(source, namespace)
-    return namespace['main']
-
-analyze_main = _load_first_run()
-edit_main = _load_second_run()
-
+def edit_main(argv=None):
+        parser = argparse.ArgumentParser(description="Apply remodeling actions to SWC data")
+        parser.add_argument("--directory", required=True, help="Base directory for the SWC file")
+        parser.add_argument("--file-name", required=True, help="SWC filename")
+        parser.add_argument("--who", required=True, help="Target dendrite selection")
+        parser.add_argument("--random-ratio", type=float, default=0.0,
+                            help="Ratio for random selection (percent)")
+        parser.add_argument("--who-manual-variable", default="none", help="Comma separated manual dendrite ids")
+        parser.add_argument("--action", required=True, help="Remodeling action")
+        parser.add_argument("--hm-choice", required=True, help="percent or micrometers for extent")
+        parser.add_argument("--amount", type=float, default=None,
+                            help="Extent of the action")
+        parser.add_argument("--var-choice", required=True, help="percent or micrometers for diameter change")
+        parser.add_argument("--diam-change", type=float, default=None,
+                            help="Extent of diameter change")
+        args = parser.parse_args(argv)
+    
+        directory = Path(args.directory)
+        file_name = args.file_name
+        fname = directory / file_name
+    
+        who = args.who
+        if who in ['who_random_all', 'who_random_apical', 'who_random_basal']:
+            who_random_variable = args.random_ratio / 100.0
+        else:
+            who_random_variable = None
+        who_manual_variable = args.who_manual_variable
+        action = args.action
+        hm_choice = args.hm_choice
+        amount = args.amount
+        var_choice = args.var_choice
+        diam_change = args.diam_change
+    
+        def sample_random_dendrites(options, label):
+            """Return a valid random dendrite selection."""
+            valid = [d for d in options if len(dend_add3d[d]) >= 3]
+            num = int(round_to(len(valid) * who_random_variable, 1))
+            num = max(0, min(num, len(valid)))
+            selection = random.sample(valid, num)
+            which = f"random {label} ({who_random_variable * 100}% ) "
+            return selection, which
+    
+        exist_downloads = directory / 'downloads'
+        exist_downloads_files = directory / 'downloads' / 'files'
+        
+        if not exist_downloads.exists():
+            exist_downloads.mkdir(parents=True, exist_ok=True)
+    
+        if not exist_downloads_files.exists():
+            exist_downloads_files.mkdir(parents=True, exist_ok=True)
+        
+        print()
+        print('Open file: ' + str(file_name))
+        print()
+        
+        (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+        
+        print('\nSWC parsing is completed!\n')
+        
+        #from graph import *
+        #local_plot(swc_lines)
+        
+        #regex_who=re.search('(.*)', choices[0])
+        #who=regex_who.group(1)
+        
+        if who=='who_all_terminal':
+            who=all_terminal
+            which_dendrites='all terminal '
+        elif who=='who_all_apical':
+            who=apical
+            which_dendrites='all apical '
+        elif who=='who_apical_terminal':
+            who=apical_terminal
+            which_dendrites='apical terminal '
+        elif who=='who_all_basal':
+            who=basal
+            which_dendrites='all basal '
+        elif who=='who_basal_terminal':
+            who=basal_terminal
+            which_dendrites='basal terminal '
+        elif who=='who_random_all':
+            who, which_dendrites = sample_random_dendrites(all_terminal, '(basal & apical) terminal')
+        elif who=='who_random_apical':
+            who, which_dendrites = sample_random_dendrites(apical_terminal, 'apical')
+        elif who=='who_random_basal':
+            who, which_dendrites = sample_random_dendrites(basal_terminal, 'basal')
+        elif who=='who_manual':
+            dendrites = [d for d in who_manual_variable.split(',') if d]
+            who = [int(x) for x in dendrites]
+            which_dendrites='manually selected '
+        else:
+            print('No dendrites are defined to be remodeled!')
+            sys.exit(0)
+        
+        who.sort()
+        
+        print('The dendrites stemming from these segments will be edited: ')
+        print(str(who))
+        
+        (branch_order_freq, branch_order_max)=branch_order_frequency(dendrite_list, branch_order)
+        
+        if action == 'shrink':
+            if hm_choice == 'micrometers':
+                    (status, not_applicable)=shrink_warning(who, dist, amount)
+                    if status:
+                            print('Consider these warnings before you proceed to shrink action!\n')
+                            for dend in not_applicable:
+                                    print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')')
+                            #sys.exit(0)
+        
+        now = datetime .datetime.now()
+        
+        print('\nRemodeling the neuron begins!\n')
+        
+        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
+        
+        (newfile, dendrite_list, segment_list)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+        
+        if action in ['shrink', 'remove', 'scale']:
+            newfile=index_reassign(dendrite_list, dend_add3d, branch_order, con, axon, basal, apical, elsep, soma_index, branch_order_max, action)
+        
+        newfile=comment_lines + newfile
+        check_indices(newfile) #check if indices are continuous from 0 and u
+        print_newfile(directory, file_name, newfile, edit)
+        
+        fname = directory / 'downloads' / 'files' / (file_name.replace('.swc','') + '_new.swc')
+        (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname)
+        second_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
+        
+        print()
+        print('File: ' + str(file_name) + ' was succesfully edited!')
+        
+        print()
+        print('--------------------------------')
+        print()
+    
+    
+        #graph(swc_lines, newfile, action, dend_add3d, dendrite_list, directory, file_name) #plots the original and modified tree (overlaying one another)
+    
+    
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description='Compute statistics or remodel SWC files',
