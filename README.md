@@ -9,7 +9,8 @@
 - Automatically store aggregated statistics in `downloads/statistics/`.
 - Remodel morphologies via `remod_cli.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and radii can be adjusted.
 - Node indices are renumbered automatically after editing.
-- Visualise original and modified trees with `neuron_export.py` for individual or overlay plots.
+- Visualise original and modified trees with the built in export utilities
+  now found in `file_io.py` for individual or overlay plots.
 - Generate summary graphs and merge results from multiple runs with
 `plot_statistics.py` using the `simple` or `smart` commands.
 
@@ -49,7 +50,11 @@ Using a virtual environment is recommended but not mandatory.
    ```
 
    Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--manual-dendrites`.
-4. **Visualise** – run `neuron_export.py` to generate 3‑D plots or overlays comparing the original and edited morphologies. Use `plot_statistics.py` on `downloads/statistics/` to create summary graphs; add `--average` or `--compare` for group averages or comparative views.  Figures are stored in the `downloads/` directory.
+4. **Visualise** – call the export helpers in `file_io.py` to generate 3‑D
+   plots or overlays comparing the original and edited morphologies. Use
+   `plot_statistics.py` on `downloads/statistics/` to create summary graphs;
+   add `--average` or `--compare` for group averages or comparative views.
+   Figures are stored in the `downloads/` directory.
 
 ## Workflow
 
@@ -58,7 +63,8 @@ The typical pipeline is:
 1. **Analyse** – `remod_cli.py analyze` computes baseline statistics for a set of SWC files and writes them to `downloads/statistics/`.
 2. **Modify** – `remod_cli.py edit` applies the chosen remodeling actions and saves edited files under `downloads/files/`.
 3. **Reassign indices** – node indices are automatically renumbered after modifications.
-4. **Visualise and plot** – generate 3‑D views and overlays with `neuron_export.py` and create summary plots with `plot_statistics.py`.
+4. **Visualise and plot** – generate 3‑D views and overlays using the
+   functions in `file_io.py` and create summary plots with `plot_statistics.py`.
 5. **Combine statistics** – use `plot_statistics.py` with the `simple` or `smart` command to merge and compare results from different runs.
 
 ## More tools
