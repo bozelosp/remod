@@ -958,31 +958,28 @@ def edit_main(argv=None):
         #regex_who=re.search('(.*)', choices[0])
         #who=regex_who.group(1)
         
-        if who=='who_all_terminal':
-            who=all_terminal
-            which_dendrites='all terminal '
-        elif who=='who_all_apical':
-            who=apical
-            which_dendrites='all apical '
-        elif who=='who_apical_terminal':
-            who=apical_terminal
-            which_dendrites='apical terminal '
-        elif who=='who_all_basal':
-            who=basal
-            which_dendrites='all basal '
-        elif who=='who_basal_terminal':
-            who=basal_terminal
-            which_dendrites='basal terminal '
-        elif who=='who_random_all':
-            who, which_dendrites = sample_random_dendrites(all_terminal, '(basal & apical) terminal')
-        elif who=='who_random_apical':
-            who, which_dendrites = sample_random_dendrites(apical_terminal, 'apical')
-        elif who=='who_random_basal':
-            who, which_dendrites = sample_random_dendrites(basal_terminal, 'basal')
-        elif who=='who_manual':
+        selection_map = {
+            'who_all_terminal': (all_terminal, 'all terminal '),
+            'who_all_apical': (apical, 'all apical '),
+            'who_apical_terminal': (apical_terminal, 'apical terminal '),
+            'who_all_basal': (basal, 'all basal '),
+            'who_basal_terminal': (basal_terminal, 'basal terminal '),
+        }
+
+        random_map = {
+            'who_random_all': (all_terminal, '(basal & apical) terminal'),
+            'who_random_apical': (apical_terminal, 'apical'),
+            'who_random_basal': (basal_terminal, 'basal'),
+        }
+
+        if who in selection_map:
+            who, which_dendrites = selection_map[who]
+        elif who in random_map:
+            who, which_dendrites = sample_random_dendrites(*random_map[who])
+        elif who == 'who_manual':
             dendrites = [d for d in who_manual_variable.split(',') if d]
             who = [int(x) for x in dendrites]
-            which_dendrites='manually selected '
+            which_dendrites = 'manually selected '
         else:
             print('No dendrites are defined to be remodeled!')
             sys.exit(0)
