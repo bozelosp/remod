@@ -236,7 +236,7 @@ def analyze_main(argv=None):
                     connectivity_map,
                     parents,
                 ) = read_file(fname)  # extracts important connectivity and morphological data
-                first_graph(directory, file_name, dendrite_roots, dendrite_samples, samples, parents, soma_samples) #plots the original and modified tree (overlaying one another)
+                first_graph(directory, file_name, dendrite_roots, dendrite_records, samples, parents, soma_samples) #plots the original and modified tree (overlaying one another)
         
                 results['number_of_all_dendrites'] = len(dendrite_roots)
                 average_number_of_all_dendrites.append(len(dendrite_roots))
@@ -880,7 +880,7 @@ def edit_main(argv=None):
         (new_lines, dendrite_roots, sample_list)=execute_action(target_dendrites, action, amount, extent_unit, dendrite_records, lengths, max_sample_number, radius_change, dendrite_roots, soma_samples, samples, parents, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
         if action in ['shrink', 'remove', 'scale']:
-            new_lines=index_reassign(dendrite_roots, dendrite_samples, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_samples, branch_order_max, action)
+            new_lines=index_reassign(dendrite_roots, dendrite_records, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_samples, branch_order_max, action)
         
         new_lines=comment_lines + new_lines
         check_indices(new_lines) #check if indices are continuous from 0 and u
@@ -917,7 +917,7 @@ def edit_main(argv=None):
             connectivity_map,
             parents,
         ) = read_file(fname)
-        second_graph(directory, file_name, dendrite_roots, dendrite_samples, samples, parents, soma_samples) #plots the original and modified tree (overlaying one another)
+        second_graph(directory, file_name, dendrite_roots, dendrite_records, samples, parents, soma_samples) #plots the original and modified tree (overlaying one another)
         
         print()
         print('File: ' + str(file_name) + ' was succesfully edited!')
@@ -927,7 +927,7 @@ def edit_main(argv=None):
         print()
     
     
-        # graph(swc_lines, new_lines, action, dendrite_samples, dendrite_roots, directory, file_name)  # overlay plot via neuron_export.graph
+        # graph(swc_lines, new_lines, action, dendrite_records, dendrite_roots, directory, file_name)  # overlay plot via neuron_export.graph
     
     
 def main(argv=None):
