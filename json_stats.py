@@ -146,3 +146,10 @@ def main(argv: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
+
+
+class StatisticsComputer:
+    """Class wrapper around :func:`compute_statistics` and :func:`main`."""
+
+    compute_statistics = staticmethod(compute_statistics)
+    main = staticmethod(main)
