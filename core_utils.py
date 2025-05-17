@@ -53,8 +53,10 @@ def sample_random_dendrites(
 
 
 def ensure_dir(path: Path | str) -> None:
-    """Ensure the parent directory of ``path`` exists."""
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    """Create ``path`` if it is a directory else its parent directory."""
+    p = Path(path)
+    target = p if not p.suffix else p.parent
+    target.mkdir(parents=True, exist_ok=True)
 
 
 
