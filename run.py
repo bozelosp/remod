@@ -81,9 +81,9 @@ def analyze_main(argv=None):
         average_t_area=[]
         average_basal_t_area=[]
         average_apical_t_area=[]
-        average_num_basal_bpoints=[]
-        average_num_apical_bpoints=[]
-        average_num_all_bpoints=[]
+        average_num_basal_branch_points=[]
+        average_num_apical_branch_points=[]
+        average_num_all_branch_points=[]
         
         average_all_branch_order_frequency={k: [] for k in range(0,200)}
         average_basal_branch_order_frequency={k: [] for k in range(0,200)}
@@ -148,9 +148,9 @@ def analyze_main(argv=None):
                 average_t_area = stats.get('average_t_area', [])
                 average_basal_t_area = stats.get('average_basal_t_area', [])
                 average_apical_t_area = stats.get('average_apical_t_area', [])
-                average_num_all_bpoints = stats.get('average_num_all_bpoints', [])
-                average_num_basal_bpoints = stats.get('average_num_basal_bpoints', [])
-                average_num_apical_bpoints = stats.get('average_num_apical_bpoints', [])
+                average_num_all_branch_points = stats.get('average_num_all_branch_points', [])
+                average_num_basal_branch_points = stats.get('average_num_basal_branch_points', [])
+                average_num_apical_branch_points = stats.get('average_num_apical_branch_points', [])
                 average_all_branch_order_frequency = stats.get('average_all_branch_order_frequency', {k: [] for k in range(0,200)})
                 average_basal_branch_order_frequency = stats.get('average_basal_branch_order_frequency', {k: [] for k in range(0,200)})
                 average_apical_branch_order_frequency = stats.get('average_apical_branch_order_frequency', {k: [] for k in range(0,200)})
@@ -190,10 +190,10 @@ def analyze_main(argv=None):
                     comment_lines,
                     parents,
                     branch_points,
-                    axon_bpoints,
-                    basal_bpoints,
-                    apical_bpoints,
-                    soma_bpoints,
+                    axon_branch_points,
+                    basal_branch_points,
+                    apical_branch_points,
+                    soma_branch_points,
                     soma_index,
                     max_index,
                     dendrite_list,
@@ -209,7 +209,7 @@ def analyze_main(argv=None):
                     all_terminal,
                     basal_terminal,
                     apical_terminal,
-                    dist,
+                    dend_lengths,
                     area,
                     branch_order_map,
                     connectivity_map,
@@ -235,15 +235,15 @@ def analyze_main(argv=None):
                 results['number_of_apical_terminal_dendrites'] = len(apical_terminal)
                 average_number_of_apical_terminal_dendrites.append(len(apical_terminal))
         
-                t_length=total_length(dendrite_list, dist)
+                t_length=total_length(dendrite_list, dend_lengths)
                 results['all_total_length'] = t_length
                 average_t_length.append(t_length)
         
-                basal_t_length=total_length(basal, dist)
+                basal_t_length=total_length(basal, dend_lengths)
                 results['basal_total_length'] = basal_t_length
                 average_basal_t_length.append(basal_t_length)
         
-                apical_t_length=total_length(apical, dist)
+                apical_t_length=total_length(apical, dend_lengths)
                 results['apical_total_length'] = apical_t_length
                 average_apical_t_length.append(apical_t_length)
         
@@ -262,23 +262,23 @@ def analyze_main(argv=None):
                 #print list(set([parent_indices[x] for x in branch_points]))
                 #print len(list(set([parent_indices[x] for x in branch_points])))
         
-                fnum_all_bpoints = stats_dir / f'{file_name}_number_of_all_branchpoints.txt'
+                fnum_all_branch_points = stats_dir / f'{file_name}_number_of_all_branchpoints.txt'
                 soma=[x[0] for x in soma_index]
                 write_value(
-                    fnum_all_bpoints,
+                    fnum_all_branch_points,
                     len(list(set([parent_indices[x] for x in branch_points if parent_indices[x] not in soma]))),
                 )
-                average_num_all_bpoints.append(len(list(set([parent_indices[x] for x in branch_points if parent_indices[x] not in soma]))))
+                average_num_all_branch_points.append(len(list(set([parent_indices[x] for x in branch_points if parent_indices[x] not in soma]))))
         
                 results['number_of_basal_branchpoints'] = len(
-                    list(set([parent_indices[x] for x in basal_bpoints if parent_indices[x] not in soma]))
+                    list(set([parent_indices[x] for x in basal_branch_points if parent_indices[x] not in soma]))
                 )
-                average_num_basal_bpoints.append(len(list(set([parent_indices[x] for x in basal_bpoints if parent_indices[x] not in soma]))))
+                average_num_basal_branch_points.append(len(list(set([parent_indices[x] for x in basal_branch_points if parent_indices[x] not in soma]))))
         
                 results['number_of_apical_branchpoints'] = len(
-                    list(set([parent_indices[x] for x in apical_bpoints if parent_indices[x] not in soma]))
+                    list(set([parent_indices[x] for x in apical_branch_points if parent_indices[x] not in soma]))
                 )
-                average_num_apical_bpoints.append(len(list(set([parent_indices[x] for x in apical_bpoints if parent_indices[x] not in soma]))))
+                average_num_apical_branch_points.append(len(list(set([parent_indices[x] for x in apical_branch_points if parent_indices[x] not in soma]))))
         
                 results['list_of_all_dendrites'] = dendrite_list
         
@@ -287,15 +287,15 @@ def analyze_main(argv=None):
                 results['list_of_apical_dendrites'] = apical
         
                 results['list_of_all_dendritic_lengths'] = {
-                    dend: dist[dend] for dend in dendrite_list
+                    dend: dend_lengths[dend] for dend in dendrite_list
                 }
         
                 results['list_of_basal_dendritic_lengths'] = {
-                    dend: dist[dend] for dend in basal
+                    dend: dend_lengths[dend] for dend in basal
                 }
         
                 results['list_of_apical_dendritic_lengths'] = {
-                    dend: dist[dend] for dend in apical
+                    dend: dend_lengths[dend] for dend in apical
                 }
         
                 '''if basal_t_length<150 or apical_t_length<150:
@@ -335,38 +335,38 @@ def analyze_main(argv=None):
                         for order in branch_order_freq:
                                 average_apical_branch_order_frequency[order].append(branch_order_freq[order])
         
-                branch_order_dlengths = branch_order_dlength(dendrite_list, branch_order_values, branch_order_max, dist)
+                branch_order_dlengths = branch_order_dlength(dendrite_list, branch_order_values, branch_order_max, dend_lengths)
                 results['all_dendritic_length_per_branch_order'] = branch_order_dlengths
                 for order in branch_order_dlengths:
                         average_all_branch_order_dlength[order].append(branch_order_dlengths[order])
         
                 if branch_order_basal is not None:
-                        branch_order_dlengths = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, dist)
+                        branch_order_dlengths = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, dend_lengths)
                         results['basal_dendritic_length_per_branch_order'] = branch_order_dlengths
                         for order in branch_order_dlengths:
                                 average_basal_branch_order_dlength[order].append(branch_order_dlengths[order])
         
                 if branch_order_apical is not None:
-                        branch_order_dlengths = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, dist)
+                        branch_order_dlengths = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, dend_lengths)
                         results['apical_dendritic_length_per_branch_order'] = branch_order_dlengths
                         for order in branch_order_dlengths:
                                 average_apical_branch_order_dlength[order].append(branch_order_dlengths[order])
         
-                path_lengths=path_length(dendrite_list, path, dist)
+                path_lengths=path_length(dendrite_list, path, dend_lengths)
                 branch_order_plengths=branch_order_plength(dendrite_list, branch_order_values, branch_order_max, path_lengths)
                 results['all_path_length_per_branch_order'] = branch_order_plengths
                 for order in branch_order_plengths:
                         average_all_branch_order_plength[order].append(branch_order_plengths[order])
         
                 if branch_order_basal is not None:
-                        path_lengths=path_length(basal, path, dist)
+                        path_lengths=path_length(basal, path, dend_lengths)
                         branch_order_plengths=branch_order_plength(basal, branch_order_basal, branch_order_max_basal, path_lengths)
                         results['basal_path_length_per_branch_order'] = branch_order_plengths
                         for order in branch_order_plengths:
                                 average_basal_branch_order_plength[order].append(branch_order_plengths[order])
         
                 if branch_order_apical is not None:
-                        path_lengths=path_length(apical, path, dist)
+                        path_lengths=path_length(apical, path, dend_lengths)
                         branch_order_plengths=branch_order_plength(apical, branch_order_apical, branch_order_max_apical, path_lengths)
                         results['apical_path_length_per_branch_order'] = branch_order_plengths
                         for order in branch_order_plengths:
@@ -400,12 +400,12 @@ def analyze_main(argv=None):
                 for length in sorted(sholl_all_bp):
                         average_sholl_all_bp[length].append(sholl_all_bp[length])
         
-                sholl_basal_bp=sholl_bp(basal_bpoints, points, soma_index, radius)
+                sholl_basal_bp=sholl_bp(basal_branch_points, points, soma_index, radius)
                 results['sholl_basal_branchpoints'] = sholl_basal_bp
                 for length in sorted(sholl_basal_bp):
                         average_sholl_basal_bp[length].append(sholl_basal_bp[length])
         
-                sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_index, radius)
+                sholl_apical_bp=sholl_bp(apical_branch_points, points, soma_index, radius)
                 results['sholl_apical_branchpoints'] = sholl_apical_bp
                 for length in sorted(sholl_apical_bp):
                         average_sholl_apical_bp[length].append(sholl_apical_bp[length])
@@ -473,9 +473,9 @@ def analyze_main(argv=None):
                 'average_t_area': average_t_area,
                 'average_basal_t_area': average_basal_t_area,
                 'average_apical_t_area': average_apical_t_area,
-                'average_num_all_bpoints': average_num_all_bpoints,
-                'average_num_basal_bpoints': average_num_basal_bpoints,
-                'average_num_apical_bpoints': average_num_apical_bpoints,
+                'average_num_all_branch_points': average_num_all_branch_points,
+                'average_num_basal_branch_points': average_num_basal_branch_points,
+                'average_num_apical_branch_points': average_num_apical_branch_points,
                 'average_all_branch_order_frequency': average_all_branch_order_frequency,
                 'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
                 'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
@@ -633,30 +633,30 @@ def analyze_main(argv=None):
         write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
         
         print()
-        avg_all_bpoints = average_list(average_num_all_bpoints)
-        print("Number of all Branch Points: " + str(avg_all_bpoints[0]), str(avg_all_bpoints[1]))
-        f_average_num_all_bpoints = stats_dir / 'average_number_of_all_branchpoints.txt'
+        avg_all_branch_points = average_list(average_num_all_branch_points)
+        print("Number of all Branch Points: " + str(avg_all_branch_points[0]), str(avg_all_branch_points[1]))
+        f_average_num_all_branch_points = stats_dir / 'average_number_of_all_branchpoints.txt'
         write_value(
-            f_average_num_all_bpoints,
-            f"{avg_all_bpoints[0]} {avg_all_bpoints[1]}",
+            f_average_num_all_branch_points,
+            f"{avg_all_branch_points[0]} {avg_all_branch_points[1]}",
         )
         
         print()
-        avg_basal_bpoints = average_list(average_num_basal_bpoints)
-        print("Number of all Basal Branch Points: " + str(avg_basal_bpoints[0]), str(avg_basal_bpoints[1]))
-        f_average_num_basal_bpoints = stats_dir / 'average_number_of_basal_branchpoints.txt'
+        avg_basal_branch_points = average_list(average_num_basal_branch_points)
+        print("Number of all Basal Branch Points: " + str(avg_basal_branch_points[0]), str(avg_basal_branch_points[1]))
+        f_average_num_basal_branch_points = stats_dir / 'average_number_of_basal_branchpoints.txt'
         write_value(
-            f_average_num_basal_bpoints,
-            f"{avg_basal_bpoints[0]} {avg_basal_bpoints[1]}",
+            f_average_num_basal_branch_points,
+            f"{avg_basal_branch_points[0]} {avg_basal_branch_points[1]}",
         )
         
         print()
-        avg_apical_bpoints = average_list(average_num_apical_bpoints)
-        print("Number of all Apical Branch Points: " + str(avg_apical_bpoints[0]), str(avg_apical_bpoints[1]))
-        f_average_num_apical_bpoints = stats_dir / 'average_number_of_apical_branchpoints.txt'
+        avg_apical_branch_points = average_list(average_num_apical_branch_points)
+        print("Number of all Apical Branch Points: " + str(avg_apical_branch_points[0]), str(avg_apical_branch_points[1]))
+        f_average_num_apical_branch_points = stats_dir / 'average_number_of_apical_branchpoints.txt'
         write_value(
-            f_average_num_apical_bpoints,
-            f"{avg_apical_bpoints[0]} {avg_apical_bpoints[1]}",
+            f_average_num_apical_branch_points,
+            f"{avg_apical_branch_points[0]} {avg_apical_branch_points[1]}",
         )
         
         print()
@@ -784,9 +784,9 @@ def analyze_main(argv=None):
             'average_total_area': avg_total_area,
             'average_total_basal_area': avg_total_basal_area,
             'average_total_apical_area': avg_total_apical_area,
-            'average_num_all_branchpoints': avg_all_bpoints,
-            'average_num_basal_branchpoints': avg_basal_bpoints,
-            'average_num_apical_branchpoints': avg_apical_bpoints,
+            'average_num_all_branchpoints': avg_all_branch_points,
+            'average_num_basal_branchpoints': avg_basal_branch_points,
+            'average_num_apical_branchpoints': avg_apical_branch_points,
             'average_all_branch_order_frequency': average_all_branch_order_frequency,
             'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
             'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
@@ -817,10 +817,10 @@ def analyze_main(argv=None):
         print 'Sholl analysis (dendritic length) for apical' + str(median_dict(average_sholl_median_basal_length))
         f_average_sholl_median_basal_length=os.path.join(stats_dir, 'average_sholl_median_basal_length.txt')
         f = open(f_average_sholl_median_basal_length, 'w+')
-        segment_list=average_sholl_median_basal_length
-        for i in sorted(segment_list):
-                print i,  segment_list[i]
-                print >>f, i,  segment_list[i]
+        segments=average_sholl_median_basal_length
+        for i in sorted(segments):
+                print i,  segments[i]
+                print >>f, i,  segments[i]
         f.close()'''
         
         #average_sholl_median_basal_length=remove_empty_keys(average_sholl_median_basal_length)
@@ -844,7 +844,7 @@ def edit_main(argv=None):
         file_name = args.file_name
         fname = directory / file_name
     
-        target_dendrites = args.who
+        target_dendrites = args.target_dendrites
         if target_dendrites in ['random_all', 'random_apical', 'random_basal']:
             random_ratio = args.random_ratio / 100.0
         else:
@@ -876,10 +876,10 @@ def edit_main(argv=None):
             comment_lines,
             parents,
             branch_points,
-            axon_bpoints,
-            basal_bpoints,
-            apical_bpoints,
-            soma_bpoints,
+            axon_branch_points,
+            basal_branch_points,
+            apical_branch_points,
+            soma_branch_points,
             soma_index,
             max_index,
             dendrite_list,
@@ -895,7 +895,7 @@ def edit_main(argv=None):
             all_terminal,
             basal_terminal,
             apical_terminal,
-            dist,
+            dend_lengths,
             area,
             branch_order_map,
             connectivity_map,
@@ -945,11 +945,11 @@ def edit_main(argv=None):
         
         if action == 'shrink':
             if extent_unit == 'micrometers':
-                    (status, not_applicable)=shrink_warning(target_dendrites, dist, amount)
+                    (status, not_applicable)=shrink_warning(target_dendrites, dend_lengths, amount)
                     if status:
                             print('Consider these warnings before you proceed to shrink action!\n')
                             for dend in not_applicable:
-                                    print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')')
+                                print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dend_lengths[dend]) + ')')
                             #sys.exit(0)
         
         now = datetime .datetime.now()
@@ -958,7 +958,7 @@ def edit_main(argv=None):
         
         edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(extent_unit) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(diam_unit) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
-        (newfile, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, extent_unit, dend_segments, dist, max_index, diam_change, dendrite_list, soma_index, points, parent_indices, subtrees, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+        (newfile, dendrite_list, segments)=execute_action(target_dendrites, action, amount, extent_unit, dend_segments, dend_lengths, max_index, diam_change, dendrite_list, soma_index, points, parent_indices, subtrees, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
         if action in ['shrink', 'remove', 'scale']:
             newfile=index_reassign(dendrite_list, dend_segments, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_index, branch_order_max, action)
@@ -974,10 +974,10 @@ def edit_main(argv=None):
             comment_lines,
             parents,
             branch_points,
-            axon_bpoints,
-            basal_bpoints,
-            apical_bpoints,
-            soma_bpoints,
+            axon_branch_points,
+            basal_branch_points,
+            apical_branch_points,
+            soma_branch_points,
             soma_index,
             max_index,
             dendrite_list,
@@ -993,7 +993,7 @@ def edit_main(argv=None):
             all_terminal,
             basal_terminal,
             apical_terminal,
-            dist,
+            dend_lengths,
             area,
             branch_order_map,
             connectivity_map,
@@ -1031,12 +1031,12 @@ def main(argv=None):
         arglist = [
             '--directory', os.fspath(args.directory),
             '--file-name', args.file_name,
-            '--who', args.who,
+            '--target-dendrites', args.target_dendrites,
             '--random-ratio', str(args.random_ratio),
-            '--who-manual-variable', args.manual_dendrite_ids,
+            '--manual-dendrite-ids', args.manual_dendrite_ids,
             '--action', args.action,
-            '--hm-choice', args.extent_unit,
-            '--var-choice', args.diam_unit,
+            '--extent-unit', args.extent_unit,
+            '--diameter-unit', args.diam_unit,
         ]
         if args.amount is not None:
             arglist.extend(['--amount', str(args.amount)])

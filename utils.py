@@ -142,18 +142,23 @@ def parse_edit_args(args: list[str] | None = None):
     parser.add_argument("--directory", required=True, type=Path,
                         help="Base directory for the SWC file")
     parser.add_argument("--file-name", required=True, help="SWC filename")
-    parser.add_argument("--who", required=True, help="Target dendrite selection")
+    parser.add_argument(
+        "--target-dendrites",
+        required=True,
+        dest="target_dendrites",
+        help="Target dendrite selection",
+    )
     parser.add_argument("--random-ratio", type=float, default=0.0,
                         help="Ratio for random selection (percent)")
     parser.add_argument(
-        "--who-manual-variable",
+        "--manual-dendrite-ids",
         dest="manual_dendrite_ids",
         default="none",
         help="Comma separated manual dendrite ids",
     )
     parser.add_argument("--action", required=True, help="Remodeling action")
     parser.add_argument(
-        "--hm-choice",
+        "--extent-unit",
         dest="extent_unit",
         required=True,
         help="percent or micrometers for extent",
@@ -165,7 +170,7 @@ def parse_edit_args(args: list[str] | None = None):
         help="Extent of the action",
     )
     parser.add_argument(
-        "--var-choice",
+        "--diameter-unit",
         dest="diam_unit",
         required=True,
         help="percent or micrometers for diameter change",

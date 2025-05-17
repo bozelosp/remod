@@ -204,7 +204,7 @@ def graph(initial_file, modified_file, action, dendrite_additions_3d, dendrite_l
 			pass
 		else:
 			#ax.plot(i[0], i[1], i[2], linewidth=i[3], c='b', alpha=1)
-			print >>f, i[0][0], i[1][0], i[2][0], i[0][1], i[1][1], i[2][1], i[3], '0x0000FF'
+                    print(i[0][0], i[1][0], i[2][0], i[0][1], i[1][1], i[2][1], i[3], '0x0000FF', file=f)
 		k+=1
 
 	k=0
@@ -213,7 +213,7 @@ def graph(initial_file, modified_file, action, dendrite_additions_3d, dendrite_l
 			pass
 		else:
 			#ax.plot(i[0], i[1], i[2], linewidth=i[3], c='r', alpha=1)
-			print >>f, i[0][0], i[1][0], i[2][0], i[0][1], i[1][1], i[2][1], i[3], '0xFF0000'
+                    print(i[0][0], i[1][0], i[2][0], i[0][1], i[1][1], i[2][1], i[3], '0xFF0000', file=f)
 
 		k+=1
 

@@ -37,15 +37,15 @@ Using a virtual environment is recommended but not mandatory.
    python run.py edit \
       --directory /path/to/swc \
       --file-name 0-2.swc \
-      --who all_terminal \
+      --target-dendrites all_terminal \
       --action remove \
-      --hm-choice percent \
+      --extent-unit percent \
       --amount 50 \
-      --var-choice percent \
+      --diameter-unit percent \
       --diam-change 10
    ```
 
-   Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--who-manual-variable`.
+   Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--manual-dendrite-ids`.
 4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D plots comparing the original and edited morphologies. Use `plot_data.py` on `downloads/statistics/` to create summary graphs; add `--average` or `--compare` for group averages or comparative views.  Figures are stored in the `downloads/` directory.
 
 ## Workflow

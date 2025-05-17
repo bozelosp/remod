@@ -78,20 +78,20 @@ def find_branch_points(points: Dict[int, List[float]]):
 
     branch_points = [i for i, count in children.items() if count > 1]
 
-    axon_bpoints = [i for i in branch_points if points[i][1] == 2]
-    basal_bpoints = [i for i in branch_points if points[i][1] == 3]
-    apical_bpoints = [i for i in branch_points if points[i][1] == 4]
-    soma_bpoints = [i for i in branch_points if points[i][1] == 1]
+    axon_branch_points = [i for i in branch_points if points[i][1] == 2]
+    basal_branch_points = [i for i in branch_points if points[i][1] == 3]
+    apical_branch_points = [i for i in branch_points if points[i][1] == 4]
+    soma_branch_points = [i for i in branch_points if points[i][1] == 1]
 
     # only dendritic branch points are returned in ``branch_points``
-    dendritic_bpoints = sorted(set(basal_bpoints + apical_bpoints))
+    dendritic_branch_points = sorted(set(basal_branch_points + apical_branch_points))
 
     return (
-        dendritic_bpoints,
-        axon_bpoints,
-        basal_bpoints,
-        apical_bpoints,
-        soma_bpoints,
+        dendritic_branch_points,
+        axon_branch_points,
+        basal_branch_points,
+        apical_branch_points,
+        soma_branch_points,
         soma_index,
     )
 
@@ -269,7 +269,7 @@ def dendrite_lengths(
     """Compute the length of each dendrite."""
     # Distances are measured between consecutive segments
 
-    dist: Dict[int, float] = {}
+    dend_lengths: Dict[int, float] = {}
     for idx in dendrite_list:
         dend = coords_map[idx]
         segs = [points[parent_indices[dend[0][0]]]] + dend
@@ -277,9 +277,9 @@ def dendrite_lengths(
             distance(a[2], b[2], a[3], b[3], a[4], b[4])
             for a, b in zip(segs[:-1], segs[1:])
         ]
-        dist[idx] = sum(lengths)
+        dend_lengths[idx] = sum(lengths)
 
-    return dist
+    return dend_lengths
 
 def dendrite_areas(
     coords_map: Dict[int, List[List[float]]],
@@ -324,10 +324,10 @@ def parse_swc_file(file_path: str):
     comment_lines, points = parse_swc_lines(swc_lines)
     (
         branch_points,
-        axon_bpoints,
-        basal_bpoints,
-        apical_bpoints,
-        soma_bpoints,
+        axon_branch_points,
+        basal_branch_points,
+        apical_branch_points,
+        soma_branch_points,
         soma_index,
     ) = find_branch_points(points)
     parent_indices = parent_map(points)
@@ -338,7 +338,9 @@ def parse_swc_file(file_path: str):
     path = paths_to_soma(dendrite_list, points, dend_indices, soma_index)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
     subtrees = build_subtree_map(dendrite_list, all_terminal, path)
-    dist = dendrite_lengths(dend_coords, dendrite_list, parent_indices, points)
+    dend_lengths = dendrite_lengths(
+        dend_coords, dendrite_list, parent_indices, points
+    )
     area = dendrite_areas(dend_coords, dendrite_list, parent_indices, points)
     max_index_value = max_index(points)
     branch_order_map = compute_branch_order(dendrite_list, path)
@@ -346,7 +348,7 @@ def parse_swc_file(file_path: str):
     parents: List[int] = []
 
     dendrite_list = basal + apical
-    branch_points = basal_bpoints + apical_bpoints
+    branch_points = basal_branch_points + apical_branch_points
 
     return (
         swc_lines,
@@ -354,10 +356,10 @@ def parse_swc_file(file_path: str):
         comment_lines,
         parents,
         branch_points,
-        axon_bpoints,
-        basal_bpoints,
-        apical_bpoints,
-        soma_bpoints,
+        axon_branch_points,
+        basal_branch_points,
+        apical_branch_points,
+        soma_branch_points,
         soma_index,
         max_index_value,
         dendrite_list,
@@ -373,7 +375,7 @@ def parse_swc_file(file_path: str):
         all_terminal,
         basal_terminal,
         apical_terminal,
-        dist,
+        dend_lengths,
         area,
         branch_order_map,
         connectivity_map,
