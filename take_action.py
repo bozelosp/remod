@@ -236,7 +236,20 @@ def extend_dendrite(
 
     return max_index, new_lines
 
-def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal): # return the updated .hoc lines with the selected dendrites shortened
+def shrink(
+    who,
+    action,
+    amount,
+    hm_choice,
+    dend_add3d,
+    dist,
+    soma_index,
+    points,
+    parental_points,
+    descendants,
+    all_terminal,
+):
+        # return the updated .hoc lines with the selected dendrites shortened
         # Shorten dendrites by a fixed percent or absolute length
 
         amount=int(amount)
@@ -545,7 +558,17 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
         return newfile'''
 
-def remove(who, action, dend_add3d, soma_index, points, parental_points, descendants, all_terminal): # return the updated .hoc lines with the selected dendrites removed
+def remove(
+    who,
+    action,
+    dend_add3d,
+    soma_index,
+    points,
+    parental_points,
+    descendants,
+    all_terminal,
+):
+        # return the updated .hoc lines with the selected dendrites removed
         # Completely delete chosen dendrites from the morphology
 
         new_lines=[]
@@ -579,7 +602,21 @@ def remove(who, action, dend_add3d, soma_index, points, parental_points, descend
 
         return newfile
 
-def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal): # return the updated .hoc lines with the selected dendrites extended
+def extend(
+    who,
+    action,
+    amount,
+    hm_choice,
+    dend_add3d,
+    dist,
+    max_index,
+    soma_index,
+    points,
+    parental_points,
+    descendants,
+    all_terminal,
+):
+        # return the updated .hoc lines with the selected dendrites extended
 
         amount=int(amount)
 
@@ -698,7 +735,18 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
         return newfile
 
-def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dendrite_list): # return the updated .hoc lines with the newly branched dendrites
+def branch(
+    who,
+    action,
+    amount,
+    hm_choice,
+    dend_add3d,
+    dist,
+    max_index,
+    soma_index,
+    dendrite_list,
+):
+        # return the updated .hoc lines with the newly branched dendrites
 
         amount=int(amount)
 
@@ -818,7 +866,8 @@ def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
 
         return newfile
 
-def scale(who, soma_index, dend_add3d, amount): # return the updated .hoc lines with the selected dendrites scaled
+def scale(who, soma_index, dend_add3d, amount):
+        # return the updated .hoc lines with the selected dendrites scaled
 
         amount=float(amount)/100
 
@@ -872,6 +921,7 @@ def _build_actions(
     dendrite_list: List[int],
 ) -> Tuple[Dict[str, ActionFunc], BranchFunc]:
     """Return action dispatcher dictionaries."""
+    # Maps action names to callables and provides the branch function
 
     return (
         {
@@ -945,6 +995,7 @@ def execute_action(
     all_terminal: List[int],
 ) -> Tuple[List[str], List[int], List[List[Any]]]:
     """Execute a remodeling action and optionally change diameters."""
+    # Delegates to the appropriate action implementation
 
     segment_list: List[List[Any]] = []
     newfile: List[str] = []
