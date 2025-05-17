@@ -40,6 +40,14 @@ from morphology_statistics import *
 from remodeling_actions import execute_action
 
 
+def clearall() -> None:
+    """Placeholder for NEURON ``clearall`` command used in legacy code."""
+    # The original implementation relied on NEURON's API.  Since NEURON is not
+    # available here this function simply acts as a no-op to avoid runtime
+    # errors when analyzing morphologies.
+    pass
+
+
 def _log_write_average(data, stats_dir, title, filename):
     """Log the average of ``data`` and write it to ``filename``."""
     avg = average_list(data)
