@@ -1,77 +1,70 @@
-from os import listdir
-import os
-import re
-import sys
+"""Utilities to combine text statistics from ``before`` and ``after`` dirs."""
+
+from __future__ import annotations
+
 import argparse
+from itertools import zip_longest
+from pathlib import Path
+import re
 
-def read_files(directory):
+def list_text_files(directory: Path) -> list[Path]:
+    """Return ``.txt`` files within ``directory`` sorted alphabetically."""
+    if not directory.is_dir():
+        raise NotADirectoryError(directory)
+    return sorted(p for p in directory.iterdir() if p.suffix == ".txt")
 
-    stat_files = listdir(directory)
-    stat_files = [x for x in stat_files if re.search(r"txt", x)]
+def read_lines(path: Path) -> list[str]:
+    """Return lines from ``path`` stripped of trailing newlines."""
+    with path.open(encoding="utf-8") as fh:
+        return [line.rstrip("\n") for line in fh]
 
-    return stat_files
 
-def append_lines(fname):
+_REPLACE_VALUE_RE = re.compile(r"\s(\S+)")
 
-    lines = []
-    with open(fname) as f:
-        for line in f:
-            lines.append(line.rstrip('\n'))
-    return lines
 
-def main():
-    parser = argparse.ArgumentParser(description="Merge text files from before and after directories")
-    parser.add_argument("--directory", required=True, help="Base directory containing before/ and after/ folders")
+def _zero_line(reference: str) -> str:
+    """Return ``reference`` with the value column replaced by ``0``."""
+    return _REPLACE_VALUE_RE.sub(" 0", reference, count=1)
+
+def merge_pair(before_file: Path, after_file: Path, output_file: Path) -> None:
+    """Write a merged representation of ``before_file`` and ``after_file``."""
+    before_lines = read_lines(before_file)
+    after_lines = read_lines(after_file)
+    with output_file.open("w", encoding="utf-8") as fh:
+        for before_line, after_line in zip_longest(before_lines, after_lines):
+            if before_line is None:
+                before_line = _zero_line(after_line)
+            if after_line is None:
+                after_line = _zero_line(before_line)
+            print(before_line, after_line, file=fh)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Merge text files from before/ and after/ directories"
+    )
+    parser.add_argument(
+        "--directory",
+        required=True,
+        type=Path,
+        help="Base directory containing before/ and after/ folders",
+    )
     args = parser.parse_args()
 
-    directory = args.directory
+    base_directory = args.directory
+    before_directory = base_directory / "before"
+    after_directory = base_directory / "after"
 
-    before_dir = os.path.join(directory, "before")
-    after_dir = os.path.join(directory, "after")
+    before_files = {p.name: p for p in list_text_files(before_directory)}
+    after_files = {p.name: p for p in list_text_files(after_directory)}
+    common_files = sorted(before_files.keys() & after_files.keys())
 
-    before_files = read_files(before_dir)
-    after_files = read_files(after_dir)
-
-    to_merge_files = [x for x in before_files if x in after_files]
-
-    print(before_files)
-    print(after_files)
-    print(to_merge_files)
-
-    for f in to_merge_files:
-        f_before = os.path.join(before_dir, f)
-        lines_before = append_lines(f_before)
-
-        f_after = os.path.join(after_dir, f)
-        lines_after = append_lines(f_after)
-
-        if len(lines_before) > len(lines_after):
-            max_len = len(lines_before)
-            min_len = len(lines_after)
-            use_before_as_base = True
-        else:
-            max_len = len(lines_after)
-            min_len = len(lines_before)
-            use_before_as_base = False
-
-        fw = os.path.join(directory, f)
-
-        print(fw)
-
-        with open(fw, "w+") as f_write:
-            if use_before_as_base:
-                for i in range(max_len):
-                    if i < min_len:
-                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-                    else:
-                        print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)', r' 0', lines_before[i]), file=f_write)
-
-            if not use_before_as_base:
-                for i in range(max_len):
-                    if i < min_len:
-                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-                    else:
-                        print(re.sub(r'\s(\S+)', r' 0', lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
+    for file_name in common_files:
+        merge_pair(
+            before_files[file_name],
+            after_files[file_name],
+            base_directory / file_name,
+        )
 
 
 if __name__ == "__main__":
