@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from math import sqrt
-import bisect
+import argparse
 import random
 from collections.abc import Sequence
 from pathlib import Path
 from statistics import mean, pstdev
-import argparse
 import re
 
 
@@ -23,30 +22,17 @@ def round_to(x, rounder):
     return round(x / rounder) * rounder
 
 
-class WeightedPopulation(Sequence):
-    """Sequence-like container for weighted random sampling."""
-
-    def __init__(self, population: Sequence, weights: Sequence[float]):
-        assert len(population) == len(weights) > 0
-        self.population = population
-        self.cumweights: list[float] = []
-        cumsum = 0.0
-        for w in weights:
-            cumsum += w
-            self.cumweights.append(cumsum)
-
-    def __len__(self) -> int:
-        return int(self.cumweights[-1])
-
-    def __getitem__(self, i: int):
-        if not 0 <= i < len(self):
-            raise IndexError(i)
-        return self.population[bisect.bisect(self.cumweights, i)]
-
 
 def weighted_sample(population: Sequence, weights: Sequence[float], k: int):
-    """Return ``k`` items sampled from ``population`` using ``weights``."""
-    return random.sample(WeightedPopulation(population, weights), k)
+    """Return ``k`` unique items from ``population`` weighted by ``weights``."""
+    import numpy as np
+
+    if k <= 0 or not population:
+        return []
+    probs = np.array(weights, dtype=float)
+    probs = probs / probs.sum()
+    idx = np.random.choice(len(population), size=min(k, len(population)), replace=False, p=probs)
+    return [population[i] for i in idx]
 
 
 def sample_random_dendrites(
@@ -248,3 +234,21 @@ def check_indices(new_lines):
 
     if status:
         return
+
+
+__all__ = [
+    "distance",
+    "round_to",
+    "weighted_sample",
+    "sample_random_dendrites",
+    "ensure_dir",
+    "average_list",
+    "average_dict",
+    "remove_empty_keys",
+    "parse_plot_args",
+    "parse_analyze_args",
+    "parse_edit_args",
+    "parse_merge_args",
+    "shrink_warning",
+    "check_indices",
+]
