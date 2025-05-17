@@ -49,14 +49,14 @@ def path_length(dendrite_list, path, dist):
 
         return {d: sum(dist[i] for i in path[d]) for d in dendrite_list}
 
-def median_diameter(dendrite_list, dend_coords):
-        """Return the median diameter for each dendrite in *dendrite_list*."""
-        # Diameter at the midpoint acts as a robust representative
-        med_diam = {}
+def median_radius(dendrite_list, dend_coords):
+        """Return the median radius for each dendrite in *dendrite_list*."""
+        # Radius at the midpoint acts as a robust representative
+        med_rad = {}
         for dend in dendrite_list:
                 mid_idx = len(dend_coords[dend]) // 2
-                med_diam[dend] = float(dend_coords[dend][mid_idx][5]) * 2
-        return med_diam
+                med_rad[dend] = float(dend_coords[dend][mid_idx][5])
+        return med_rad
 
 def print_branch_order(dendrite_list, branch_order):
         """Return a sorted list of (dendrite, branch_order) tuples."""
@@ -200,20 +200,20 @@ def dist_angle_frequency(dist_angle, radius):
 def axis(apical, dend_coords, soma_segments):
         # weighted linear regression
         """Return principal axis and soma location using weighted regression."""
-        # Weighted by diameter so thicker dendrites influence the fit
+        # Weighted by radius so thicker dendrites influence the fit
 
         x_soma, y_soma, z_soma = soma_segments[0][2], soma_segments[0][3], soma_segments[0][4]
 
         coords = []
-        diam = []
+        radii = []
         for dend in apical:
                 arr = np.array(dend_coords[dend])
                 coords.append(arr[:, 2:5] - [x_soma, y_soma, z_soma])
-                diam.append(arr[:, 5])
+                radii.append(arr[:, 5])
 
         coords = np.vstack(coords)
-        diam = np.hstack(diam)
-        weights = diam / diam.sum()
+        radii = np.hstack(radii)
+        weights = radii / radii.sum()
 
         weighted = coords * weights[:, None]
         centered = weighted - weighted.mean(axis=0)
