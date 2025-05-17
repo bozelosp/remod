@@ -18,7 +18,7 @@ def _sorted_dendrites(dendrites: Iterable[int], branch_order: Dict[int, int]) ->
 
 def _renumber_dendrite(
     dend_id: int,
-    dend_segments: Dict[int, List[List[float]]],
+    dend_coords: Dict[int, List[List[float]]],
     branch_order: Dict[int, int],
     connectivity: Dict[int, int],
     start_index: int,
@@ -30,7 +30,7 @@ def _renumber_dendrite(
     ----------
     dend_id : int
         Identifier of the dendrite to renumber.
-    dend_segments : Dict[int, List[List[float]]]
+    dend_coords : Dict[int, List[List[float]]]
         Mapping from dendrite id to its list of segments.
     branch_order : Dict[int, int]
         Branch order of every dendrite.
@@ -49,7 +49,7 @@ def _renumber_dendrite(
     # Walk through the dendrite and assign new sequential indices
 
     order = branch_order[dend_id]
-    dend = dend_segments[dend_id]
+    dend = dend_coords[dend_id]
 
     previous = None
     for i, point in enumerate(dend):
@@ -61,7 +61,7 @@ def _renumber_dendrite(
                 point[6] = 1
             else:
                 parent_dend = connectivity[original_idx]
-                parent_point = dend_segments[parent_dend][-1]
+                parent_point = dend_coords[parent_dend][-1]
                 point[6] = parent_point[0]
         else:
             point[6] = previous
@@ -75,14 +75,14 @@ def _renumber_dendrite(
 
 def index_reassign(
     dendrite_list: Iterable[int],  # unused parameter maintained for compatibility
-    dend_segments: Dict[int, List[List[float]]],
+    dend_coords: Dict[int, List[List[float]]],
     branch_order_map: Dict[int, int],
     connectivity_map: Dict[int, int],
     axon: Iterable[int],
     basal: Iterable[int],
     apical: Iterable[int],
     undefined_dendrites: Iterable[int],
-    soma_index: List[List[float]],
+    soma_segments: List[List[float]],
     branch_order_max: int,
     action: str,
 ) -> List[str]:
@@ -98,7 +98,7 @@ def index_reassign(
 
     # Renumber soma segments first
     previous = None
-    for i, soma_pt in enumerate(soma_index):
+    for i, soma_pt in enumerate(soma_segments):
         soma_pt[0] = next_index
         soma_pt[6] = -1 if i == 0 else previous
         previous = next_index
@@ -110,7 +110,7 @@ def index_reassign(
     for dend_group in groups:
         for dend_id in _sorted_dendrites(dend_group, branch_order_map):
             next_index = _renumber_dendrite(
-                dend_id, dend_segments, branch_order_map, connectivity_map, next_index, segments
+                dend_id, dend_coords, branch_order_map, connectivity_map, next_index, segments
             )
 
     # Convert to SWC text lines

@@ -68,7 +68,7 @@ def find_branch_points(points: Dict[int, List[float]]):
     """Return branch point information from ``points``."""
     # Count how many children each node has to detect branches
 
-    soma_index = [p for p in points.values() if p[1] == 1]
+    soma_segments = [p for p in points.values() if p[1] == 1]
 
     children: Dict[int, int] = {}
     for p in points.values():
@@ -92,7 +92,7 @@ def find_branch_points(points: Dict[int, List[float]]):
         basal_bpoints,
         apical_bpoints,
         soma_bpoints,
-        soma_index,
+        soma_segments,
     )
 
 def parent_map(points: Dict[int, List[float]]) -> Dict[int, int]:
@@ -185,12 +185,12 @@ def paths_to_soma(
     dendrite_list: Iterable[int],
     points: Dict[int, List[float]],
     dend_indices: Dict[int, List[int]],
-    soma_index: Iterable[List[float]],
+    soma_segments: Iterable[List[float]],
 ) -> Dict[int, List[int]]:
     """Return the pathway from each dendrite to the soma."""
     # Walk up the tree from each dendrite until hitting the soma root
 
-    soma_set = {s[0] for s in soma_index}
+    soma_set = {s[0] for s in soma_segments}
     path: Dict[int, List[int]] = {}
 
     for dend in dendrite_list:
@@ -229,14 +229,14 @@ def terminal_dendrites(
 
     return all_terminal, basal_terminal, apical_terminal
 
-def build_subtree_map(
+def build_descendant_map(
     dendrite_list: Iterable[int],
     all_terminal: Iterable[int],
     path: Dict[int, List[int]],
 ) -> Dict[int, List[int]]:
     """Return all subtree dendrites for each non‑terminal dendrite."""
 
-    subtrees: Dict[int, List[int]] = {}
+    descendants: Dict[int, List[int]] = {}
     terminal_set = set(all_terminal)
     for dend in dendrite_list:
         if dend in terminal_set:
@@ -247,17 +247,17 @@ def build_subtree_map(
                 start = seq.index(dend)
                 result.update(seq[start:])
         result.discard(dend)
-        subtrees[dend] = list(result)
+        descendants[dend] = list(result)
 
-    return subtrees
+    return descendants
 
-def soma_centroid(soma_index: Iterable[List[float]]) -> List[float]:
+def soma_centroid(soma_segments: Iterable[List[float]]) -> List[float]:
     """Return the centroid of the soma segments."""
     # Calculates the average position of all soma points
 
-    x = [p[2] for p in soma_index]
-    y = [p[3] for p in soma_index]
-    z = [p[4] for p in soma_index]
+    x = [p[2] for p in soma_segments]
+    y = [p[3] for p in soma_segments]
+    z = [p[4] for p in soma_segments]
     return [float(np.mean(x)), float(np.mean(y)), float(np.mean(z))]
 
 def dendrite_lengths(
@@ -308,13 +308,13 @@ def compute_branch_order(dendrite_list: Iterable[int], path: Dict[int, List[int]
     # Branch order corresponds to the hop count to the soma
     return {d: len(path[d]) for d in dendrite_list}
 
-def connection_to_parent(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
-    """Return connectivity mapping for each dendrite."""
-    # Records the first child along the path for each dendrite
-    first_child: Dict[int, int] = {}
+def toward_soma_map(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
+    """Return the next dendrite towards the soma for each dendrite."""
+    # Records the first segment encountered when walking toward the soma
+    toward_soma: Dict[int, int] = {}
     for dend in dendrite_list:
-        first_child[dend] = path[dend][1] if len(path[dend]) > 1 else 1
-    return first_child
+        toward_soma[dend] = path[dend][1] if len(path[dend]) > 1 else 1
+    return toward_soma
 
 def parse_swc_file(file_path: str):
     """Parse ``file_path`` and return all extracted morphology information."""
@@ -328,23 +328,21 @@ def parse_swc_file(file_path: str):
         basal_bpoints,
         apical_bpoints,
         soma_bpoints,
-        soma_index,
+        soma_segments,
     ) = find_branch_points(points)
     parent_indices = parent_map(points)
     dendrite_list = sort_dendrites(branch_points)
     dend_indices = dendrite_segments(dendrite_list, points)
     dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_list, points)
     dend_coords = dendrite_coordinates(dendrite_list, dend_indices, points)
-    path = paths_to_soma(dendrite_list, points, dend_indices, soma_index)
+    path = paths_to_soma(dendrite_list, points, dend_indices, soma_segments)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
-    subtrees = build_subtree_map(dendrite_list, all_terminal, path)
+    descendants = build_descendant_map(dendrite_list, all_terminal, path)
     dist = dendrite_lengths(dend_coords, dendrite_list, parent_indices, points)
     area = dendrite_areas(dend_coords, dendrite_list, parent_indices, points)
     max_index_value = max_index(points)
     branch_order_map = compute_branch_order(dendrite_list, path)
-    connectivity_map = connection_to_parent(dendrite_list, path)
-    parents: List[int] = []
-
+    connectivity_map = toward_soma_map(dendrite_list, path)
     dendrite_list = basal + apical
     branch_points = basal_bpoints + apical_bpoints
 
@@ -352,16 +350,15 @@ def parse_swc_file(file_path: str):
         swc_lines,
         points,
         comment_lines,
-        parents,
         branch_points,
         axon_bpoints,
         basal_bpoints,
         apical_bpoints,
         soma_bpoints,
-        soma_index,
+        soma_segments,
         max_index_value,
         dendrite_list,
-        subtrees,
+        descendants,
         dend_indices,
         dend_names,
         axon,
