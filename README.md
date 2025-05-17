@@ -14,7 +14,8 @@ to dendritic trees and visualise the results.
 - Modify morphologies using `second_run.py` (remove, extend or change the
   diameter of dendrites).
 - Visualise original and edited trees with 3‑D plots.
-- Additional helper scripts to merge segments, reassign indices and plot data.
+- Additional helper scripts to merge segments and plot data. Node indices are
+  renumbered automatically by `second_run.py` after relevant edits.
 
 ## Installation
 
@@ -74,9 +75,8 @@ The individual scripts are designed to be used as a pipeline:
 2. **Modify** – apply structural changes with `second_run.py` (or the legacy
    wrapper `take_action_swc.py`). This script can remove, extend or shrink
    selected dendrites and stores edited files under `downloads/files/`.
-3. **Reassign indices** – if an editing step breaks the original node numbering,
-   run `index_reassignment.py` on the newly created file so that node indices are
-   consecutive again.
+3. **Reassign indices** – `second_run.py` automatically renumbers nodes after
+   modifications, so no extra command is needed.
 4. **Visualise and plot** – generate 3‑D views using `neuron_visualization.py`
    or `graph.py` and create summary plots with `plot_data.py` or
    `plot_individual_data.py`.
@@ -87,7 +87,7 @@ The individual scripts are designed to be used as a pipeline:
 
 - `merge.py` and `smart_merge.py` combine SWC segments.
 - `plot_data.py` and `plot_individual_data.py` visualise computed statistics.
-- `index_reassignment.py` renumbers node indices after editing.
+- `index_reassignment.py` contains the renumbering logic used internally.
 - `random_sampling.py` demonstrates how to draw random dendrites.
 
 Run any script with the `--help` flag for a description of its command-line
