@@ -7,8 +7,8 @@ from typing import Any, Callable, Dict, Iterable, List, Tuple
 
 import numpy as np
 from math import cos, sin, radians
-from utils import distance, round_to
-from file_utils import read_lines
+from core_utils import distance, round_to
+from file_io import read_lines
 
 def parse_length_distribution(
     path: Path = Path("length_distribution.txt"),
@@ -908,7 +908,7 @@ def scale(target_dendrites, soma_samples, dendrite_samples, amount):
         return new_lines
 
 # ---------------------------------------------------------------------------
-# Dispatcher originally implemented in ``take_action.py``
+# Dispatcher originally implemented in ``remodeling_actions.py``
 # ---------------------------------------------------------------------------
 
 ActionFunc = Callable[[], List[str]]
