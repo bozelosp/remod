@@ -55,14 +55,24 @@ def main():
     var_choice = args.var_choice
     diam_change = args.diam_change
 
+    def sample_random_dendrites(options, label):
+        """Return a valid random dendrite selection."""
+        num = int(round_to(len(options) * float(who_random_variable), 1))
+        while True:
+            selection = random.sample(options, num)
+            if all(len(dend_add3d[d]) >= 3 for d in selection):
+                break
+        which = f"random {label} ({float(who_random_variable) * 100}% ) "
+        return selection, which
+
     exist_downloads = directory / 'downloads'
     exist_downloads_files = directory / 'downloads' / 'files'
     
     if not exist_downloads.exists():
-        exist_downloads.mkdir(parents=True)
-    
+        exist_downloads.mkdir(parents=True, exist_ok=True)
+
     if not exist_downloads_files.exists():
-        exist_downloads_files.mkdir(parents=True)
+        exist_downloads_files.mkdir(parents=True, exist_ok=True)
     
     print()
     print('Open file: ' + str(file_name))
@@ -94,46 +104,14 @@ def main():
         who=basal_terminal
         which_dendrites='basal terminal '
     elif who=='who_random_all':
-        num=len(all_terminal)*float(who_random_variable)
-        num=int(round_to(num, 1))
-        check_nseg=False
-        while check_nseg==False:
-                who=random.sample(all_terminal, num)
-                for dend in who:
-                        check_nseg=True
-                        if len(dend_add3d[dend])<3:
-                                check_nseg=False
-                                break
-        which_dendrites='random (basal & apical) terminal (' + str(who_random_variable*100) + '%) '
+        who, which_dendrites = sample_random_dendrites(all_terminal, '(basal & apical) terminal')
     elif who=='who_random_apical':
-        num=len(apical_terminal)*float(who_random_variable)
-        num=int(round_to(num, 1))
-        check_nseg=False
-        while check_nseg==False:
-                who=random.sample(apical_terminal, num)
-                for dend in who:
-                        check_nseg=True
-                        if len(dend_add3d[dend])<3:
-                                check_nseg=False
-                                break
-        which_dendrites='random apical (' + str(who_random_variable*100) + '%) '
+        who, which_dendrites = sample_random_dendrites(apical_terminal, 'apical')
     elif who=='who_random_basal':
-        num=len(basal_terminal)*float(who_random_variable)
-        num=int(round_to(num, 1))
-        check_nseg=False
-        while check_nseg==False:
-                who=random.sample(basal_terminal, num)
-                for dend in who:
-                        check_nseg=True
-                        if len(dend_add3d[dend])<3:
-                                check_nseg=False
-                                break
-        which_dendrites='random basal (' + str(who_random_variable*100) + '%) '
+        who, which_dendrites = sample_random_dendrites(basal_terminal, 'basal')
     elif who=='who_manual':
-        if len(who)>1:
-                who=[int(x) for x in who_manual_variable.split(',')]
-        else:
-                who=int(who)
+        dendrites = [d for d in who_manual_variable.split(',') if d]
+        who = [int(x) for x in dendrites]
         which_dendrites='manually selected '
     else:
         print('No dendrites are defined to be remodeled!')
