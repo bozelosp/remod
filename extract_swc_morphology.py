@@ -144,7 +144,7 @@ def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[floa
     apical: List[int] = []
     undefined_dendrites: List[int] = []
 
-    undef_index = axon_index = basal_index = apic_index = 0
+    undefined_index = axon_index = basal_index = apical_index = 0
 
     for idx in dendrite_list:
         p_type = points[idx][1]
@@ -157,13 +157,13 @@ def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[floa
             basal.append(idx)
             basal_index += 1
         elif p_type == 4:
-            dend_names[idx] = f"apic[{apic_index}]"
+            dend_names[idx] = f"apic[{apical_index}]"
             apical.append(idx)
-            apic_index += 1
+            apical_index += 1
         else:
-            dend_names[idx] = f"undef[{undef_index}]"
+            dend_names[idx] = f"undef[{undefined_index}]"
             undefined_dendrites.append(idx)
-            undef_index += 1
+            undefined_index += 1
 
     return dend_names, axon, basal, apical, undefined_dendrites
 
@@ -229,14 +229,14 @@ def terminal_dendrites(
 
     return all_terminal, basal_terminal, apical_terminal
 
-def descendants_map(
+def build_subtree_map(
     dendrite_list: Iterable[int],
     all_terminal: Iterable[int],
     path: Dict[int, List[int]],
 ) -> Dict[int, List[int]]:
-    """Return descendants for each non‑terminal dendrite."""
+    """Return all subtree dendrites for each non‑terminal dendrite."""
 
-    descendants: Dict[int, List[int]] = {}
+    subtrees: Dict[int, List[int]] = {}
     terminal_set = set(all_terminal)
     for dend in dendrite_list:
         if dend in terminal_set:
@@ -247,9 +247,9 @@ def descendants_map(
                 start = seq.index(dend)
                 result.update(seq[start:])
         result.discard(dend)
-        descendants[dend] = list(result)
+        subtrees[dend] = list(result)
 
-    return descendants
+    return subtrees
 
 def soma_centroid(soma_index: Iterable[List[float]]) -> List[float]:
     """Return the centroid of the soma segments."""
@@ -327,7 +327,7 @@ def parse_swc_file(file_path: str):
         axon_bpoints,
         basal_bpoints,
         apical_bpoints,
-        else_bpoints,
+        soma_bpoints,
         soma_index,
     ) = find_branch_points(points)
     parental_points = parent_map(points)
@@ -337,7 +337,7 @@ def parse_swc_file(file_path: str):
     dend_coords = dendrite_coordinates(dendrite_list, dend_indices, points)
     path = paths_to_soma(dendrite_list, points, dend_indices, soma_index)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
-    descendants = descendants_map(dendrite_list, all_terminal, path)
+    subtrees = build_subtree_map(dendrite_list, all_terminal, path)
     dist = dendrite_lengths(dend_coords, dendrite_list, parental_points, points)
     area = dendrite_areas(dend_coords, dendrite_list, parental_points, points)
     max_index_value = max_index(points)
@@ -357,11 +357,11 @@ def parse_swc_file(file_path: str):
         axon_bpoints,
         basal_bpoints,
         apical_bpoints,
-        else_bpoints,
+        soma_bpoints,
         soma_index,
         max_index_value,
         dendrite_list,
-        descendants,
+        subtrees,
         dend_indices,
         dend_names,
         axon,

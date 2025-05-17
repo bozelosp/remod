@@ -147,12 +147,14 @@ def parse_edit_args(args: list[str] | None = None):
                         help="Ratio for random selection (percent)")
     parser.add_argument(
         "--who-manual-variable",
+        dest="manual_dendrites",
         default="none",
         help="Comma separated manual dendrite ids",
     )
     parser.add_argument("--action", required=True, help="Remodeling action")
     parser.add_argument(
         "--hm-choice",
+        dest="extent_unit",
         required=True,
         help="percent or micrometers for extent",
     )
@@ -164,6 +166,7 @@ def parse_edit_args(args: list[str] | None = None):
     )
     parser.add_argument(
         "--var-choice",
+        dest="diam_unit",
         required=True,
         help="percent or micrometers for diameter change",
     )
