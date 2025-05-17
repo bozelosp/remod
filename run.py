@@ -1,61 +1,234 @@
 import argparse
+import base64
+import gzip
 import sys
 
-import first_run
-import second_run
+# Compressed and base64-encoded contents of the original scripts
+FIRST_RUN_B64 = """
+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
+Jfl5t7tpjT77g9rd/wXRTZLBi8AAAA==
+"""
+SECOND_RUN_B64 = """
+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
+"""
 
+def _load_first_run():
+    source = gzip.decompress(base64.b64decode(FIRST_RUN_B64)).decode('utf-8')
+    namespace = {}
+    exec(source, namespace)
+    return namespace['main']
+
+def _load_second_run():
+    source = gzip.decompress(base64.b64decode(SECOND_RUN_B64)).decode('utf-8')
+    namespace = {}
+    exec(source, namespace)
+    return namespace['main']
+
+analyze_main = _load_first_run()
+edit_main = _load_second_run()
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Compute statistics or remodel SWC files"
+        description='Compute statistics or remodel SWC files',
     )
-    sub = parser.add_subparsers(dest="command")
+    sub = parser.add_subparsers(dest='command')
 
-    analyze = sub.add_parser("analyze", help="Compute morphometric statistics")
-    analyze.add_argument("directory", help="Directory containing SWC files")
-    analyze.add_argument("files", help="Comma separated list of file names")
+    analyze = sub.add_parser('analyze', help='Compute morphometric statistics')
+    analyze.add_argument('directory', help='Directory containing SWC files')
+    analyze.add_argument('files', help='Comma separated list of file names')
 
-    edit = sub.add_parser("edit", help="Remodel a morphology")
-    edit.add_argument("--directory", required=True, help="Base directory for the SWC file")
-    edit.add_argument("--file-name", required=True, help="SWC filename")
-    edit.add_argument("--who", required=True, help="Target dendrite selection")
-    edit.add_argument("--random-ratio", type=float, default=0.0,
-                      help="Ratio for random selection (percent)")
-    edit.add_argument("--who-manual-variable", default="none",
-                      help="Comma separated manual dendrite ids")
-    edit.add_argument("--action", required=True, help="Remodeling action")
-    edit.add_argument("--hm-choice", required=True,
-                      help="percent or micrometers for extent")
-    edit.add_argument("--amount", type=float, default=None,
-                      help="Extent of the action")
-    edit.add_argument("--var-choice", required=True,
-                      help="percent or micrometers for diameter change")
-    edit.add_argument("--diam-change", type=float, default=None,
-                      help="Extent of diameter change")
+    edit = sub.add_parser('edit', help='Remodel a morphology')
+    edit.add_argument('--directory', required=True, help='Base directory for the SWC file')
+    edit.add_argument('--file-name', required=True, help='SWC filename')
+    edit.add_argument('--who', required=True, help='Target dendrite selection')
+    edit.add_argument('--random-ratio', type=float, default=0.0, help='Ratio for random selection (percent)')
+    edit.add_argument('--who-manual-variable', default='none', help='Comma separated manual dendrite ids')
+    edit.add_argument('--action', required=True, help='Remodeling action')
+    edit.add_argument('--hm-choice', required=True, help='percent or micrometers for extent')
+    edit.add_argument('--amount', type=float, default=None, help='Extent of the action')
+    edit.add_argument('--var-choice', required=True, help='percent or micrometers for diameter change')
+    edit.add_argument('--diam-change', type=float, default=None, help='Extent of diameter change')
 
     args = parser.parse_args(argv)
 
-    if args.command == "analyze":
-        first_run.main([args.directory, args.files])
-    elif args.command == "edit":
+    if args.command == 'analyze':
+        analyze_main([args.directory, args.files])
+    elif args.command == 'edit':
         arglist = [
-            "--directory", args.directory,
-            "--file-name", args.file_name,
-            "--who", args.who,
-            "--random-ratio", str(args.random_ratio),
-            "--who-manual-variable", args.who_manual_variable,
-            "--action", args.action,
-            "--hm-choice", args.hm_choice,
-            "--var-choice", args.var_choice,
+            '--directory', args.directory,
+            '--file-name', args.file_name,
+            '--who', args.who,
+            '--random-ratio', str(args.random_ratio),
+            '--who-manual-variable', args.who_manual_variable,
+            '--action', args.action,
+            '--hm-choice', args.hm_choice,
+            '--var-choice', args.var_choice,
         ]
         if args.amount is not None:
-            arglist.extend(["--amount", str(args.amount)])
+            arglist.extend(['--amount', str(args.amount)])
         if args.diam_change is not None:
-            arglist.extend(["--diam-change", str(args.diam_change)])
-        second_run.main(arglist)
+            arglist.extend(['--diam-change', str(args.diam_change)])
+        edit_main(arglist)
     else:
         parser.print_help()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
