@@ -35,6 +35,13 @@ Using a virtual environment is recommended but not mandatory.
 
    Results such as total dendritic length, forkpoint counts, branch order
    frequency and Sholl intersections are saved in `downloads/statistics/`.
+
+   To generate the statistics in a single JSON file without producing the
+   intermediate text files, use `json_stats.py` instead:
+
+   ```bash
+   python json_stats.py /path/to/swc 0-2.swc
+   ```
 3. **Remodel a morphology** – use `remod_cli.py edit` to apply structural changes.  The example below removes 50% of all terminal dendrites from `0-2.swc` and writes the modified neuron to `downloads/files/0-2_new.swc`:
 
    ```bash
