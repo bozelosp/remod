@@ -277,6 +277,7 @@ def _read_bulk_files(directory: Path, files: Sequence[str], reader):
 
 
 def _plot_counts(directory: Path, with_error: bool) -> None:
+    """Plot total dendrite counts for each region."""
     # Plot bar charts showing total dendrite counts for each region
     reader = read_values if with_error else read_single_value
     counts = _read_bulk_files(directory, COUNT_FILES, reader)
@@ -299,6 +300,7 @@ def _plot_counts(directory: Path, with_error: bool) -> None:
 
 
 def _plot_totals(directory: Path, with_error: bool) -> None:
+    """Plot aggregated totals across dendrite regions."""
     # Plot bar charts for aggregated totals across dendrite regions
     reader = read_values if with_error else read_single_value
     for out_name, ylabel, files in TOTAL_SPECS:
@@ -346,11 +348,13 @@ def _plot_from_specs(
 
 
 def _plot_series(directory: Path, with_error: bool) -> None:
+    """Plot dendrite counts or lengths grouped by branch order."""
     # Plot dendrite counts or lengths grouped by branch order
     _plot_from_specs(directory, SERIES_SPECS, with_error, "Branch Order")
 
 
 def _plot_sholl(directory: Path, with_error: bool) -> None:
+    """Plot measurements across concentric shells around the soma."""
     # Plot measurements across concentric shells around the soma
     _plot_from_specs(
         directory,
@@ -361,6 +365,7 @@ def _plot_sholl(directory: Path, with_error: bool) -> None:
 
 
 def plot_the_data(directory: str) -> None:
+    """Generate standard plots for a single set of statistics."""
     # Generate standard plots for a single set of statistics
     directory_path = Path(directory)
     _configure_figure_size()
@@ -372,6 +377,7 @@ def plot_the_data(directory: str) -> None:
 
 
 def plot_average_data(directory: str) -> None:
+    """Generate plots where each value has an associated error bar."""
     # Generate plots where each value has an associated error bar
     directory_path = Path(directory)
     _configure_figure_size()
@@ -383,6 +389,7 @@ def plot_average_data(directory: str) -> None:
 
 
 def plot_compare_data(directory: str) -> None:
+    """Generate side-by-side plots comparing two groups of statistics."""
     # Generate side-by-side plots comparing two groups of statistics
     directory_path = Path(directory)
     _configure_figure_size()
