@@ -4,6 +4,37 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 
+
+# Helper functions for repeated patterns
+
+def read_single_value(path):
+    with open(path) as f:
+        return float(f.readline().strip())
+
+
+def read_series(path):
+    labels=[]
+    values=[]
+    with open(path) as f:
+        for line in f:
+            parts=line.split()
+            if len(parts)>=2:
+                labels.append(int(parts[0]))
+                values.append(float(parts[1]))
+    return labels, values
+
+
+def plot_bar_series(data, labels, outfile, ylabel="", xlabel="", width=0.5, color="#406cbe", yerr=None):
+    fig, ax = plt.subplots()
+    ind=np.arange(len(labels))
+    rects=ax.bar(ind, data, width, color=color, yerr=yerr)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_xticks(ind)
+    ax.set_xticklabels([str(l) for l in labels])
+    plt.savefig(outfile, format="svg", dpi=1000)
+    plt.close()
+
 def autolabel(rects):
     for rect in rects:
         height = rect.get_height()
@@ -18,29 +49,12 @@ def plot_the_data(d):
 
     #plots the total number of all the dendrites vs the terminal ones for all the tree, as well as from the basal and apical region
 
-    with open(d+"number_of_basal_dendrites.txt") as f:
-        nbd=f.readline()
-    nbd=nbd.rstrip('\n')
-
-    with open(d+"number_of_basal_terminal_dendrites.txt") as f:
-        nbtd=f.readline()
-    nbtd=nbtd.rstrip('\n')
-
-    with open(d+"number_of_apical_dendrites.txt") as f:
-        nad=f.readline()
-    nad=nad.rstrip('\n')
-
-    with open(d+"number_of_apical_terminal_dendrites.txt") as f:
-        natd=f.readline()
-    natd=natd.rstrip('\n')
-
-    with open(d+"number_of_all_dendrites.txt") as f:
-        nald=f.readline()
-    nald=nald.rstrip('\n')
-
-    with open(d+"number_of_all_terminal_dendrites.txt") as f:
-        naltd=f.readline()
-    naltd=naltd.rstrip('\n')
+    nbd = read_single_value(d+"number_of_basal_dendrites.txt")
+    nbtd = read_single_value(d+"number_of_basal_terminal_dendrites.txt")
+    nad = read_single_value(d+"number_of_apical_dendrites.txt")
+    natd = read_single_value(d+"number_of_apical_terminal_dendrites.txt")
+    nald = read_single_value(d+"number_of_all_dendrites.txt")
+    naltd = read_single_value(d+"number_of_all_terminal_dendrites.txt")
 
     labels=['All', 'Basal', 'Apical']
 
@@ -70,578 +84,293 @@ def plot_the_data(d):
 
     #plots the total number of branchpoints from all the tree, as well as from the basal and apical region
 
-    with open(d+"number_of_all_branchpoints.txt") as f:
-        nalb=f.readline()
-    nalb=nalb.rstrip('\n')
+    bars = [
+        read_single_value(d+"number_of_all_branchpoints.txt"),
+        read_single_value(d+"number_of_basal_branchpoints.txt"),
+        read_single_value(d+"number_of_apical_branchpoints.txt")
+    ]
 
-    with open(d+"number_of_basal_branchpoints.txt") as f:
-        nbb=f.readline()
-    nbb=nbb.rstrip('\n')
-
-    with open(d+"number_of_apical_branchpoints.txt") as f:
-        nab=f.readline()
-    nab=nab.rstrip('\n')
-
-    bars=[float(nalb), float(nbb), float(nab)]
-
-    fig, ax = plt.subplots()
-
-    index = np.arange(3)
-    bar_width = 0.35
-
-    rects1 = plt.bar(index, bars, bar_width,
-                     color='#406cbe')
-
-    plt.xlabel('Dendritic Region')
-    plt.ylabel('Total Number of Branchpoints')
-    plt.xticks(index + bar_width/2, ['All', 'Basal', 'Apical'])
-
-    plt.savefig(d+'total_number_of_branchpoints.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        bars,
+        ['All', 'Basal', 'Apical'],
+        d+'total_number_of_branchpoints.svg',
+        ylabel='Total Number of Branchpoints',
+        xlabel='Dendritic Region',
+        width=0.35
+    )
 
     #plots the total dendritic length from all the tree, as well as the basal and the apical regions
 
-    with open(d+"all_total_length.txt") as f:
-        altl=f.readline()
-    altl=altl.rstrip('\n')
+    altl = read_single_value(d+"all_total_length.txt")
+    btl = read_single_value(d+"basal_total_length.txt")
+    atl = read_single_value(d+"apical_total_length.txt")
 
-    with open(d+"basal_total_length.txt") as f:
-        btl=f.readline()
-    btl=btl.rstrip('\n')
+    bars = [altl, btl, atl]
 
-    with open(d+"apical_total_length.txt") as f:
-        atl=f.readline()
-    atl=atl.rstrip('\n')
-
-    bars=[float(altl), float(btl), float(atl)]
-
-    fig, ax = plt.subplots()
-
-    index = np.arange(3)
-    bar_width = 0.35
-
-    rects1 = plt.bar(index, bars, bar_width,
-                     color='#406cbe')
-
-    plt.xlabel('Dendritic Region')
-    plt.ylabel('Total Dendritic Length')
-    plt.xticks(index + bar_width/2, ['All', 'Basal', 'Apical'])
-
-    plt.savefig(d+'total_dendritic_length.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        bars,
+        ['All', 'Basal', 'Apical'],
+        d+'total_dendritic_length.svg',
+        ylabel='Total Dendritic Length',
+        xlabel='Dendritic Region',
+        width=0.35
+    )
 
     #plots the total dendritic area from all the tree, as well as the basal and the apical regions
 
-    with open(d+"all_total_area.txt") as f:
-        alta=f.readline()
-    alta=alta.rstrip('\n')
+    alta = read_single_value(d+"all_total_area.txt")
+    bta = read_single_value(d+"basal_total_area.txt")
+    ata = read_single_value(d+"apical_total_area.txt")
 
-    with open(d+"basal_total_area.txt") as f:
-        bta=f.readline()
-    bta=bta.rstrip('\n')
+    bars = [alta, bta, ata]
 
-    with open(d+"apical_total_area.txt") as f:
-        ata=f.readline()
-    ata=ata.rstrip('\n')
-
-    bars=[float(alta), float(bta), float(ata)]
-
-    fig, ax = plt.subplots()
-
-    index = np.arange(3)
-    bar_width = 0.35
-
-    rects1 = plt.bar(index, bars, bar_width,
-                     color='#406cbe')
-
-    plt.xlabel('Dendritic Region')
-    plt.ylabel('Total Dendritic Area')
-    plt.xticks(index + bar_width/2, ['All', 'Basal', 'Apical'])
-
-    plt.savefig(d+'total_dendritic_area.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        bars,
+        ['All', 'Basal', 'Apical'],
+        d+'total_dendritic_area.svg',
+        ylabel='Total Dendritic Area',
+        xlabel='Dendritic Region',
+        width=0.35
+    )
 
     #plots the number of dendrites per branch order for all the dendritic tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"number_of_all_dendrites_per_branch_order.txt")
 
-    
-    for line in open(d+"number_of_all_dendrites_per_branch_order.txt"):
-    	data=line.split()
-    	labels.append(int(data[0]))
-    	means.append(float(data[1]))
-    	
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Number of All Dendrites')
-    ax.set_xlabel('Branch Order')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'number_of_all_dendrites_per_branch_order.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'number_of_all_dendrites_per_branch_order.svg',
+        ylabel='Number of All Dendrites',
+        xlabel='Branch Order'
+    )
 
     #plots the number of dendrites per branch order for the basal region of the tree
     if os.path.isfile(d+"number_of_basal_dendrites_per_branch_order.txt"):
 
-        labels=[]
-        means=[]
-        
-        for line in open(d+"number_of_basal_dendrites_per_branch_order.txt"):
-        	data=line.split()
-        	labels.append(int(data[0]))
-        	means.append(float(data[1]))
-        	
+        labels, means = read_series(d+"number_of_basal_dendrites_per_branch_order.txt")
 
-        ind = np.arange(len(labels))
-        myl=tuple([str(i) for i in labels])
-        width = 0.5       # the width of the bars
-
-        fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-        ax.set_ylabel('Number of Basal Dendrites')
-        ax.set_xlabel('Branch Order')
-        ax.set_xticks(2.25+ind+width)
-        ax.set_xticklabels( myl )
-
-        plt.savefig(d+'number_of_basal_dendrites_per_branch_order.svg', format='svg', dpi=1000)
-        plt.close()
+        plot_bar_series(
+            means,
+            labels,
+            d+'number_of_basal_dendrites_per_branch_order.svg',
+            ylabel='Number of Basal Dendrites',
+            xlabel='Branch Order'
+        )
 
     #plots the number of dendrites per branch order for the apical region of the tree
 
     if os.path.isfile(d+"number_of_apical_dendrites_per_branch_order.txt"):
-        
-        labels=[]
-        means=[]
 
-        for line in open(d+"number_of_apical_dendrites_per_branch_order.txt"):
-        	data=line.split()
-        	labels.append(int(data[0]))
-        	means.append(float(data[1]))
+        labels, means = read_series(d+"number_of_apical_dendrites_per_branch_order.txt")
 
-        ind = np.arange(len(labels))
-        myl=tuple([str(i) for i in labels])
-        width = 0.5       # the width of the bars
-
-        fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-        ax.set_ylabel('Number of Apical Dendrites')
-        ax.set_xlabel('Branch Order')
-        ax.set_xticks(2.25+ind+width)
-        ax.set_xticklabels( myl )
-
-        plt.savefig(d+'number_of_apical_dendrites_per_branch_order.svg', format='svg', dpi=1000)
-        plt.close()
+        plot_bar_series(
+            means,
+            labels,
+            d+'number_of_apical_dendrites_per_branch_order.svg',
+            ylabel='Number of Apical Dendrites',
+            xlabel='Branch Order'
+        )
 
     #plots the average dendritic length per branch order for all the dendritic tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"all_dendritic_length_per_branch_order.txt")
 
-    
-    for line in open(d+"all_dendritic_length_per_branch_order.txt"):
-    	data=line.split()
-    	labels.append(int(data[0]))
-    	means.append(float(data[1]))
-    	
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Dendritic Length (um)')
-    ax.set_xlabel('Branch Order')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'all_dendritic_length_per_branch_order.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'all_dendritic_length_per_branch_order.svg',
+        ylabel='Average Dendritic Length (um)',
+        xlabel='Branch Order'
+    )
 
     #plots the average dendritic length per branch order for the basal region of the tree
 
 
     if os.path.isfile(d+"basal_dendritic_length_per_branch_order.txt"):
 
-        labels=[]
-        means=[]
-        
-        for line in open(d+"basal_dendritic_length_per_branch_order.txt"):
-        	data=line.split()
-        	labels.append(int(data[0]))
-        	means.append(float(data[1]))
-        	
+        labels, means = read_series(d+"basal_dendritic_length_per_branch_order.txt")
 
-        ind = np.arange(len(labels))
-        myl=tuple([str(i) for i in labels])
-        width = 0.5       # the width of the bars
-
-        fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-        ax.set_ylabel('Average Basal Dendritic Length (um)')
-        ax.set_xlabel('Branch Order')
-        ax.set_xticks(2.25+ind+width)
-        ax.set_xticklabels( myl )
-
-        plt.savefig(d+'basal_dendritic_length_per_branch_order.svg', format='svg', dpi=1000)
-        plt.close()
+        plot_bar_series(
+            means,
+            labels,
+            d+'basal_dendritic_length_per_branch_order.svg',
+            ylabel='Average Basal Dendritic Length (um)',
+            xlabel='Branch Order'
+        )
 
     #plots the average dendritic length per branch order for the apical region of the tree
 
     if os.path.isfile(d+"apical_dendritic_length_per_branch_order.txt"):
 
-        labels=[]
-        means=[]
+        labels, means = read_series(d+"apical_dendritic_length_per_branch_order.txt")
 
-        for line in open(d+"apical_dendritic_length_per_branch_order.txt"):
-        	data=line.split()
-        	labels.append(int(data[0]))
-        	means.append(float(data[1]))
-
-        ind = np.arange(len(labels))
-        myl=tuple([str(i) for i in labels])
-        width = 0.5       # the width of the bars
-
-        fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-        ax.set_ylabel('Average Apical Dendritic Length (um)')
-        ax.set_xlabel('Branch Order')
-        ax.set_xticks(2.25+ind+width)
-        ax.set_xticklabels( myl )
-
-        plt.savefig(d+'apical_dendritic_length_per_branch_order.svg', format='svg', dpi=1000)
-        plt.close()
+        plot_bar_series(
+            means,
+            labels,
+            d+'apical_dendritic_length_per_branch_order.svg',
+            ylabel='Average Apical Dendritic Length (um)',
+            xlabel='Branch Order'
+        )
 
     #plots the average path length per branch order for all the dendritic tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"all_path_length_per_branch_order.txt")
 
-    
-    for line in open(d+"all_path_length_per_branch_order.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-        
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Path Length (um)')
-    ax.set_xlabel('Branch Order')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'all_path_length_per_branch_order.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'all_path_length_per_branch_order.svg',
+        ylabel='Average Path Length (um)',
+        xlabel='Branch Order'
+    )
 
     #plots the average path length per branch order for the basal region of the tree
 
     if os.path.isfile(d+"basal_path_length_per_branch_order.txt"):
 
-        labels=[]
-        means=[]
+        labels, means = read_series(d+"basal_path_length_per_branch_order.txt")
 
-        for line in open(d+"basal_path_length_per_branch_order.txt"):
-            data=line.split()
-            labels.append(int(data[0]))
-            means.append(float(data[1]))        
-
-        ind = np.arange(len(labels))
-        myl=tuple([str(i) for i in labels])
-        width = 0.5       # the width of the bars
-
-        fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-        ax.set_ylabel('Average Basal Path Length (um)')
-        ax.set_xlabel('Branch Order')
-        ax.set_xticks(2.25+ind+width)
-        ax.set_xticklabels( myl )
-
-        plt.savefig(d+'basal_path_length_per_branch_order.svg', format='svg', dpi=1000)
-        plt.close()
+        plot_bar_series(
+            means,
+            labels,
+            d+'basal_path_length_per_branch_order.svg',
+            ylabel='Average Basal Path Length (um)',
+            xlabel='Branch Order'
+        )
 
     #plots the average path length per branch order for the apical region of the tree
 
     if os.path.isfile(d+"apical_path_length_per_branch_order.txt"):
 
-        labels=[]
-        means=[]
+        labels, means = read_series(d+"apical_path_length_per_branch_order.txt")
 
-        for line in open(d+"apical_path_length_per_branch_order.txt"):
-            data=line.split()
-            labels.append(int(data[0]))
-            means.append(float(data[1]))
-
-        ind = np.arange(len(labels))
-        myl=tuple([str(i) for i in labels])
-        width = 0.5       # the width of the bars
-
-        fig, ax = plt.subplots()
-        rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-        ax.set_ylabel('Average Apical Path Length (um)')
-        ax.set_xlabel('Branch Order')
-        ax.set_xticks(2.25+ind+width)
-        ax.set_xticklabels( myl )
-
-        plt.savefig(d+'apical_path_length_per_branch_order.svg', format='svg', dpi=1000)
-        plt.close()
+        plot_bar_series(
+            means,
+            labels,
+            d+'apical_path_length_per_branch_order.svg',
+            ylabel='Average Apical Path Length (um)',
+            xlabel='Branch Order'
+        )
 
     #plots the average dendritic length per radial distance from the soma for all the dendritic tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_all_length.txt")
+    for i in range(1, len(labels), 2):
+        labels[i] = ''
 
-    for line in open(d+"sholl_all_length.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    for i in range(1,len(labels),2):
-        labels[i]=''
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Dendritic Length (um)')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_all_length.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_all_length.svg',
+        ylabel='Average Dendritic Length (um)',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average dendritic length per radial distance from the soma for the basal region of the tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_basal_length.txt")
 
-    for line in open(d+"sholl_basal_length.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Basal Dendritic Length (um)')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_basal_length.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_basal_length.svg',
+        ylabel='Average Basal Dendritic Length (um)',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average dendritic length per radial distance from the soma for the apical region of the tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_apical_length.txt")
+    for i in range(1, len(labels), 2):
+        labels[i] = ''
 
-    for line in open(d+"sholl_apical_length.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    for i in range(1,len(labels),2):
-        labels[i]=''
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Apical Dendritic Length (um)')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_apical_length.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_apical_length.svg',
+        ylabel='Average Apical Dendritic Length (um)',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average number of branchpoints per radial distance from the soma for all the dendritic tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_all_branchpoints.txt")
 
-    for line in open(d+"sholl_all_branchpoints.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Number of Branchpoints')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_all_branchpoints.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_all_branchpoints.svg',
+        ylabel='Average Number of Branchpoints',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average number of branchpoints per radial distance from the soma for the basal region of the tree
 
     labels=[]
     means=[]
 
-    for line in open(d+"sholl_basal_branchpoints.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
+    labels, means = read_series(d+"sholl_basal_branchpoints.txt")
 
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Number of Basal Branchpoints')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_basal_branchpoints.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_basal_branchpoints.svg',
+        ylabel='Average Number of Basal Branchpoints',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average number of branchpoints per radial distance from the soma for the apical region of the tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_apical_branchpoints.txt")
 
-    for line in open(d+"sholl_apical_branchpoints.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Number of Apical Branchpoints')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_apical_branchpoints.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_apical_branchpoints.svg',
+        ylabel='Average Number of Apical Branchpoints',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average number of intersections per radial distance from the soma for all the dendritic tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_all_intersections.txt")
+    for i in range(1, len(labels), 2):
+        labels[i] = ''
 
-    for line in open(d+"sholl_all_intersections.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    for i in range(1,len(labels),2):
-        labels[i]=''
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Number of Intersections')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_all_intersections.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_all_intersections.svg',
+        ylabel='Average Number of Intersections',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average number of intersections per radial distance from the soma for the basal region of the tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_basal_intersections.txt")
 
-    for line in open(d+"sholl_basal_intersections.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Number of Basal Intersections')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_basal_intersections.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_basal_intersections.svg',
+        ylabel='Average Number of Basal Intersections',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
     #plots the average number of intersections per radial distance from the soma for the apical region of the tree
 
-    labels=[]
-    means=[]
+    labels, means = read_series(d+"sholl_apical_intersections.txt")
+    for i in range(1, len(labels), 2):
+        labels[i] = ''
 
-    for line in open(d+"sholl_apical_intersections.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
-
-    for i in range(1,len(labels),2):
-        labels[i]=''
-
-    ind = np.arange(len(labels))
-    myl=tuple([str(i) for i in labels])
-    width = 0.5       # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects = ax.bar(2.5+ind, means, width, color='#406cbe')
-
-    ax.set_ylabel('Average Number of Apical Intersections')
-    ax.set_xlabel('Radial Distance from the Soma (um)')
-    ax.set_xticks(2.25+ind+width)
-    ax.set_xticklabels( myl )
-
-    plt.savefig(d+'sholl_apical_intersections.svg', format='svg', dpi=1000)
-    plt.close()
+    plot_bar_series(
+        means,
+        labels,
+        d+'sholl_apical_intersections.svg',
+        ylabel='Average Number of Apical Intersections',
+        xlabel='Radial Distance from the Soma (um)'
+    )
 
 def plot_average_data(d):
 
