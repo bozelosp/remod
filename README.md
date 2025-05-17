@@ -63,6 +63,26 @@ Using a virtual environment is recommended but not mandatory.
    plots comparing the original and edited morphologies. Figures are stored in
    the `downloads/` directory.
 
+## Workflow
+
+The individual scripts are designed to be used as a pipeline:
+
+1. **Analyse** – start with `first_run.py` to compute baseline statistics for a
+   set of SWC files. It expects a directory and a comma-separated list of
+   filenames. The resulting metrics are written to
+   `downloads/statistics/`.
+2. **Modify** – apply structural changes with `second_run.py` (or the legacy
+   wrapper `take_action_swc.py`). This script can remove, extend or shrink
+   selected dendrites and stores edited files under `downloads/files/`.
+3. **Reassign indices** – if an editing step breaks the original node numbering,
+   run `index_reassignment.py` on the newly created file so that node indices are
+   consecutive again.
+4. **Visualise and plot** – generate 3‑D views using `neuron_visualization.py`
+   or `graph.py` and create summary plots with `plot_data.py` or
+   `plot_individual_data.py`.
+5. **Combine statistics** – use `merge.py` or `smart_merge.py` to merge multiple
+   statistics files produced from different runs.
+
 ## More tools
 
 - `merge.py` and `smart_merge.py` combine SWC segments.
