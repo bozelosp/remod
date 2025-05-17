@@ -521,7 +521,7 @@ def remove(who, action, dend_add3d, soma_index, points, parental_points, descend
 
 	new_lines=[]
 
-	print all_terminal
+	print(all_terminal)
 
 	for dend in who:
 		if dend not in all_terminal:

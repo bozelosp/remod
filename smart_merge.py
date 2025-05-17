@@ -27,7 +27,7 @@ if (len(sys.argv)==4):
 	fwi=str(sys.argv[3])
 
 else:
-	print "error"
+	print("error")
 	sys.exit(0)
 
 before_files=read_files(before_dir)
@@ -63,23 +63,23 @@ for f in to_merge_files:
 
 	f_write = open(fw, 'w+')
 
-	print fw
+	print(fw)
 
 	if k==0:
 
 		for i in range(max_len):
 			if i<min_len:
-				print >>f_write, lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n')
+				print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
 			else:
-				print >>f_write, lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)',r' 0',lines_before[i])
+				print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)',r' 0',lines_before[i]), file=f_write)
 	
 	if k==1:
 
 		for i in range(max_len):
 			if i<min_len:
-				print >>f_write, lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n')
+				print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
 			else:
-				print >>f_write, re.sub(r'\s(\S+)',r' 0',lines_after[i]), lines_after[i].rstrip('\n')
+				print(re.sub(r'\s(\S+)',r' 0',lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
 
 	f_write.close()
 
