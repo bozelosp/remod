@@ -68,8 +68,8 @@ def max_sample_id(samples: Dict[int, List[float]]) -> int:
     # Useful when generating new identifiers
     return max(samples)
 
-def find_fork_points(samples: Dict[int, List[float]]):
-    """Return fork point information from ``samples``."""
+def find_branch_points(samples: Dict[int, List[float]]):
+    """Return branch point information from ``samples``."""
     # Count how many children each node has to detect branches
 
     soma_samples = [p for p in samples.values() if p[1] == 1]
@@ -80,22 +80,22 @@ def find_fork_points(samples: Dict[int, List[float]]):
         if p[1] not in [10]:
             child_count[parent] = child_count.get(parent, 0) + 1
 
-    fork_points = [i for i, count in child_count.items() if count > 1]
+    branch_points = [i for i, count in child_count.items() if count > 1]
 
-    axon_forks = [i for i in fork_points if samples[i][1] == 2]
-    basal_forks = [i for i in fork_points if samples[i][1] == 3]
-    apical_forks = [i for i in fork_points if samples[i][1] == 4]
-    soma_forks = [i for i in fork_points if samples[i][1] == 1]
+    axon_branches = [i for i in branch_points if samples[i][1] == 2]
+    basal_branches = [i for i in branch_points if samples[i][1] == 3]
+    apical_branches = [i for i in branch_points if samples[i][1] == 4]
+    soma_branches = [i for i in branch_points if samples[i][1] == 1]
 
-    # only dendritic fork points are returned in ``fork_points``
-    dendritic_forks = sorted(set(basal_forks + apical_forks))
+    # only dendritic branch points are returned in ``branch_points``
+    dendritic_branches = sorted(set(basal_branches + apical_branches))
 
     return (
-        dendritic_forks,
-        axon_forks,
-        basal_forks,
-        apical_forks,
-        soma_forks,
+        dendritic_branches,
+        axon_branches,
+        basal_branches,
+        apical_branches,
+        soma_branches,
         soma_samples,
     )
 
@@ -104,10 +104,10 @@ def parent_map(samples: Dict[int, List[float]]) -> Dict[int, int]:
     # Enables quick lookup of each segment's parent
     return {int(i): int(val[6]) for i, val in samples.items()}
 
-def sort_dendrites(fork_points: Iterable[int]) -> List[int]:
+def sort_dendrites(branch_points: Iterable[int]) -> List[int]:
     """Return a sorted list of dendrite starting indices."""
     # Sorting ensures deterministic traversal order
-    return sorted(fork_points)
+    return sorted(branch_points)
 
 def collect_dendrite_sample_ids(
     dendrite_roots: Iterable[int],
@@ -330,15 +330,15 @@ def parse_swc_file(file_path: str):
     swc_lines = read_swc_lines(file_path)
     comment_lines, samples = parse_swc_lines(swc_lines)
     (
-        fork_points,
-        axon_forks,
-        basal_forks,
-        apical_forks,
-        soma_forks,
+        branch_points,
+        axon_branches,
+        basal_branches,
+        apical_branches,
+        soma_branches,
         soma_samples,
-    ) = find_fork_points(samples)
+    ) = find_branch_points(samples)
     parents = parent_map(samples)
-    dendrite_roots = sort_dendrites(fork_points)
+    dendrite_roots = sort_dendrites(branch_points)
     sample_id_map = collect_dendrite_sample_ids(dendrite_roots, samples)
     dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_roots, samples)
     dendrite_records = collect_dendrite_samples(dendrite_roots, sample_id_map, samples)
@@ -351,17 +351,17 @@ def parse_swc_file(file_path: str):
     branch_order_map = compute_branch_order(dendrite_roots, soma_paths)
     connectivity_map = toward_soma_map(dendrite_roots, soma_paths)
     dendrite_roots = basal + apical
-    fork_points = basal_forks + apical_forks
+    branch_points = basal_branches + apical_branches
 
     return (
         swc_lines,
         samples,
         comment_lines,
-        fork_points,
-        axon_forks,
-        basal_forks,
-        apical_forks,
-        soma_forks,
+        branch_points,
+        axon_branches,
+        basal_branches,
+        apical_branches,
+        soma_branches,
         soma_samples,
         max_sample_number,
         dendrite_roots,
