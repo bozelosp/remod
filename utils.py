@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from statistics import mean, pstdev
 import argparse
+import re
 
 
 
@@ -208,3 +209,39 @@ def parse_merge_args(args: list[str] | None = None):
                          help="Destination directory for merged files")
 
     return parser.parse_args(args)
+
+
+def shrink_warning(who, dist, amount):
+    """Return dendrites shorter than ``amount`` and a status flag."""
+    not_applicable = []
+    status = False
+    for dend in who:
+        if dist[dend] < int(amount):
+            not_applicable.append(dend)
+            status = True
+    return status, not_applicable
+
+
+def check_indices(newfile):
+    """Print a warning if segment indices are not continuous."""
+    ilist = []
+    for line in newfile:
+        if line.startswith("#"):
+            continue
+        index = re.search(r"(\d+) (\d+) (.*?) (.*?) (.*?) (.*?) (-?\d+)", line)
+        if index:
+            i = int(index.group(1))
+            ilist.append([i, line])
+
+    status = True
+    for i in range(len(ilist) - 1):
+        if ilist[i + 1][0] - ilist[i][0] != 1:
+            print(
+                "Error! Non-continuity of segment indices found at:",
+                ilist[i][0],
+                ilist[i][1],
+            )
+            status = False
+
+    if status:
+        return
