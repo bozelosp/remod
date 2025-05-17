@@ -27,7 +27,7 @@ def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List
     -------
     tuple
         ``(comment_lines, points)`` where ``points`` maps segment index to the
-        list ``[i, t, x, y, z, d, parent]``.
+        list ``[i, t, x, y, z, radius, parent]``.
     """
 
     # Maintain original comments separately from numeric data
@@ -49,13 +49,13 @@ def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List
             x = float(parts[2])
             y = float(parts[3])
             z = float(parts[4])
-            d = float(parts[5])
+            radius = float(parts[5])
             parent = int(parts[6])
         except ValueError:
             # Skip malformed lines
             continue
 
-        points[i] = [i, t, x, y, z, d, parent]
+        points[i] = [i, t, x, y, z, radius, parent]
 
     return comment_lines, points
 
@@ -296,9 +296,9 @@ def dendrite_areas(
         segs = [points[parent_indices[dend[0][0]]]] + dend
         contributions = []
         for a, b in zip(segs[:-1], segs[1:]):
-            diam = b[5]
+            radius = b[5]
             di = distance(a[2], b[2], a[3], b[3], a[4], b[4])
-            contributions.append(2 * pi * diam * di)
+            contributions.append(2 * pi * radius * di)
         area[idx] = sum(contributions)
 
     return area
