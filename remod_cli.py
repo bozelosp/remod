@@ -1045,3 +1045,11 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
+
+
+class RemodCLI:
+    """Callable interface to the ``remod_cli`` entry points."""
+
+    analyze_main = staticmethod(analyze_main)
+    edit_main = staticmethod(edit_main)
+    main = staticmethod(main)

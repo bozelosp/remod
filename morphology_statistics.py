@@ -164,3 +164,19 @@ __all__ = [
     "sholl_length",
 ]
 
+
+class MorphologyStats:
+    """Namespace for morphometric statistic helpers."""
+
+    total_length = staticmethod(total_length)
+    total_area = staticmethod(total_area)
+    path_length = staticmethod(path_length)
+    median_radius = staticmethod(median_radius)
+    branch_order_frequency = staticmethod(branch_order_frequency)
+    branch_order_dlength = staticmethod(branch_order_dlength)
+    branch_order_path_length = staticmethod(branch_order_path_length)
+    sholl_intersections = staticmethod(sholl_intersections)
+    sholl_branch_points = staticmethod(sholl_branch_points)
+    remove_trailing_zeros = staticmethod(remove_trailing_zeros)
+    sholl_length = staticmethod(sholl_length)
+

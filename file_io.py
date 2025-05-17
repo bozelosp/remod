@@ -350,3 +350,27 @@ def graph(
     write_plot(fname, before_plot, after_plot)
 
 
+class FileIO:
+    """Convenient namespace for common file helpers."""
+
+    write_json = staticmethod(write_json)
+    write_value = staticmethod(write_value)
+    read_values = staticmethod(read_values)
+    read_value = staticmethod(read_value)
+    list_text_files = staticmethod(list_text_files)
+    read_lines = staticmethod(read_lines)
+    zero_line = staticmethod(zero_line)
+    read_sanitised_lines = staticmethod(read_sanitised_lines)
+    zero_pad = staticmethod(zero_pad)
+    write_swc = staticmethod(write_swc)
+    write_lines = staticmethod(write_lines)
+    write_dict = staticmethod(write_dict)
+    write_plot = staticmethod(write_plot)
+    read_single_value = staticmethod(read_single_value)
+    read_table_data = staticmethod(read_table_data)
+    read_compare_values = staticmethod(read_compare_values)
+    read_bulk_files = staticmethod(read_bulk_files)
+    write_pickle = staticmethod(write_pickle)
+    build_plot_from_lines = staticmethod(build_plot_from_lines)
+    graph = staticmethod(graph)
+
