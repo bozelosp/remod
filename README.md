@@ -79,8 +79,7 @@ The individual scripts are designed to be used as a pipeline:
 3. **Reassign indices** – `run.py edit` automatically renumbers nodes after
    modifications, so no extra command is needed.
 4. **Visualise and plot** – generate 3‑D views using `neuron_visualization.py`
-   or `graph.py` and create summary plots with `plot_data.py` or
-   `plot_individual_data.py`.
+   or `graph.py` and create summary plots with `plot_data.py`.
 5. **Combine statistics** – use `merge_stats.py` to merge statistics from
    different runs.
 
@@ -88,8 +87,7 @@ The individual scripts are designed to be used as a pipeline:
 
 - `merge_stats.py` combines SWC segments from multiple runs.
 - `plot_data.py` generates summary graphs from a statistics directory with
-  optional `--average` and `--compare` flags; `plot_individual_data.py` holds
-  the plotting helpers.
+  optional `--average` and `--compare` flags and includes all plotting helpers.
 - `index_reassignment.py` contains the renumbering logic used internally.
 - `random_sampling.py` demonstrates how to draw random dendrites.
 
