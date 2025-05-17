@@ -193,11 +193,11 @@ def analyze_main(argv=None):
                     axon_bpoints,
                     basal_bpoints,
                     apical_bpoints,
-                    else_bpoints,
+                    soma_bpoints,
                     soma_index,
                     max_index,
                     dendrite_list,
-                    descendants,
+                    subtrees,
                     dend_indices,
                     dend_names,
                     axon,
@@ -335,42 +335,42 @@ def analyze_main(argv=None):
                         for order in branch_order_freq:
                                 average_apical_branch_order_frequency[order].append(branch_order_freq[order])
         
-                branch_order_dlen = branch_order_dlength(dendrite_list, branch_order_values, branch_order_max, dist)
-                results['all_dendritic_length_per_branch_order'] = branch_order_dlen
-                for order in branch_order_dlen:
-                        average_all_branch_order_dlength[order].append(branch_order_dlen[order])
+                branch_order_dlengths = branch_order_dlength(dendrite_list, branch_order_values, branch_order_max, dist)
+                results['all_dendritic_length_per_branch_order'] = branch_order_dlengths
+                for order in branch_order_dlengths:
+                        average_all_branch_order_dlength[order].append(branch_order_dlengths[order])
         
                 if branch_order_basal is not None:
-                        branch_order_dlen = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, dist)
-                        results['basal_dendritic_length_per_branch_order'] = branch_order_dlen
-                        for order in branch_order_dlen:
-                                average_basal_branch_order_dlength[order].append(branch_order_dlen[order])
+                        branch_order_dlengths = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, dist)
+                        results['basal_dendritic_length_per_branch_order'] = branch_order_dlengths
+                        for order in branch_order_dlengths:
+                                average_basal_branch_order_dlength[order].append(branch_order_dlengths[order])
         
                 if branch_order_apical is not None:
-                        branch_order_dlen = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, dist)
-                        results['apical_dendritic_length_per_branch_order'] = branch_order_dlen
-                        for order in branch_order_dlen:
-                                average_apical_branch_order_dlength[order].append(branch_order_dlen[order])
+                        branch_order_dlengths = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, dist)
+                        results['apical_dendritic_length_per_branch_order'] = branch_order_dlengths
+                        for order in branch_order_dlengths:
+                                average_apical_branch_order_dlength[order].append(branch_order_dlengths[order])
         
-                plength=path_length(dendrite_list, path, dist)
-                branch_order_plen=branch_order_plength(dendrite_list, branch_order_values, branch_order_max, plength)
-                results['all_path_length_per_branch_order'] = branch_order_plen
-                for order in branch_order_plen:
-                        average_all_branch_order_plength[order].append(branch_order_plen[order])
+                path_lengths=path_length(dendrite_list, path, dist)
+                branch_order_plengths=branch_order_plength(dendrite_list, branch_order_values, branch_order_max, path_lengths)
+                results['all_path_length_per_branch_order'] = branch_order_plengths
+                for order in branch_order_plengths:
+                        average_all_branch_order_plength[order].append(branch_order_plengths[order])
         
                 if branch_order_basal is not None:
-                        plength=path_length(basal, path, dist)
-                        branch_order_plen=branch_order_plength(basal, branch_order_basal, branch_order_max_basal, plength)
-                        results['basal_path_length_per_branch_order'] = branch_order_plen
-                        for order in branch_order_plen:
-                                average_basal_branch_order_plength[order].append(branch_order_plen[order])
+                        path_lengths=path_length(basal, path, dist)
+                        branch_order_plengths=branch_order_plength(basal, branch_order_basal, branch_order_max_basal, path_lengths)
+                        results['basal_path_length_per_branch_order'] = branch_order_plengths
+                        for order in branch_order_plengths:
+                                average_basal_branch_order_plength[order].append(branch_order_plengths[order])
         
                 if branch_order_apical is not None:
-                        plength=path_length(apical, path, dist)
-                        branch_order_plen=branch_order_plength(apical, branch_order_apical, branch_order_max_apical, plength)
-                        results['apical_path_length_per_branch_order'] = branch_order_plen
-                        for order in branch_order_plen:
-                                average_apical_branch_order_plength[order].append(branch_order_plen[order])
+                        path_lengths=path_length(apical, path, dist)
+                        branch_order_plengths=branch_order_plength(apical, branch_order_apical, branch_order_max_apical, path_lengths)
+                        results['apical_path_length_per_branch_order'] = branch_order_plengths
+                        for order in branch_order_plengths:
+                                average_apical_branch_order_plength[order].append(branch_order_plengths[order])
         
                 sholl_all_length=sholl_length(points, parental_points, soma_index, radius, [3,4])
                 results['sholl_all_length'] = sholl_all_length
@@ -849,11 +849,11 @@ def edit_main(argv=None):
             target_random_ratio = args.random_ratio / 100.0
         else:
             target_random_ratio = None
-        who_manual_variable = args.who_manual_variable
+        manual_dendrites = args.manual_dendrites
         action = args.action
-        hm_choice = args.hm_choice
+        extent_unit = args.extent_unit
         amount = args.amount
-        var_choice = args.var_choice
+        diam_unit = args.diam_unit
         diam_change = args.diam_change
     
     
@@ -879,11 +879,11 @@ def edit_main(argv=None):
             axon_bpoints,
             basal_bpoints,
             apical_bpoints,
-            else_bpoints,
+            soma_bpoints,
             soma_index,
             max_index,
             dendrite_list,
-            descendants,
+            subtrees,
             dend_indices,
             dend_names,
             axon,
@@ -929,7 +929,7 @@ def edit_main(argv=None):
         elif target_dendrites in random_map:
             target_dendrites, which_dendrites = sample_random_dendrites(*random_map[target_dendrites])
         elif target_dendrites == 'who_manual':
-            dendrites = [d for d in who_manual_variable.split(',') if d]
+            dendrites = [d for d in manual_dendrites.split(',') if d]
             target_dendrites = [int(x) for x in dendrites]
             which_dendrites = 'manually selected '
         else:
@@ -944,7 +944,7 @@ def edit_main(argv=None):
         (branch_order_freq, branch_order_max)=branch_order_frequency(dendrite_list, branch_order_map)
         
         if action == 'shrink':
-            if hm_choice == 'micrometers':
+            if extent_unit == 'micrometers':
                     (status, not_applicable)=shrink_warning(target_dendrites, dist, amount)
                     if status:
                             print('Consider these warnings before you proceed to shrink action!\n')
@@ -956,9 +956,9 @@ def edit_main(argv=None):
         
         print('\nRemodeling the neuron begins!\n')
         
-        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
-        
-        (newfile, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, hm_choice, dend_segments, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(extent_unit) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(diam_unit) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
+
+        (newfile, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, extent_unit, dend_segments, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, subtrees, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
         if action in ['shrink', 'remove', 'scale']:
             newfile=index_reassign(dendrite_list, dend_segments, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_index, branch_order_max, action)
@@ -977,11 +977,11 @@ def edit_main(argv=None):
             axon_bpoints,
             basal_bpoints,
             apical_bpoints,
-            else_bpoints,
+            soma_bpoints,
             soma_index,
             max_index,
             dendrite_list,
-            descendants,
+            subtrees,
             dend_indices,
             dend_names,
             axon,
@@ -1033,10 +1033,10 @@ def main(argv=None):
             '--file-name', args.file_name,
             '--who', args.who,
             '--random-ratio', str(args.random_ratio),
-            '--who-manual-variable', args.who_manual_variable,
+            '--who-manual-variable', args.manual_dendrites,
             '--action', args.action,
-            '--hm-choice', args.hm_choice,
-            '--var-choice', args.var_choice,
+            '--hm-choice', args.extent_unit,
+            '--var-choice', args.diam_unit,
         ]
         if args.amount is not None:
             arglist.extend(['--amount', str(args.amount)])
