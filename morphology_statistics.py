@@ -58,11 +58,6 @@ def median_radius(dendrite_roots, dendrite_samples):
                 med_rad[dend] = float(dendrite_samples[dend][mid_idx][5])
         return med_rad
 
-def print_branch_order(dendrite_roots, branch_order):
-        """Return a sorted list of (dendrite, branch_order) tuples."""
-        # Useful for debugging the traversal order
-        branch_order_dict = {d: branch_order[d] for d in dendrite_roots}
-        return sorted(branch_order_dict.items(), key=lambda x: x[0])
 
 def branch_order_frequency(dendrite_roots, branch_order):
         """Return the frequency of each branch order."""
@@ -152,75 +147,22 @@ def sholl_length(samples, parents, soma_samples, radius, parameter):
         sholl_list = {}
         for prev, nxt in zip(values[:-1], values[1:]):
                 mask = (dist1 > prev) & (dist1 < nxt)
-                sholl_list[nxt] = float(lengths[mask].sum())
+        sholl_list[nxt] = float(lengths[mask].sum())
 
         return sholl_list
 
-def dist_angle_analysis(dendrite_roots, dendrite_samples, soma_root, principal_axis):
-        """Return list of [distance, angle] pairs for dendrite samples."""
-        # Calculates angle relative to the main apical axis
 
-        soma_root = np.array(soma_root)
-        axis_vec = np.array(principal_axis) - soma_root
-        axis_unit = axis_vec / LA.norm(axis_vec)
+__all__ = [
+    "total_length",
+    "total_area",
+    "path_length",
+    "median_radius",
+    "branch_order_frequency",
+    "branch_order_dlength",
+    "branch_order_path_length",
+    "sholl_intersections",
+    "sholl_fork_points",
+    "remove_trailing_zeros",
+    "sholl_length",
+]
 
-        dist_angle = []
-        for dend in dendrite_roots:
-                coords = np.array(dendrite_samples[dend])[:, 2:5]
-                bc = coords - soma_root
-                dist = LA.norm(bc, axis=1)
-                bc_unit = bc / dist[:, None]
-                dotp = bc_unit.dot(axis_unit)
-                degree = 180 - np.degrees(np.arccos(dotp))
-                dist_angle.extend(np.column_stack((dist, degree)).tolist())
-
-        return dist_angle
-
-def dist_angle_frequency(dist_angle, radius):
-        """Bin distances and angles to compute frequency tables."""
-        # Generates histograms used for polar plots
-
-        dist_arr = np.array([d[0] for d in dist_angle])
-        angle_arr = np.array([d[1] for d in dist_angle])
-
-        dist_freq = {}
-        angle_f = {}
-        values = np.arange(0, 1000, radius)
-        angle_bins = np.arange(5, 185, 5)
-
-        for prev, nxt in zip(values[:-1], values[1:]):
-                mask = (dist_arr > prev) & (dist_arr < nxt)
-                dist_freq[nxt] = int(mask.sum())
-
-                hist, edges = np.histogram(angle_arr[mask], bins=angle_bins)
-                angle_f[nxt] = {edge: int(count) for edge, count in zip(angle_bins[1:], hist)}
-
-        return dist_freq, angle_f
-
-def axis(apical, dendrite_samples, soma_samples):
-        # weighted linear regression
-        """Return principal axis and soma location using weighted regression."""
-        # Weighted by radius so thicker dendrites influence the fit
-
-        x_soma, y_soma, z_soma = soma_samples[0][2], soma_samples[0][3], soma_samples[0][4]
-
-        coords = []
-        radii = []
-        for dend in apical:
-                arr = np.array(dendrite_samples[dend])
-                coords.append(arr[:, 2:5] - [x_soma, y_soma, z_soma])
-                radii.append(arr[:, 5])
-
-        coords = np.vstack(coords)
-        radii = np.hstack(radii)
-        weights = radii / radii.sum()
-
-        weighted = coords * weights[:, None]
-        centered = weighted - weighted.mean(axis=0)
-
-        _, _, singular_vecs = np.linalg.svd(centered)
-
-        principal_axis = (singular_vecs[0] + np.array([x_soma, y_soma, z_soma])).tolist()
-        soma_root = [x_soma, y_soma, z_soma]
-
-        return principal_axis, soma_root
