@@ -9,7 +9,7 @@ from pathlib import Path
 
 from swc_parser import parse_swc_file, index_reassign
 read_file = parse_swc_file
-from neuron_export import *
+from file_io import first_graph, second_graph
 from morphology_statistics import (
     total_length,
     total_area,
