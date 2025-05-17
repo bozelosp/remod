@@ -3,7 +3,7 @@ from neuron_visualization import *
 from statistics_swc import *
 from random_sampling import *
 from actions_swc import *
-from utils import round_to
+from utils import round_to, write_json
 import sys
 import numpy as np
 import os
@@ -831,6 +831,45 @@ with open(f_average_sholl_apical_intersections, 'w+') as f:
 from plot_individual_data import plot_average_data
 prefix=directory+'downloads/statistics/average_'
 plot_average_data(prefix)
+
+summary = {
+    'average_number_of_all_dendrites': average_list(average_number_of_all_dendrites),
+    'average_number_of_all_terminal_dendrites': average_list(average_number_of_all_terminal_dendrites),
+    'average_number_of_basal_dendrites': average_list(average_number_of_basal_dendrites),
+    'average_number_of_basal_terminal_dendrites': average_list(average_number_of_basal_terminal_dendrites),
+    'average_number_of_apical_dendrites': average_list(average_number_of_apical_dendrites),
+    'average_number_of_apical_terminal_dendrites': average_list(average_number_of_apical_terminal_dendrites),
+    'average_total_length': average_list(average_t_length),
+    'average_total_basal_length': average_list(average_basal_t_length),
+    'average_total_apical_length': average_list(average_apical_t_length),
+    'average_total_area': average_list(average_t_area),
+    'average_total_basal_area': average_list(average_basal_t_area),
+    'average_total_apical_area': average_list(average_apical_t_area),
+    'average_num_all_branchpoints': average_list(average_num_all_bpoints),
+    'average_num_basal_branchpoints': average_list(average_num_basal_bpoints),
+    'average_num_apical_branchpoints': average_list(average_num_apical_bpoints),
+    'average_all_bo_frequency': average_all_bo_frequency,
+    'average_basal_bo_frequency': average_basal_bo_frequency,
+    'average_apical_bo_frequency': average_apical_bo_frequency,
+    'average_all_bo_dlength': average_all_bo_dlength,
+    'average_basal_bo_dlength': average_basal_bo_dlength,
+    'average_apical_bo_dlength': average_apical_bo_dlength,
+    'average_all_bo_plength': average_all_bo_plength,
+    'average_basal_bo_plength': average_basal_bo_plength,
+    'average_apical_bo_plength': average_apical_bo_plength,
+    'average_sholl_all_bp': average_sholl_all_bp,
+    'average_sholl_basal_bp': average_sholl_basal_bp,
+    'average_sholl_apical_bp': average_sholl_apical_bp,
+    'average_sholl_all_length': average_sholl_all_length,
+    'average_sholl_basal_length': average_sholl_basal_length,
+    'average_sholl_apical_length': average_sholl_apical_length,
+    'average_sholl_all_intersections': average_sholl_all_intersections,
+    'average_sholl_basal_intersections': average_sholl_basal_intersections,
+    'average_sholl_apical_intersections': average_sholl_apical_intersections,
+}
+
+json_path = directory + 'downloads/statistics/summary.json'
+write_json(json_path, summary)
 
 '''print
 print 'Sholl analysis (dendritic length) for apical' + str(median_dict(average_sholl_median_basal_length))
