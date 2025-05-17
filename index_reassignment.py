@@ -75,13 +75,13 @@ def _renumber_dendrite(
 
 def index_reassign(
     dendrite_list: Iterable[int],  # unused parameter maintained for compatibility
-    dend_add3d: Dict[int, List[List[float]]],
+    dend_segments: Dict[int, List[List[float]]],
     branch_order_map: Dict[int, int],
-    con: Dict[int, int],
+    connectivity_map: Dict[int, int],
     axon: Iterable[int],
     basal: Iterable[int],
     apical: Iterable[int],
-    elsep: Iterable[int],
+    undefined_dendrites: Iterable[int],
     soma_index: List[List[float]],
     branch_order_max: int,
     action: str,
@@ -106,11 +106,11 @@ def index_reassign(
         segments.append(soma_pt)
 
     # Renumber dendrites grouped by type
-    groups = (axon, basal, apical, elsep)
+    groups = (axon, basal, apical, undefined_dendrites)
     for dend_group in groups:
         for dend_id in _sorted_dendrites(dend_group, branch_order_map):
             next_index = _renumber_dendrite(
-                dend_id, dend_add3d, branch_order_map, con, next_index, segments
+                dend_id, dend_segments, branch_order_map, connectivity_map, next_index, segments
             )
 
     # Convert to SWC text lines
