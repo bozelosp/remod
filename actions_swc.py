@@ -13,8 +13,8 @@ def length_distribution(): #parses the length distribution
 
         length=[]
         frequency=[]
-        cd=os.getcwd()
-        fname=cd+'/length_distribution.txt'
+        current_directory=os.getcwd()
+        fname=current_directory+'/length_distribution.txt'
         with open(fname) as f:
                 for line in f:
                         line=line.rstrip('\n')
@@ -23,27 +23,27 @@ def length_distribution(): #parses the length distribution
                                 length.append(float(regex.group(1)))
                                 frequency.append(float(regex.group(2)))
 
-        l_length=[]
-        l_length.append(0)
+        cumulative_length_index=[]
+        cumulative_length_index.append(0)
         limit_length=0
         for i in range(len(length)):
-                l_length.append(int(frequency[i]*1000000+limit_length))
-                limit_length=l_length[i]
-        return length, l_length
+                cumulative_length_index.append(int(frequency[i]*1000000+limit_length))
+                limit_length=cumulative_length_index[i]
+        return length, cumulative_length_index
 
-def length_selection(l_length): #returns a randomly chosen length value based on the distribution
+def length_selection(cumulative_length_index): #returns a randomly chosen length value based on the distribution
 
-        random=randint(0, l_length[-1]);
+        random=randint(0, cumulative_length_index[-1]);
 
-        for i in range(len(l_length)):
-                if random>l_length[i] and random<l_length[i+1]:
+        for i in range(len(cumulative_length_index)):
+                if random>cumulative_length_index[i] and random<cumulative_length_index[i+1]:
                         return length[i]
                         break
 
 
 def createP(length, angle, p1, p2, flag): # return new pt3dadd lines formatted in the standard NEURON style
 
-        r=radians(angle)
+        rotation_angle=radians(angle)
 
         axis_origin=[0,0,1]
         if p2[0]==p2[0] and p2[1]==p1[1]:
@@ -62,50 +62,50 @@ def createP(length, angle, p1, p2, flag): # return new pt3dadd lines formatted i
         yt = perp_vector[0,1]
         zt = perp_vector[0,2]
 
-        r1 = np.matrix([[cos(r)+(xt**2)*(1-cos(r)), xt*yt*(1-cos(r))-zt*sin(r), xt*zt*(1-cos(r))+yt*sin(r)],
-                [yt*xt*(1-cos(r))+zt*sin(r) , cos(r) + (yt**2)*(1-cos(r)), yt*zt*(1-cos(r))-xt*sin(r)],
-                [zt*xt*(1-cos(r))-yt*sin(r), zt*yt*(1-cos(r))+xt*sin(r), cos(r)+(zt**2)*(1-cos(r))]], float)
+        rotation_matrix_one = np.matrix([[cos(rotation_angle)+(xt**2)*(1-cos(rotation_angle)), xt*yt*(1-cos(rotation_angle))-zt*sin(rotation_angle), xt*zt*(1-cos(rotation_angle))+yt*sin(rotation_angle)],
+                [yt*xt*(1-cos(rotation_angle))+zt*sin(rotation_angle) , cos(rotation_angle) + (yt**2)*(1-cos(rotation_angle)), yt*zt*(1-cos(rotation_angle))-xt*sin(rotation_angle)],
+                [zt*xt*(1-cos(rotation_angle))-yt*sin(rotation_angle), zt*yt*(1-cos(rotation_angle))+xt*sin(rotation_angle), cos(rotation_angle)+(zt**2)*(1-cos(rotation_angle))]], float)
 
         xa = axis[0,0]
         ya = axis[0,1]
         za = axis[0,2]
 
-        r=randrange(360) 
-        r=radians(r) # /!\ in rads /!\
+        rotation_angle=randrange(360)
+        rotation_angle=radians(rotation_angle) # /!\ in rads /!\
 
-        r2 = np.matrix([[cos(r)+(xa**2)*(1-cos(r)), xa*ya*(1-cos(r))-za*sin(r), xa*za*(1-cos(r))+ya*sin(r)],
-                [ya*xa*(1-cos(r))+za*sin(r) , cos(r) + (ya**2)*(1-cos(r)), ya*za*(1-cos(r))-xa*sin(r)],
-                [za*xa*(1-cos(r))-ya*sin(r), za*ya*(1-cos(r))+xa*sin(r), cos(r)+(za**2)*(1-cos(r))]], float)
+        rotation_matrix_two = np.matrix([[cos(rotation_angle)+(xa**2)*(1-cos(rotation_angle)), xa*ya*(1-cos(rotation_angle))-za*sin(rotation_angle), xa*za*(1-cos(rotation_angle))+ya*sin(rotation_angle)],
+                [ya*xa*(1-cos(rotation_angle))+za*sin(rotation_angle) , cos(rotation_angle) + (ya**2)*(1-cos(rotation_angle)), ya*za*(1-cos(rotation_angle))-xa*sin(rotation_angle)],
+                [za*xa*(1-cos(rotation_angle))-ya*sin(rotation_angle), za*ya*(1-cos(rotation_angle))+xa*sin(rotation_angle), cos(rotation_angle)+(za**2)*(1-cos(rotation_angle))]], float)
 
         factor =  (axis.T * length)
 
-        f1 = r1 * factor
-        f2 = r2 * f1
-        f2 = f2.T
-        v1 = f2 + p2
+        vector_step_one = rotation_matrix_one * factor
+        vector_step_two = rotation_matrix_two * vector_step_one
+        vector_step_two = vector_step_two.T
+        v1 = vector_step_two + p2
 
-        np1=[v1[0,0], v1[0,1], v1[0,2]]
+        new_point_one=[v1[0,0], v1[0,1], v1[0,2]]
 
         new_points=[]
-        new_points.append(np1)
+        new_points.append(new_point_one)
 
         if flag==2:
-                r = r + 3.1415
-                r2_ = np.matrix([[cos(r)+(xa**2)*(1-cos(r)), xa*ya*(1-cos(r))-za*sin(r), xa*za*(1-cos(r))+ya*sin(r)],
-                        [ya*xa*(1-cos(r))+za*sin(r) , cos(r) + (ya**2)*(1-cos(r)), ya*za*(1-cos(r))-xa*sin(r)],
-                        [za*xa*(1-cos(r))-ya*sin(r), za*ya*(1-cos(r))+xa*sin(r), cos(r)+(za**2)*(1-cos(r))]], float)
-                f3 = r2_ * f1
-                f3 = f3.T
-                v2 = f3 + p2
+                rotation_angle = rotation_angle + 3.1415
+                rotation_matrix_two_alt = np.matrix([[cos(rotation_angle)+(xa**2)*(1-cos(rotation_angle)), xa*ya*(1-cos(rotation_angle))-za*sin(rotation_angle), xa*za*(1-cos(rotation_angle))+ya*sin(rotation_angle)],
+                        [ya*xa*(1-cos(rotation_angle))+za*sin(rotation_angle) , cos(rotation_angle) + (ya**2)*(1-cos(rotation_angle)), ya*za*(1-cos(rotation_angle))-xa*sin(rotation_angle)],
+                        [za*xa*(1-cos(rotation_angle))-ya*sin(rotation_angle), za*ya*(1-cos(rotation_angle))+xa*sin(rotation_angle), cos(rotation_angle)+(za**2)*(1-cos(rotation_angle))]], float)
+                vector_step_three = rotation_matrix_two_alt * vector_step_one
+                vector_step_three = vector_step_three.T
+                v2 = vector_step_three + p2
 
                 new_point=[]
                 new_point.append(v2[0,0])
                 new_point.append(v2[0,1])
                 new_point.append(v2[0,2])
 
-                np2=[v2[0,0], v2[0,1], v2[0,2]]
+                new_point_two=[v2[0,0], v2[0,1], v2[0,2]]
 
-                new_points.append(np2)
+                new_points.append(new_point_two)
 
         return new_points
 
@@ -114,7 +114,7 @@ def add_point(point1, point2, flag): # return one or two new points
         p2=[point1[2], point1[3], point1[4]]
         p1=[point2[2], point2[3], point2[4]]
 
-        length=length_selection(l_length)
+        length=length_selection(cumulative_length_index)
         angle=5
 
         new_point=createP(length, angle, p1, p2, flag)
@@ -151,13 +151,13 @@ def new_dend(max_index): # return two new dendrite IDs for branching
 def extend_dendrite(dend, new_dist, point1, point2, max_index, flag): # grow the dendrite and return a list of new lines
 
         new_lines=[]
-        dist_sum=0
+        cumulative_distance=0
 
         my_point2=point2
 
         seg_index=max_index
 
-        while dist_sum<new_dist[dend]:
+        while cumulative_distance<new_dist[dend]:
 
                 (new_point, length)=add_point(point1, point2, flag)
                 
@@ -169,9 +169,9 @@ def extend_dendrite(dend, new_dist, point1, point2, max_index, flag): # grow the
                 point2=point1
                 point1=p
 
-                dist_sum+=length
+                cumulative_distance+=length
 
-        diff=dist_sum-float(new_dist[dend])
+        diff=cumulative_distance-float(new_dist[dend])
 
         if len(new_lines)==1:
                 x2=my_point2[2]
@@ -233,7 +233,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                         initial_position=dend_add3d[dend][-1]
 
                 segment_list=[]
-                dist_sum=step[dend]
+                cumulative_distance=step[dend]
 
                 if hm_choice=='percent':
                         new_dist[dend]=dist[dend]*((100-float(amount))/100)
@@ -261,11 +261,11 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                                 z=next_point[4]
                                 d=next_point[5]
 
-                                dist_sum+=distance(x,xp,y,yp,z,zp)
+                                cumulative_distance+=distance(x,xp,y,yp,z,zp)
 
-                                if dist_sum>new_dist[dend]:
+                                if cumulative_distance>new_dist[dend]:
 
-                                        diff=dist_sum-float(new_dist[dend])
+                                        diff=cumulative_distance-float(new_dist[dend])
                                 
                                         xn=x-xp
                                         yn=y-yp 
@@ -369,7 +369,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                                 else:
                                         k+=1
 
-                dist_sum=0
+                cumulative_distance=0
 
                 current_point=dend_add3d[dend][0]
                 next_point=points[parental_points[current_point[0]]]
@@ -382,7 +382,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                 y=next_point[3]
                 z=next_point[4]
 
-                dist_sum+=distance(x,xp,y,yp,z,zp)
+                cumulative_distance+=distance(x,xp,y,yp,z,zp)
 
                 if hm_choice=='percent':
                         new_dist[dend]=dist[dend]*((100-amount)/100)
@@ -410,11 +410,11 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                         z=next_point[4]
                         d=next_point[5]
 
-                        dist_sum+=distance(x,xp,y,yp,z,zp)
+                        cumulative_distance+=distance(x,xp,y,yp,z,zp)
 
-                        if dist_sum>new_dist[dend]:
+                        if cumulative_distance>new_dist[dend]:
 
-                                diff=dist_sum-float(new_dist[dend])
+                                diff=cumulative_distance-float(new_dist[dend])
 
                                 xn=x-xp
                                 yn=y-yp 
@@ -716,7 +716,7 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
         return (newfile, dendrite_list, segment_list)
 
-(length, l_length)=length_distribution()
+(length, cumulative_length_index)=length_distribution()
 
 def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
 
