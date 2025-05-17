@@ -166,15 +166,15 @@ def parse_edit_args(args: list[str] | None = None):
     )
     parser.add_argument(
         "--var-choice",
-        dest="diam_unit",
+        dest="radius_unit",
         required=True,
-        help="percent or micrometers for diameter change",
+        help="percent or micrometers for radius change",
     )
     parser.add_argument(
-        "--diam-change",
+        "--radius-change",
         type=float,
         default=None,
-        help="Extent of diameter change",
+        help="Extent of radius change",
     )
     ns = parser.parse_args(args)
     if not ns.directory.is_dir():
