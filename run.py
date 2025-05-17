@@ -444,7 +444,7 @@ def analyze_main(argv=None):
                                 pass
                         vector.append(sholl_apical_intersections[length])
         
-                from plot_individual_data import plot_the_data
+                from plot_data import plot_the_data
                 prefix=os.path.join(stats_dir, file_name + '_')
                 plot_the_data(prefix)
         
@@ -825,7 +825,7 @@ def analyze_main(argv=None):
                         print(i, ' '.join(map(str, average_sholl_apical_intersections[i])))
                         print(i, ' '.join(map(str, average_sholl_apical_intersections[i])), file=f)
         
-        from plot_individual_data import plot_average_data
+        from plot_data import plot_average_data
         prefix=os.path.join(stats_dir, 'average_')
         plot_average_data(prefix)
         

@@ -8,7 +8,7 @@ from pathlib import Path
 import os
 import re
 
-from plot_individual_data import plot_compare_data
+from plot_data import plot_compare_data
 
 
 def list_text_files(directory: Path) -> list[Path]:
