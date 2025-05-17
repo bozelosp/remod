@@ -12,6 +12,7 @@ from random import uniform, randrange
 from math import cos, sin, pi, sqrt, radians, degrees
 
 import collections
+from utils import distance
 
 def total_length(dendrite_list, dist): #soma_included
 
@@ -108,11 +109,6 @@ def bo_plength(dendrite_list, bo, bo_max, plength):
 			bo_plen[i]=add_length/k
 
 	return bo_plen
-
-def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
-
-	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-	return dist
 
 def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 

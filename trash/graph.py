@@ -8,15 +8,7 @@ import sys
 import numpy as np
 from random import uniform, randrange
 from math import cos, sin, pi, sqrt, radians, degrees
-
-def round_to(x, rounder): #returns the nearest number to the multiplied "rounder"
-
-	return round(x/rounder)*rounder
-
-def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
-
-	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-	return dist
+from utils import distance, round_to
 
 def plot_(my_file, my_plot, dlist):
 
