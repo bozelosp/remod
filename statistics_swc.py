@@ -85,7 +85,7 @@ def branch_order_plength(dendrite_list, branch_order, branch_order_max, path_len
         # Path lengths are summed for each order before averaging
         return _mean_by_branch_order(dendrite_list, branch_order, path_lengths)
 
-def sholl_intersections(points, parental_points, soma_index, radius, parameter):
+def sholl_intersections(points, parent_indices, soma_index, radius, parameter):
         """Compute Sholl intersection counts for the given radius."""
         # Measures crossings of concentric shells centred at the soma
 
@@ -94,7 +94,7 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
         values = np.arange(0, 10000, radius)
         ids = [i for i in points if points[i][1] in parameter]
         pts = _coords(points, ids)
-        parents = _coords(points, [parental_points[i] for i in ids])
+        parents = _coords(points, [parent_indices[i] for i in ids])
 
         dist1 = np.linalg.norm(pts - soma_coords, axis=1)
         dist2 = np.linalg.norm(parents - soma_coords, axis=1)
@@ -135,7 +135,7 @@ def remove_trailing_zeros(sholl_list, values, radius):
         return {values[i] + radius: sholl_list[values[i] + radius] for i in range(idx)}
 
 
-def sholl_length(points, parental_points, soma_index, radius, parameter):
+def sholl_length(points, parent_indices, soma_index, radius, parameter):
         """Compute total dendrite length inside successive Sholl shells."""
         # Sums segment lengths that fall within each radial bin
 
@@ -144,7 +144,7 @@ def sholl_length(points, parental_points, soma_index, radius, parameter):
         values = np.arange(0, 10000, radius)
         ids = [i for i in points if points[i][1] in parameter]
         pts = _coords(points, ids)
-        parents = _coords(points, [parental_points[i] for i in ids])
+        parents = _coords(points, [parent_indices[i] for i in ids])
 
         lengths = np.linalg.norm(pts - parents, axis=1)
         dist1 = np.linalg.norm(pts - soma_coords, axis=1)

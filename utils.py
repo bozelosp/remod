@@ -147,7 +147,7 @@ def parse_edit_args(args: list[str] | None = None):
                         help="Ratio for random selection (percent)")
     parser.add_argument(
         "--who-manual-variable",
-        dest="manual_dendrites",
+        dest="manual_dendrite_ids",
         default="none",
         help="Comma separated manual dendrite ids",
     )
