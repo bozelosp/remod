@@ -181,7 +181,7 @@ for file_name in file_names:
         print('Extracting morphometric statistics for file: ' + str(file_name+'.swc'))
         print()
 
-        (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+        (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
         first_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
 
         fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
@@ -250,15 +250,15 @@ for file_name in file_names:
                 print(apical_t_area, file=f)
         average_apical_t_area.append(apical_t_area)
 
-        #print list(set([parental_points[x] for x in bpoints]))
-        #print len(list(set([parental_points[x] for x in bpoints])))
+        #print list(set([parental_points[x] for x in branch_points]))
+        #print len(list(set([parental_points[x] for x in branch_points])))
 
         fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_branchpoints.txt'
         with open(fnum_all_bpoints, 'w+') as f:
 
                 soma=[x[0] for x in soma_index]
-                print(len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma]))), file=f)
-        average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma]))))
+                print(len(list(set([parental_points[x] for x in branch_points if parental_points[x] not in soma]))), file=f)
+        average_num_all_bpoints.append(len(list(set([parental_points[x] for x in branch_points if parental_points[x] not in soma]))))
 
         fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_branchpoints.txt'
         with open(fnum_basal_bpoints, 'w+') as f:
@@ -311,8 +311,8 @@ for file_name in file_names:
                 os.remove(ftotalength)
                 continue'''
 
-        bo=branch_order(dendrite_list, path)
-        (bo_freq, bo_max)=bo_frequency(dendrite_list, bo)
+        branch_order=branch_order(dendrite_list, path)
+        (bo_freq, bo_max)=bo_frequency(dendrite_list, branch_order)
         fbo=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites_per_branch_order.txt'
         with open(fbo, 'w+') as f:
                 for order in bo_freq:
@@ -322,7 +322,7 @@ for file_name in file_names:
         if len(basal)>0:
 
                 bo_basal=branch_order(basal, path)
-                (bo_freq, bo_max_basal)=bo_frequency(basal, bo)
+                (bo_freq, bo_max_basal)=bo_frequency(basal, branch_order)
                 fbo=directory+'downloads/statistics/'+file_name+'_number_of_basal_dendrites_per_branch_order.txt'
                 with open(fbo, 'w+') as f:
                         for order in bo_freq:
@@ -332,14 +332,14 @@ for file_name in file_names:
         if len(apical)>0:
 
                 bo_apical=branch_order(apical, path)
-                (bo_freq, bo_max_apical)=bo_frequency(apical, bo)
+                (bo_freq, bo_max_apical)=bo_frequency(apical, branch_order)
                 fbo=directory+'downloads/statistics/'+file_name+'_number_of_apical_dendrites_per_branch_order.txt'
                 with open(fbo, 'w+') as f:
                         for order in bo_freq:
                                 average_apical_bo_frequency[order].append(bo_freq[order])
                                 print(str(order) + ' ' + str(bo_freq[order]), file=f)
 
-        bo_dlen=bo_dlength(dendrite_list, bo, bo_max, dist)
+        bo_dlen=bo_dlength(dendrite_list, branch_order, bo_max, dist)
         fbo_dlen=directory+'downloads/statistics/'+file_name+'_all_dendritic_length_per_branch_order.txt'
         with open(fbo_dlen, 'w+') as f:
                 for order in bo_dlen:
@@ -371,7 +371,7 @@ for file_name in file_names:
                                 print(str(order) + ' ' + str(bo_dlen[order]), file=f)
 
         plength=path_length(dendrite_list, path, dist)
-        bo_plen=bo_plength(dendrite_list, bo, bo_max, plength)
+        bo_plen=bo_plength(dendrite_list, branch_order, bo_max, plength)
         fbo_plen=directory+'downloads/statistics/'+file_name+'_all_path_length_per_branch_order.txt'
         with open(fbo_plen, 'w+') as f:
                 for order in bo_plen:
@@ -436,7 +436,7 @@ for file_name in file_names:
                 print >>f, "%s %s" % (length, sholl_median_basal_length[length])
         f.close'''
 
-        sholl_all_bp=sholl_bp(bpoints, points, soma_index, radius)
+        sholl_all_bp=sholl_bp(branch_points, points, soma_index, radius)
         f_sholl=directory+'downloads/statistics/'+file_name+'_sholl_all_branchpoints.txt'
         with open(f_sholl, 'w+') as f:
                 for length in sorted(sholl_all_bp):
