@@ -19,7 +19,7 @@ from morphology_statistics import (
     branch_order_path_length,
     path_length,
     sholl_length,
-    sholl_fork_points,
+    sholl_branch_points,
     sholl_intersections,
     branch_order,
 )
@@ -81,9 +81,9 @@ def analyze_main(argv=None):
         average_t_area=[]
         average_basal_t_area=[]
         average_apical_t_area=[]
-        average_num_basal_forks=[]
-        average_num_apical_forks=[]
-        average_num_all_forks=[]
+        average_num_basal_branches=[]
+        average_num_apical_branches=[]
+        average_num_all_branches=[]
         
         average_all_branch_order_frequency={k: [] for k in range(0,200)}
         average_basal_branch_order_frequency={k: [] for k in range(0,200)}
@@ -148,9 +148,9 @@ def analyze_main(argv=None):
                 average_t_area = stats.get('average_t_area', [])
                 average_basal_t_area = stats.get('average_basal_t_area', [])
                 average_apical_t_area = stats.get('average_apical_t_area', [])
-                average_num_all_forks = stats.get('average_num_all_forks', [])
-                average_num_basal_forks = stats.get('average_num_basal_forks', [])
-                average_num_apical_forks = stats.get('average_num_apical_forks', [])
+                average_num_all_branches = stats.get('average_num_all_branches', [])
+                average_num_basal_branches = stats.get('average_num_basal_branches', [])
+                average_num_apical_branches = stats.get('average_num_apical_branches', [])
                 average_all_branch_order_frequency = stats.get('average_all_branch_order_frequency', {k: [] for k in range(0,200)})
                 average_basal_branch_order_frequency = stats.get('average_basal_branch_order_frequency', {k: [] for k in range(0,200)})
                 average_apical_branch_order_frequency = stats.get('average_apical_branch_order_frequency', {k: [] for k in range(0,200)})
@@ -186,11 +186,11 @@ def analyze_main(argv=None):
                     swc_lines,
                     samples,
                     comment_lines,
-                    fork_points,
-                    axon_forks,
-                    basal_forks,
-                    apical_forks,
-                    soma_forks,
+                    branch_points,
+                    axon_branches,
+                    basal_branches,
+                    apical_branches,
+                    soma_branches,
                     soma_samples,
                     max_sample_number,
                     dendrite_roots,
@@ -259,23 +259,23 @@ def analyze_main(argv=None):
                 #print list(set([parent_indices[x] for x in branch_points]))
                 #print len(list(set([parent_indices[x] for x in branch_points])))
         
-                fnum_all_fpoints = stats_dir / f'{file_name}_number_of_all_forkpoints.txt'
+                fnum_all_fpoints = stats_dir / f'{file_name}_number_of_all_branchpoints.txt'
                 soma=[x[0] for x in soma_samples]
                 write_value(
                     fnum_all_fpoints,
-                    len(list(set([parents[x] for x in fork_points if parents[x] not in soma]))),
+                    len(list(set([parents[x] for x in branch_points if parents[x] not in soma]))),
                 )
-                average_num_all_forks.append(len(list(set([parents[x] for x in fork_points if parents[x] not in soma]))))
+                average_num_all_branches.append(len(list(set([parents[x] for x in branch_points if parents[x] not in soma]))))
         
-                results['number_of_basal_forkpoints'] = len(
-                    list(set([parents[x] for x in basal_forks if parents[x] not in soma]))
+                results['number_of_basal_branchpoints'] = len(
+                    list(set([parents[x] for x in basal_branches if parents[x] not in soma]))
                 )
-                average_num_basal_forks.append(len(list(set([parents[x] for x in basal_forks if parents[x] not in soma]))))
+                average_num_basal_branches.append(len(list(set([parents[x] for x in basal_branches if parents[x] not in soma]))))
         
-                results['number_of_apical_forkpoints'] = len(
-                    list(set([parents[x] for x in apical_forks if parents[x] not in soma]))
+                results['number_of_apical_branchpoints'] = len(
+                    list(set([parents[x] for x in apical_branches if parents[x] not in soma]))
                 )
-                average_num_apical_forks.append(len(list(set([parents[x] for x in apical_forks if parents[x] not in soma]))))
+                average_num_apical_branches.append(len(list(set([parents[x] for x in apical_branches if parents[x] not in soma]))))
         
                 results['list_of_all_dendrites'] = dendrite_roots
         
@@ -392,18 +392,18 @@ def analyze_main(argv=None):
                         print >>f, "%s %s" % (length, sholl_median_basal_length[length])
                 f.close'''
         
-                sholl_all_fp=sholl_fork_points(fork_points, samples, soma_samples, radius)
-                results['sholl_all_forkpoints'] = sholl_all_fp
+                sholl_all_fp=sholl_branch_points(branch_points, samples, soma_samples, radius)
+                results['sholl_all_branchpoints'] = sholl_all_fp
                 for length in sorted(sholl_all_fp):
                         average_sholl_all_fp[length].append(sholl_all_fp[length])
         
-                sholl_basal_fp=sholl_fork_points(basal_forks, samples, soma_samples, radius)
-                results['sholl_basal_forkpoints'] = sholl_basal_fp
+                sholl_basal_fp=sholl_branch_points(basal_branches, samples, soma_samples, radius)
+                results['sholl_basal_branchpoints'] = sholl_basal_fp
                 for length in sorted(sholl_basal_fp):
                         average_sholl_basal_fp[length].append(sholl_basal_fp[length])
         
-                sholl_apical_fp=sholl_fork_points(apical_forks, samples, soma_samples, radius)
-                results['sholl_apical_forkpoints'] = sholl_apical_fp
+                sholl_apical_fp=sholl_branch_points(apical_branches, samples, soma_samples, radius)
+                results['sholl_apical_branchpoints'] = sholl_apical_fp
                 for length in sorted(sholl_apical_fp):
                         average_sholl_apical_fp[length].append(sholl_apical_fp[length])
         
@@ -472,9 +472,9 @@ def analyze_main(argv=None):
                 'average_t_area': average_t_area,
                 'average_basal_t_area': average_basal_t_area,
                 'average_apical_t_area': average_apical_t_area,
-                'average_num_all_forks': average_num_all_forks,
-                'average_num_basal_forks': average_num_basal_forks,
-                'average_num_apical_forks': average_num_apical_forks,
+                'average_num_all_branches': average_num_all_branches,
+                'average_num_basal_branches': average_num_basal_branches,
+                'average_num_apical_branches': average_num_apical_branches,
                 'average_all_branch_order_frequency': average_all_branch_order_frequency,
                 'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
                 'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
@@ -632,30 +632,30 @@ def analyze_main(argv=None):
         write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
         
         log("")
-        avg_all_forks = average_list(average_num_all_forks)
-        log(f"Number of all Fork Points: {avg_all_forks[0]} {avg_all_forks[1]}")
-        f_average_num_all_forks = stats_dir / 'average_number_of_all_forkpoints.txt'
+        avg_all_branches = average_list(average_num_all_branches)
+        log(f"Number of all Branch Points: {avg_all_branches[0]} {avg_all_branches[1]}")
+        f_average_num_all_branches = stats_dir / 'average_number_of_all_branchpoints.txt'
         write_value(
-            f_average_num_all_forks,
-            f"{avg_all_forks[0]} {avg_all_forks[1]}",
+            f_average_num_all_branches,
+            f"{avg_all_branches[0]} {avg_all_branches[1]}",
         )
         
         log("")
-        avg_basal_forks = average_list(average_num_basal_forks)
-        log(f"Number of all Basal Fork Points: {avg_basal_forks[0]} {avg_basal_forks[1]}")
-        f_average_num_basal_forks = stats_dir / 'average_number_of_basal_forkpoints.txt'
+        avg_basal_branches = average_list(average_num_basal_branches)
+        log(f"Number of all Basal Branch Points: {avg_basal_branches[0]} {avg_basal_branches[1]}")
+        f_average_num_basal_branches = stats_dir / 'average_number_of_basal_branchpoints.txt'
         write_value(
-            f_average_num_basal_forks,
-            f"{avg_basal_forks[0]} {avg_basal_forks[1]}",
+            f_average_num_basal_branches,
+            f"{avg_basal_branches[0]} {avg_basal_branches[1]}",
         )
         
         log("")
-        avg_apical_forks = average_list(average_num_apical_forks)
-        log(f"Number of all Apical Fork Points: {avg_apical_forks[0]} {avg_apical_forks[1]}")
-        f_average_num_apical_forks = stats_dir / 'average_number_of_apical_forkpoints.txt'
+        avg_apical_branches = average_list(average_num_apical_branches)
+        log(f"Number of all Apical Branch Points: {avg_apical_branches[0]} {avg_apical_branches[1]}")
+        f_average_num_apical_branches = stats_dir / 'average_number_of_apical_branchpoints.txt'
         write_value(
-            f_average_num_apical_forks,
-            f"{avg_apical_forks[0]} {avg_apical_forks[1]}",
+            f_average_num_apical_branches,
+            f"{avg_apical_branches[0]} {avg_apical_branches[1]}",
         )
         
         print()
@@ -713,21 +713,21 @@ def analyze_main(argv=None):
         write_dict(f_average_branch_order_path_length, average_apical_branch_order_path_length)
         
         print()
-        print('Sholl analysis (fork points) for all dendrites')
+        print('Sholl analysis (branch points) for all dendrites')
         average_dict(average_sholl_all_fp)
-        f_average_sholl_all_fp=os.path.join(stats_dir, 'average_sholl_all_forkpoints.txt')
+        f_average_sholl_all_fp=os.path.join(stats_dir, 'average_sholl_all_branchpoints.txt')
         write_dict(f_average_sholl_all_fp, average_sholl_all_fp)
         
         print()
-        print('Sholl analysis (fork points) for basal dendrites')
+        print('Sholl analysis (branch points) for basal dendrites')
         average_dict(average_sholl_basal_fp)
-        f_average_sholl_basal_fp=os.path.join(stats_dir, 'average_sholl_basal_forkpoints.txt')
+        f_average_sholl_basal_fp=os.path.join(stats_dir, 'average_sholl_basal_branchpoints.txt')
         write_dict(f_average_sholl_basal_fp, average_sholl_basal_fp)
         
         print()
-        print('Sholl analysis (fork points) for apical dendrites')
+        print('Sholl analysis (branch points) for apical dendrites')
         average_dict(average_sholl_apical_fp)
-        f_average_sholl_apical_fp=os.path.join(stats_dir, 'average_sholl_apical_forkpoints.txt')
+        f_average_sholl_apical_fp=os.path.join(stats_dir, 'average_sholl_apical_branchpoints.txt')
         write_dict(f_average_sholl_apical_fp, average_sholl_apical_fp)
         
         print()
@@ -783,9 +783,9 @@ def analyze_main(argv=None):
             'average_total_area': avg_total_area,
             'average_total_basal_area': avg_total_basal_area,
             'average_total_apical_area': avg_total_apical_area,
-            'average_num_all_forkpoints': avg_all_forks,
-            'average_num_basal_forkpoints': avg_basal_forks,
-            'average_num_apical_forkpoints': avg_apical_forks,
+            'average_num_all_branchpoints': avg_all_branches,
+            'average_num_basal_branchpoints': avg_basal_branches,
+            'average_num_apical_branchpoints': avg_apical_branches,
             'average_all_branch_order_frequency': average_all_branch_order_frequency,
             'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
             'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
@@ -873,11 +873,11 @@ def edit_main(argv=None):
             swc_lines,
             samples,
             comment_lines,
-            fork_points,
-            axon_forks,
-            basal_forks,
-            apical_forks,
-            soma_forks,
+            branch_points,
+            axon_branches,
+            basal_branches,
+            apical_branches,
+            soma_branches,
             soma_samples,
             max_sample_number,
             dendrite_roots,
@@ -969,11 +969,11 @@ def edit_main(argv=None):
             swc_lines,
             samples,
             comment_lines,
-            fork_points,
-            axon_forks,
-            basal_forks,
-            apical_forks,
-            soma_forks,
+            branch_points,
+            axon_branches,
+            basal_branches,
+            apical_branches,
+            soma_branches,
             soma_samples,
             max_sample_number,
             dendrite_roots,

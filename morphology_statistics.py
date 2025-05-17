@@ -101,14 +101,14 @@ def sholl_intersections(samples, parents, soma_samples, radius, parameter):
 
         return sholl_list
 
-def sholl_fork_points(fork_points, samples, soma_samples, radius):
-        """Compute number of fork samples crossing each Sholl shell."""
-        # Each fork point is assigned to a radial distance bin
+def sholl_branch_points(branch_points, samples, soma_samples, radius):
+        """Compute number of branch samples crossing each Sholl shell."""
+        # Each branch point is assigned to a radial distance bin
 
         soma_coords = _soma_coords(soma_samples)
 
         values = np.arange(0, 10000, radius)
-        pts = _coords(samples, fork_points)
+        pts = _coords(samples, branch_points)
         dist = np.linalg.norm(pts - soma_coords, axis=1)
 
         sholl_list = {}
@@ -159,7 +159,7 @@ __all__ = [
     "branch_order_dlength",
     "branch_order_path_length",
     "sholl_intersections",
-    "sholl_fork_points",
+    "sholl_branch_points",
     "remove_trailing_zeros",
     "sholl_length",
 ]
