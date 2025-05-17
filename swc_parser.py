@@ -1,4 +1,8 @@
-"""Helpers for parsing and analysing SWC morphology files."""
+"""Helpers for parsing and analysing SWC morphology files.
+
+The module also provides :func:`index_reassign` for renumbering samples after
+editing a morphology.
+"""
 
 from math import pi
 from typing import Dict, Iterable, List, Tuple, Set
@@ -379,3 +383,92 @@ def parse_swc_file(file_path: str):
         connectivity_map,
         parents,
     )
+
+
+def _sorted_dendrites(dendrites: Iterable[int], branch_order: Dict[int, int]) -> List[int]:
+    """Return *dendrites* sorted by their branch order."""
+    return sorted(dendrites, key=lambda d: branch_order[d])
+
+
+def _renumber_dendrite(
+    dend_id: int,
+    dendrite_samples: Dict[int, List[List[float]]],
+    branch_order: Dict[int, int],
+    connectivity: Dict[int, int],
+    start_index: int,
+    samples: List[List[float]],
+) -> int:
+    """Renumber all samples of a single dendrite."""
+
+    order = branch_order[dend_id]
+    dend = dendrite_samples[dend_id]
+
+    previous = None
+    for i, point in enumerate(dend):
+        original_idx = point[0]
+        point[0] = start_index
+
+        if i == 0:
+            if order == 1:
+                point[6] = 1
+            else:
+                parent_dend = connectivity[original_idx]
+                parent_point = dendrite_samples[parent_dend][-1]
+                point[6] = parent_point[0]
+        else:
+            point[6] = previous
+
+        previous = start_index
+        start_index += 1
+    samples.append(point)
+
+    return start_index
+
+
+def index_reassign(
+    dendrite_list: Iterable[int],  # unused parameter kept for backwards compat
+    dendrite_samples: Dict[int, List[List[float]]],
+    branch_order_map: Dict[int, int],
+    connectivity_map: Dict[int, int],
+    axon: Iterable[int],
+    basal: Iterable[int],
+    apical: Iterable[int],
+    undefined_dendrites: Iterable[int],
+    soma_samples: List[List[float]],
+    branch_order_max: int,
+    action: str,
+) -> List[str]:
+    """Return SWC lines with continuous sample numbers for all samples."""
+
+    if action == "branch":
+        branch_order_max += 1
+
+    samples: List[List[float]] = []
+    next_index = 1
+
+    previous = None
+    for i, soma_pt in enumerate(soma_samples):
+        soma_pt[0] = next_index
+        soma_pt[6] = -1 if i == 0 else previous
+        previous = next_index
+        next_index += 1
+        samples.append(soma_pt)
+
+    groups = (axon, basal, apical, undefined_dendrites)
+    for dend_group in groups:
+        for dend_id in _sorted_dendrites(dend_group, branch_order_map):
+            next_index = _renumber_dendrite(
+                dend_id,
+                dendrite_samples,
+                branch_order_map,
+                connectivity_map,
+                next_index,
+                samples,
+            )
+
+    new_lines = [
+        f" {s[0]} {int(s[1])} {s[2]:.2f} {s[3]:.2f} {s[4]:.2f} {s[5]:.2f} {int(s[6])}"
+        for s in samples
+    ]
+    return new_lines
+

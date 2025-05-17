@@ -65,7 +65,7 @@ The typical pipeline is:
 
 ## More tools
 
-- `reassign_indices.py` contains the logic used to renumber nodes after editing.
+- `swc_parser.py` also provides `index_reassign` to renumber nodes after editing.
 - `core_utils.py` provides weighted dendrite sampling utilities and warning helpers once kept in `warn.py`.
 - `remodeling_actions.py` implements the individual remodeling operations.
 

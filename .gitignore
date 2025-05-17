@@ -46,7 +46,6 @@ test.py
 tree_graph.txt
 swc_parser.pyc
 overlay_graph.pyc
-reassign_indices.pyc
 neuron_before_swc.pyc
 plot_individual_data.pyc
 print_file.pyc
