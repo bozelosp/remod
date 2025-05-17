@@ -6,7 +6,6 @@ def print_newfile_tmp(directory, file_name, newfile, edit):
 
         with open(new_name, 'w') as f:
                 print(('\n').join(newfile), file=f)
-                print('Hi')
         return new_name
 
 def print_newfile(directory, file_name, newfile, edit):
