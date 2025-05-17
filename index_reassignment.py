@@ -22,24 +22,24 @@ def _renumber_dendrite(
     branch_order: Dict[int, int],
     connectivity: Dict[int, int],
     start_index: int,
-    segments: List[List[float]],
+    samples: List[List[float]],
 ) -> int:
-    """Renumber all segments of a single dendrite.
+    """Renumber all samples of a single dendrite.
 
     Parameters
     ----------
     dend_id : int
         Identifier of the dendrite to renumber.
     dend_coords : Dict[int, List[List[float]]]
-        Mapping from dendrite id to its list of segments.
+        Mapping from dendrite id to its list of samples.
     branch_order : Dict[int, int]
         Branch order of every dendrite.
     connectivity : Dict[int, int]
         Mapping from dendrite id to its parent dendrite id.
     start_index : int
         The next free index to assign.
-    segments : list
-        Accumulator for all segments in their new order.
+    samples : list
+        Accumulator for all samples in their new order.
 
     Returns
     -------
@@ -68,7 +68,7 @@ def _renumber_dendrite(
 
         previous = start_index
         start_index += 1
-        segments.append(point)
+    samples.append(point)
 
     return start_index
 
@@ -82,41 +82,41 @@ def index_reassign(
     basal: Iterable[int],
     apical: Iterable[int],
     undefined_dendrites: Iterable[int],
-    soma_segments: List[List[float]],
+    soma_samples: List[List[float]],
     branch_order_max: int,
     action: str,
 ) -> List[str]:
-    """Return SWC lines with continuous indices for all segments."""
+    """Return SWC lines with continuous sample numbers for all samples."""
     # Reindexes all morphology points after structural edits
     # Handles soma first then each dendrite group in order
 
     if action == "branch":
         branch_order_max += 1  # keep backwards compatibility
 
-    segments: List[List[float]] = []
+    samples: List[List[float]] = []
     next_index = 1
 
-    # Renumber soma segments first
+    # Renumber soma samples first
     previous = None
-    for i, soma_pt in enumerate(soma_segments):
+    for i, soma_pt in enumerate(soma_samples):
         soma_pt[0] = next_index
         soma_pt[6] = -1 if i == 0 else previous
         previous = next_index
         next_index += 1
-        segments.append(soma_pt)
+        samples.append(soma_pt)
 
     # Renumber dendrites grouped by type
     groups = (axon, basal, apical, undefined_dendrites)
     for dend_group in groups:
         for dend_id in _sorted_dendrites(dend_group, branch_order_map):
             next_index = _renumber_dendrite(
-                dend_id, dend_coords, branch_order_map, connectivity_map, next_index, segments
+                dend_id, dend_coords, branch_order_map, connectivity_map, next_index, samples
             )
 
     # Convert to SWC text lines
     new_lines = [
         f" {s[0]} {int(s[1])} {s[2]:.2f} {s[3]:.2f} {s[4]:.2f} {s[5]:.2f} {int(s[6])}"
-        for s in segments
+        for s in samples
     ]
     return new_lines
 
