@@ -248,9 +248,9 @@ def descend(dendrite_list, all_terminal, path):
 			descendants[dend]=[]
 			for n in dendrite_list:
 				if dend in path[n]:
-					tmp_list=path[n][::-1]
+					reversed_path=path[n][::-1]
 					allow=False
-					for k in tmp_list:
+					for k in reversed_path:
 						if dend==k:
 							allow=True
 						if allow==True:

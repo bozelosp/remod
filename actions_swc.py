@@ -63,12 +63,12 @@ def createP(length, angle, p1, p2, flag): # return new pt3dadd lines formatted i
 	axis = p2-p1
 		
 	axis = axis / np.linalg.norm(axis) # normalize to a unit vector with the same direction
-	tmp = np.cross(axis, axis_origin)
-	tmp = tmp/np.linalg.norm(tmp)
-
-	xt = tmp[0,0]
-	yt = tmp[0,1]
-	zt = tmp[0,2]
+	perp_vector = np.cross(axis, axis_origin)
+	perp_vector = perp_vector/np.linalg.norm(perp_vector)
+	
+	xt = perp_vector[0,0]
+	yt = perp_vector[0,1]
+	zt = perp_vector[0,2]
 
 	r1 = np.matrix([[cos(r)+(xt**2)*(1-cos(r)), xt*yt*(1-cos(r))-zt*sin(r), xt*zt*(1-cos(r))+yt*sin(r)],
 		[yt*xt*(1-cos(r))+zt*sin(r) , cos(r) + (yt**2)*(1-cos(r)), yt*zt*(1-cos(r))-xt*sin(r)],
@@ -319,15 +319,15 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 			zn='%.2f' % (round_to((zp+per*zn),0.01))
 
 			segment_list.append([current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]])
-			dend_add3d[dend]=mylists
+			dend_add3d[dend]=segment_list
 
 		if dend not in all_terminal:
 
 			final_position=dend_add3d[dend][-1]
 
 			vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-			my_vec=tuple(vec)
-			dend_add3d=transpose(my_vec, dend, descendants, dend_add3d)
+			translation_vec=tuple(vec)
+			dend_add3d=transpose(translation_vec, dend, descendants, dend_add3d)
 
 	segment_list=[]
 
@@ -640,8 +640,8 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 			final_position=add_these_lines[dend][-1]
 
 			vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-			my_vec=tuple(vec)
-			dend_add3d=transpose(my_vec, dend, descendants, dend_add3d)
+			translation_vec=tuple(vec)
+			dend_add3d=transpose(translation_vec, dend, descendants, dend_add3d)
 
 			dend_add3d[change_these[0]][0][6]=dend_add3d[dend][-1][0]
 			dend_add3d[change_these[1]][0][6]=dend_add3d[dend][-1][0]
