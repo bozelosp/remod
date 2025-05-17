@@ -1,27 +1,19 @@
 # remod
 
-**remod** is a small collection of Python utilities for exploring, analysing and
-remodelling neuronal morphologies stored in the
-[SWC format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/).
-The tools can compute detailed morphometric statistics, apply structural changes
-to dendritic trees and visualise the results.
+**remod** provides command line tools for analysing and editing neuronal morphologies stored in the [SWC format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/).  The utilities compute detailed morphometric statistics, apply structural changes to dendrites and export the results for visualisation.
 
 ## Features
 
-- Parse SWC files and extract measurements such as branch counts, branch-order
-  distributions, total length/area and Sholl profiles.
+- Parse SWC files and compute branch counts, branch order distributions, path and total lengths, surface areas and Sholl measurements.
 - Automatically store aggregated statistics in `downloads/statistics/`.
-- Modify morphologies using the `run.py edit` command to remove, extend or
-  change dendrites.
-- Visualise original and edited trees with 3‑D plots.
-- Additional helper scripts to merge segments and plot data. Node indices are
-  renumbered automatically after relevant edits.
+- Remodel morphologies via `run.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and diameters can be adjusted.
+- Node indices are renumbered automatically after editing.
+- Visualise original and modified trees with `neuron_visualization.py` or overlay plots from `graph.py`.
+- Generate summary graphs with `plot_data.py` and combine results from multiple runs using `merge_stats.py`.
 
 ## Installation
 
-The code requires **Python 3.8 or later** and depends on
-[NumPy](https://numpy.org/) and [Matplotlib](https://matplotlib.org/).
-Install them with:
+The code requires **Python 3.10 or later** and depends on [NumPy](https://numpy.org/) and [Matplotlib](https://matplotlib.org/):
 
 ```bash
 pip install numpy matplotlib
@@ -31,22 +23,15 @@ Using a virtual environment is recommended but not mandatory.
 
 ## Quick start
 
-1. **Prepare your SWC files** – place your `.swc` files in a directory. Example
-   data can be found under `trash/`.
-
-2. **Compute statistics** – run `run.py analyze` and provide
-   the directory and a comma-separated list of file names:
+1. **Prepare your SWC files** – place your `.swc` files in a directory. Example data are available under `trash/`.
+2. **Compute statistics** – run `run.py analyze` with the directory and a comma separated list of file names:
 
    ```bash
    python run.py analyze /path/to/swc 0-2.swc
    ```
 
-   Results such as total dendritic length, branch-order frequency and Sholl
-   intersections are saved in `downloads/statistics/`.
-
-3. **Remodel a morphology** – use `run.py edit` to apply structural changes.
-   The example below removes 50% of all terminal dendrites from `0-2.swc` and
-   writes the modified neuron to `downloads/files/0-2_new.swc`:
+   Results such as total dendritic length, branch order frequency and Sholl intersections are saved in `downloads/statistics/`.
+3. **Remodel a morphology** – use `run.py edit` to apply structural changes.  The example below removes 50% of all terminal dendrites from `0-2.swc` and writes the modified neuron to `downloads/files/0-2_new.swc`:
 
    ```bash
    python run.py edit \
@@ -60,36 +45,23 @@ Using a virtual environment is recommended but not mandatory.
       --diam-change 10
    ```
 
-4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D
-   plots comparing the original and edited morphologies. Use `plot_data.py` with
-   the path to `downloads/statistics/` to create summary graphs; add
-   `--average` or `--compare` for group averages or comparative views.
-   Figures are stored in the `downloads/` directory.
+   Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--who-manual-variable`.
+4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D plots comparing the original and edited morphologies. Use `plot_data.py` on `downloads/statistics/` to create summary graphs; add `--average` or `--compare` for group averages or comparative views.  Figures are stored in the `downloads/` directory.
 
 ## Workflow
 
-The individual scripts are designed to be used as a pipeline:
+The typical pipeline is:
 
-1. **Analyse** – start with `run.py analyze` to compute baseline statistics for a
-   set of SWC files. It expects a directory and a comma-separated list of
-   filenames. The resulting metrics are written to
-   `downloads/statistics/`.
-2. **Modify** – apply structural changes with `run.py edit`.
-   This script can remove, extend or shrink selected dendrites and stores edited files under `downloads/files/`.
-3. **Reassign indices** – `run.py edit` automatically renumbers nodes after
-   modifications, so no extra command is needed.
-4. **Visualise and plot** – generate 3‑D views using `neuron_visualization.py`
-   or `graph.py` and create summary plots with `plot_data.py`.
-5. **Combine statistics** – use `merge_stats.py` to merge statistics from
-   different runs.
+1. **Analyse** – `run.py analyze` computes baseline statistics for a set of SWC files and writes them to `downloads/statistics/`.
+2. **Modify** – `run.py edit` applies the chosen remodeling actions and saves edited files under `downloads/files/`.
+3. **Reassign indices** – node indices are automatically renumbered after modifications.
+4. **Visualise and plot** – generate 3‑D views with `neuron_visualization.py` or `graph.py` and create summary plots with `plot_data.py`.
+5. **Combine statistics** – `merge_stats.py` merges and compares statistics from different runs.
 
 ## More tools
 
-- `merge_stats.py` combines SWC segments from multiple runs.
-- `plot_data.py` generates summary graphs from a statistics directory with
-  optional `--average` and `--compare` flags and includes all plotting helpers.
-- `index_reassignment.py` contains the renumbering logic used internally.
-- `random_sampling.py` demonstrates how to draw random dendrites.
+- `index_reassignment.py` contains the logic used to renumber nodes after editing.
+- `random_sampling.py` demonstrates weighted dendrite sampling utilities.
+- `take_action.py` implements the individual remodeling operations.
 
-Run any script with the `--help` flag for a description of its command-line
-options.
+Run any script with the `--help` flag for a description of its command line options.
