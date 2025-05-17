@@ -88,6 +88,18 @@ def write_lines(path: Path | str, lines: Iterable[Sequence]) -> None:
             print(*line, file=f)
 
 
+def write_dict(path: Path | str, data: dict) -> None:
+    """Write the contents of ``data`` as whitespace-separated rows."""
+    ensure_dir(path)
+    with Path(path).open("w", encoding="utf-8") as f:
+        for key in sorted(data):
+            value = data[key]
+            if isinstance(value, (list, tuple)):
+                print(key, *value, file=f)
+            else:
+                print(key, value, file=f)
+
+
 def write_plot(
     path: Path | str,
     before: list[Sequence],
