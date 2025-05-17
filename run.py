@@ -1,4 +1,3 @@
-import argparse
 import sys
 import os
 import time
@@ -32,7 +31,7 @@ from utils import (
     parse_analyze_args,
     parse_edit_args,
 )
-from file_utils import write_json, write_value, write_swc, write_dict
+from file_utils import write_json, write_value, write_swc, write_dict, write_pickle
 from statistics_swc import *
 from take_action import execute_action
 from warn import *
@@ -457,47 +456,45 @@ def analyze_main(argv=None):
             for file_name in file_names:
                 print(file_name, file=f)
         
-        import pickle, os
         stats_pickle_path = directory / 'current_average_statistics.p'
-        with open(stats_pickle_path, "wb") as f:
-            pickle.dump(
-                {
-                    'average_number_of_all_terminal_dendrites': average_number_of_all_terminal_dendrites,
-                    'average_number_of_basal_terminal_dendrites': average_number_of_basal_terminal_dendrites,
-                    'average_number_of_apical_terminal_dendrites': average_number_of_apical_terminal_dendrites,
-                    'average_number_of_all_dendrites': average_number_of_all_dendrites,
-                    'average_number_of_basal_dendrites': average_number_of_basal_dendrites,
-                    'average_number_of_apical_dendrites': average_number_of_apical_dendrites,
-                    'average_t_length': average_t_length,
-                    'average_basal_t_length': average_basal_t_length,
-                    'average_apical_t_length': average_apical_t_length,
-                    'average_t_area': average_t_area,
-                    'average_basal_t_area': average_basal_t_area,
-                    'average_apical_t_area': average_apical_t_area,
-                    'average_num_all_bpoints': average_num_all_bpoints,
-                    'average_num_basal_bpoints': average_num_basal_bpoints,
-                    'average_num_apical_bpoints': average_num_apical_bpoints,
-                    'average_all_branch_order_frequency': average_all_branch_order_frequency,
-                    'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
-                    'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
-                    'average_all_branch_order_dlength': average_all_branch_order_dlength,
-                    'average_basal_branch_order_dlength': average_basal_branch_order_dlength,
-                    'average_apical_branch_order_dlength': average_apical_branch_order_dlength,
-                    'average_all_branch_order_plength': average_all_branch_order_plength,
-                    'average_basal_branch_order_plength': average_basal_branch_order_plength,
-                    'average_apical_branch_order_plength': average_apical_branch_order_plength,
-                    'average_sholl_all_length': average_sholl_all_length,
-                    'average_sholl_basal_length': average_sholl_basal_length,
-                    'average_sholl_apical_length': average_sholl_apical_length,
-                    'average_sholl_all_bp': average_sholl_all_bp,
-                    'average_sholl_basal_bp': average_sholl_basal_bp,
-                    'average_sholl_apical_bp': average_sholl_apical_bp,
-                    'average_sholl_all_intersections': average_sholl_all_intersections,
-                    'average_sholl_basal_intersections': average_sholl_basal_intersections,
-                    'average_sholl_apical_intersections': average_sholl_apical_intersections,
+        write_pickle(
+            stats_pickle_path,
+            {
+                'average_number_of_all_terminal_dendrites': average_number_of_all_terminal_dendrites,
+                'average_number_of_basal_terminal_dendrites': average_number_of_basal_terminal_dendrites,
+                'average_number_of_apical_terminal_dendrites': average_number_of_apical_terminal_dendrites,
+                'average_number_of_all_dendrites': average_number_of_all_dendrites,
+                'average_number_of_basal_dendrites': average_number_of_basal_dendrites,
+                'average_number_of_apical_dendrites': average_number_of_apical_dendrites,
+                'average_t_length': average_t_length,
+                'average_basal_t_length': average_basal_t_length,
+                'average_apical_t_length': average_apical_t_length,
+                'average_t_area': average_t_area,
+                'average_basal_t_area': average_basal_t_area,
+                'average_apical_t_area': average_apical_t_area,
+                'average_num_all_bpoints': average_num_all_bpoints,
+                'average_num_basal_bpoints': average_num_basal_bpoints,
+                'average_num_apical_bpoints': average_num_apical_bpoints,
+                'average_all_branch_order_frequency': average_all_branch_order_frequency,
+                'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
+                'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
+                'average_all_branch_order_dlength': average_all_branch_order_dlength,
+                'average_basal_branch_order_dlength': average_basal_branch_order_dlength,
+                'average_apical_branch_order_dlength': average_apical_branch_order_dlength,
+                'average_all_branch_order_plength': average_all_branch_order_plength,
+                'average_basal_branch_order_plength': average_basal_branch_order_plength,
+                'average_apical_branch_order_plength': average_apical_branch_order_plength,
+                'average_sholl_all_length': average_sholl_all_length,
+                'average_sholl_basal_length': average_sholl_basal_length,
+                'average_sholl_apical_length': average_sholl_apical_length,
+                'average_sholl_all_bp': average_sholl_all_bp,
+                'average_sholl_basal_bp': average_sholl_basal_bp,
+                'average_sholl_apical_bp': average_sholl_apical_bp,
+                'average_sholl_all_intersections': average_sholl_all_intersections,
+                'average_sholl_basal_intersections': average_sholl_basal_intersections,
+                'average_sholl_apical_intersections': average_sholl_apical_intersections,
                 },
-                f,
-            )
+        )
         
         '''print length_metrics
         
@@ -683,136 +680,91 @@ def analyze_main(argv=None):
         print("Average All Dendritic Length per Branch Order: ")
         average_dict(average_all_branch_order_dlength)
         f_average_branch_order_dlength=os.path.join(stats_dir, 'average_all_dendritic_length_per_branch_order.txt')
-        with open(f_average_branch_order_dlength, 'w+') as f:
-                for i in average_all_branch_order_dlength:
-                        print(i, ' '.join(map(str, average_all_branch_order_dlength[i])))
-                        print(i, ' '.join(map(str, average_all_branch_order_dlength[i])), file=f)
+        write_dict(f_average_branch_order_dlength, average_all_branch_order_dlength)
         
         print()
         print("Average Basal Dendritic Length per Branch Order: ")
         average_dict(average_basal_branch_order_dlength)
         f_average_branch_order_dlength=os.path.join(stats_dir, 'average_basal_dendritic_length_per_branch_order.txt')
-        with open(f_average_branch_order_dlength, 'w+') as f:
-                for i in average_basal_branch_order_dlength:
-                        print(i, ' '.join(map(str, average_basal_branch_order_dlength[i])))
-                        print(i, ' '.join(map(str, average_basal_branch_order_dlength[i])), file=f)
+        write_dict(f_average_branch_order_dlength, average_basal_branch_order_dlength)
         
         print()
         print("Average Apical Dendritic Length per Branch Order: ")
         average_dict(average_apical_branch_order_dlength)
         f_average_branch_order_dlength=os.path.join(stats_dir, 'average_apical_dendritic_length_per_branch_order.txt')
-        with open(f_average_branch_order_dlength, 'w+') as f:
-                for i in average_apical_branch_order_dlength:
-                        print(i, ' '.join(map(str, average_apical_branch_order_dlength[i])))
-                        print(i, ' '.join(map(str, average_apical_branch_order_dlength[i])), file=f)
+        write_dict(f_average_branch_order_dlength, average_apical_branch_order_dlength)
         
         print()
         print("Average All Path Length per Branch Order: ")
         average_dict(average_all_branch_order_plength)
         f_average_branch_order_plength=os.path.join(stats_dir, 'average_all_path_length_per_branch_order.txt')
-        with open(f_average_branch_order_plength, 'w+') as f:
-                for i in average_all_branch_order_plength:
-                        print(i, ' '.join(map(str, average_all_branch_order_plength[i])))
-                        print(i, ' '.join(map(str, average_all_branch_order_plength[i])), file=f)
+        write_dict(f_average_branch_order_plength, average_all_branch_order_plength)
         
         print()
         print("Average Basal Path Length per Branch Order: ")
         average_dict(average_basal_branch_order_plength)
         f_average_branch_order_plength=os.path.join(stats_dir, 'average_basal_path_length_per_branch_order.txt')
-        with open(f_average_branch_order_plength, 'w+') as f:
-                for i in average_basal_branch_order_plength:
-                        print(i, ' '.join(map(str, average_basal_branch_order_plength[i])))
-                        print(i, ' '.join(map(str, average_basal_branch_order_plength[i])), file=f)
+        write_dict(f_average_branch_order_plength, average_basal_branch_order_plength)
         
         print()
         print("Average Apical Path Length per Branch Order: ")
         average_dict(average_apical_branch_order_plength)
         f_average_branch_order_plength=os.path.join(stats_dir, 'average_apical_path_length_per_branch_order.txt')
-        with open(f_average_branch_order_plength, 'w+') as f:
-                for i in average_apical_branch_order_plength:
-                        print(i, ' '.join(map(str, average_apical_branch_order_plength[i])))
-                        print(i, ' '.join(map(str, average_apical_branch_order_plength[i])), file=f)
+        write_dict(f_average_branch_order_plength, average_apical_branch_order_plength)
         
         print()
         print('Sholl analysis (branch points) for all dendrites')
         average_dict(average_sholl_all_bp)
         f_average_sholl_all_bp=os.path.join(stats_dir, 'average_sholl_all_branchpoints.txt')
-        with open(f_average_sholl_all_bp, 'w+') as f:
-                for i in sorted(average_sholl_apical_bp):
-                        print(i, ' '.join(map(str, average_sholl_all_bp[i])))
-                        print(i, ' '.join(map(str, average_sholl_all_bp[i])), file=f)
+        write_dict(f_average_sholl_all_bp, average_sholl_all_bp)
         
         print()
         print('Sholl analysis (branch points) for basal dendrites')
         average_dict(average_sholl_basal_bp)
         f_average_sholl_basal_bp=os.path.join(stats_dir, 'average_sholl_basal_branchpoints.txt')
-        with open(f_average_sholl_basal_bp, 'w+') as f:
-                for i in sorted(average_sholl_basal_bp):
-                        print(i, ' '.join(map(str, average_sholl_basal_bp[i])))
-                        print(i, ' '.join(map(str, average_sholl_basal_bp[i])), file=f)
+        write_dict(f_average_sholl_basal_bp, average_sholl_basal_bp)
         
         print()
         print('Sholl analysis (branch points) for apical dendrites')
         average_dict(average_sholl_apical_bp)
         f_average_sholl_apical_bp=os.path.join(stats_dir, 'average_sholl_apical_branchpoints.txt')
-        with open(f_average_sholl_apical_bp, 'w+') as f:
-                for i in sorted(average_sholl_apical_bp):
-                        print(i, ' '.join(map(str, average_sholl_apical_bp[i])))
-                        print(i, ' '.join(map(str, average_sholl_apical_bp[i])), file=f)
+        write_dict(f_average_sholl_apical_bp, average_sholl_apical_bp)
         
         print()
         print('Sholl analysis (dendritic length) for all dendrites')
         average_dict(average_sholl_all_length)
         f_average_sholl_all_length=os.path.join(stats_dir, 'average_sholl_all_length.txt')
-        with open(f_average_sholl_all_length, 'w+') as f:
-                for i in sorted(average_sholl_all_length):
-                        print(i, ' '.join(map(str, average_sholl_all_length[i])))
-                        print(i, ' '.join(map(str, average_sholl_all_length[i])), file=f)
+        write_dict(f_average_sholl_all_length, average_sholl_all_length)
         
         print()
         print('Sholl analysis (dendritic length) for basal dendrites')
         average_dict(average_sholl_basal_length)
         f_average_sholl_basal_length=os.path.join(stats_dir, 'average_sholl_basal_length.txt')
-        with open(f_average_sholl_basal_length, 'w+') as f:
-                for i in sorted(average_sholl_basal_length):
-                        print(i, ' '.join(map(str, average_sholl_basal_length[i])))
-                        print(i, ' '.join(map(str, average_sholl_basal_length[i])), file=f)
+        write_dict(f_average_sholl_basal_length, average_sholl_basal_length)
         
         print()
         print('Sholl analysis (dendritic length) for apical dendrites')
         average_dict(average_sholl_apical_length)
         f_average_sholl_apical_length=os.path.join(stats_dir, 'average_sholl_apical_length.txt')
-        with open(f_average_sholl_apical_length, 'w+') as f:
-                for i in sorted(average_sholl_apical_length):
-                        print(i, ' '.join(map(str, average_sholl_apical_length[i])))
-                        print(i, ' '.join(map(str, average_sholl_apical_length[i])), file=f)
+        write_dict(f_average_sholl_apical_length, average_sholl_apical_length)
         
         print()
         print('Sholl analysis (number of intersections) for all dendrites')
         average_dict(average_sholl_all_intersections)
         f_average_sholl_all_intersections=os.path.join(stats_dir, 'average_sholl_all_intersections.txt')
-        with open(f_average_sholl_all_intersections, 'w+') as f:
-                for i in sorted(average_sholl_all_intersections):
-                        print(i, ' '.join(map(str, average_sholl_all_intersections[i])))
-                        print(i, ' '.join(map(str, average_sholl_all_intersections[i])), file=f)
+        write_dict(f_average_sholl_all_intersections, average_sholl_all_intersections)
         
         print()
         print('Sholl analysis (number of intersections) for basal dendrites')
         average_dict(average_sholl_basal_intersections)
         f_average_sholl_basal_intersections=os.path.join(stats_dir, 'average_sholl_basal_intersections.txt')
-        with open(f_average_sholl_basal_intersections, 'w+') as f:
-                for i in sorted(average_sholl_basal_intersections):
-                        print(i, ' '.join(map(str, average_sholl_basal_intersections[i])))
-                        print(i, ' '.join(map(str, average_sholl_basal_intersections[i])), file=f)
+        write_dict(f_average_sholl_basal_intersections, average_sholl_basal_intersections)
         
         print()
         print('Sholl analysis (number of intersections) for apical dendrites')
         average_dict(average_sholl_apical_intersections)
         f_average_sholl_apical_intersections=os.path.join(stats_dir, 'average_sholl_apical_intersections.txt')
-        with open(f_average_sholl_apical_intersections, 'w+') as f:
-                for i in sorted(average_sholl_apical_intersections):
-                        print(i, ' '.join(map(str, average_sholl_apical_intersections[i])))
-                        print(i, ' '.join(map(str, average_sholl_apical_intersections[i])), file=f)
+        write_dict(f_average_sholl_apical_intersections, average_sholl_apical_intersections)
         
         from plot_data import plot_average_data
         prefix=os.path.join(stats_dir, 'average_')
@@ -1060,36 +1012,23 @@ def edit_main(argv=None):
     
     
 def main(argv=None):
-    """Dispatch command line arguments to analysis or editing routines."""
-    # Command line interface dispatching to analyze/edit modes
-    parser = argparse.ArgumentParser(
-        description='Compute statistics or remodel SWC files',
-    )
-    sub = parser.add_subparsers(dest='command')
+    """Dispatch ``analyze`` or ``edit`` commands using shared parsers."""
+    if argv is None:
+        argv = sys.argv[1:]
 
-    analyze = sub.add_parser('analyze', help='Compute morphometric statistics')
-    analyze.add_argument('directory', help='Directory containing SWC files')
-    analyze.add_argument('files', help='Comma separated list of file names')
+    if not argv:
+        print("Usage: run.py <analyze|edit> [options]")
+        return
 
-    edit = sub.add_parser('edit', help='Remodel a morphology')
-    edit.add_argument('--directory', required=True, help='Base directory for the SWC file')
-    edit.add_argument('--file-name', required=True, help='SWC filename')
-    edit.add_argument('--who', required=True, help='Target dendrite selection')
-    edit.add_argument('--random-ratio', type=float, default=0.0, help='Ratio for random selection (percent)')
-    edit.add_argument('--who-manual-variable', default='none', help='Comma separated manual dendrite ids')
-    edit.add_argument('--action', required=True, help='Remodeling action')
-    edit.add_argument('--hm-choice', required=True, help='percent or micrometers for extent')
-    edit.add_argument('--amount', type=float, default=None, help='Extent of the action')
-    edit.add_argument('--var-choice', required=True, help='percent or micrometers for diameter change')
-    edit.add_argument('--diam-change', type=float, default=None, help='Extent of diameter change')
+    command, *sub_args = argv
 
-    args = parser.parse_args(argv)
-
-    if args.command == 'analyze':
-        analyze_main([args.directory, args.files])
-    elif args.command == 'edit':
+    if command == 'analyze':
+        args = parse_analyze_args(sub_args)
+        analyze_main([os.fspath(args.directory), args.files])
+    elif command == 'edit':
+        args = parse_edit_args(sub_args)
         arglist = [
-            '--directory', args.directory,
+            '--directory', os.fspath(args.directory),
             '--file-name', args.file_name,
             '--who', args.who,
             '--random-ratio', str(args.random_ratio),
@@ -1104,7 +1043,7 @@ def main(argv=None):
             arglist.extend(['--diam-change', str(args.diam_change)])
         edit_main(arglist)
     else:
-        parser.print_help()
+        print(f"Unknown command: {command}")
 
 
 if __name__ == '__main__':
