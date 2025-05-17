@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 from math import sqrt
-import json
+import bisect
+import random
+from collections.abc import Sequence
+from pathlib import Path
 from statistics import mean, pstdev
 
 
@@ -16,32 +21,52 @@ def round_to(x, rounder):
     return round(x / rounder) * rounder
 
 
-def write_json(path, data):
-    """Write *data* as JSON to *path* using UTF-8 encoding."""
-    # Used by many scripts to persist intermediate results
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+class WeightedPopulation(Sequence):
+    """Sequence-like container for weighted random sampling."""
+
+    def __init__(self, population: Sequence, weights: Sequence[float]):
+        assert len(population) == len(weights) > 0
+        self.population = population
+        self.cumweights: list[float] = []
+        cumsum = 0.0
+        for w in weights:
+            cumsum += w
+            self.cumweights.append(cumsum)
+
+    def __len__(self) -> int:
+        return int(self.cumweights[-1])
+
+    def __getitem__(self, i: int):
+        if not 0 <= i < len(self):
+            raise IndexError(i)
+        return self.population[bisect.bisect(self.cumweights, i)]
 
 
-def write_value(path, value):
-    """Write ``value`` to ``path`` using ``w+`` mode."""
-    # Convenience wrapper for small numeric results
-    with open(path, "w+") as f:
-        f.write(f"{value}\n")
+def weighted_sample(population: Sequence, weights: Sequence[float], k: int):
+    """Return ``k`` items sampled from ``population`` using ``weights``."""
+    return random.sample(WeightedPopulation(population, weights), k)
 
 
-def read_values(path):
-    """Return a list of floats from the first line of ``path``."""
-    # Used by the plotting utilities to parse generated statistics
-    with open(path) as f:
-        return [float(x) for x in f.readline().split()]
+def sample_random_dendrites(
+    options: Sequence[int],
+    label: str,
+    dend_segments: dict[int, Sequence],
+    ratio: float,
+) -> tuple[list[int], str]:
+    """Return a random selection of dendrites respecting ``ratio``."""
+    valid = [d for d in options if len(dend_segments[d]) >= 3]
+    num = int(round_to(len(valid) * ratio, 1))
+    num = max(0, min(num, len(valid)))
+    selection = random.sample(valid, num)
+    which = f"random {label} ({ratio * 100}% ) "
+    return selection, which
 
 
-def read_value(path):
-    """Return the first float found in ``path``."""
-    # Convenience wrapper around ``read_values`` for single numbers
-    values = read_values(path)
-    return values[0] if values else 0.0
+def ensure_dir(path: Path | str) -> None:
+    """Ensure the parent directory of ``path`` exists."""
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+
 
 
 def average_list(values):

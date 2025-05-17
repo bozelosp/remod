@@ -6,33 +6,18 @@ import argparse
 from itertools import zip_longest
 from pathlib import Path
 import os
-import re
 
 from plot_data import plot_compare_data
+from file_utils import (
+    list_text_files,
+    read_lines,
+    read_sanitised_lines,
+    zero_pad,
+    zero_line,
+)
+from utils import ensure_dir
 
 
-def list_text_files(directory: Path) -> list[Path]:
-    """Return ``.txt`` files within ``directory`` sorted alphabetically."""
-    # Only plain text files are considered for merging
-    if not directory.is_dir():
-        raise NotADirectoryError(directory)
-    return sorted(p for p in directory.iterdir() if p.suffix == ".txt")
-
-
-def read_lines(path: Path) -> list[str]:
-    """Return lines from ``path`` stripped of trailing newlines."""
-    # Utility used by both merging strategies
-    with path.open(encoding="utf-8") as fh:
-        return [line.rstrip("\n") for line in fh]
-
-
-_REPLACE_VALUE_RE = re.compile(r"\s(\S+)")
-
-
-def _zero_line(reference: str) -> str:
-    """Return ``reference`` with the value column replaced by ``0``."""
-    # Keeps table structure when one file has fewer lines
-    return _REPLACE_VALUE_RE.sub(" 0", reference, count=1)
 
 
 def merge_simple(base_directory: Path) -> None:
@@ -50,24 +35,12 @@ def merge_simple(base_directory: Path) -> None:
         with (base_directory / name).open("w", encoding="utf-8") as out:
             for b, a in zip_longest(before_lines, after_lines):
                 if b is None:
-                    b = _zero_line(a)
+                    b = zero_line(a)
                 if a is None:
-                    a = _zero_line(b)
+                    a = zero_line(b)
                 print(b, a, file=out)
 
 
-def read_sanitised_lines(path: Path) -> list[str]:
-    """Return lines from ``path`` without ``[]`` or commas."""
-    # Prepares data files produced by averaging scripts
-    remove_chars = str.maketrans("", "", "[],")
-    with path.open(encoding="utf-8") as f:
-        return [line.translate(remove_chars).rstrip("\n") for line in f]
-
-
-def zero_pad(line: str) -> str:
-    """Return ``line`` with the second column replaced by ``0``."""
-    # Used to fill missing rows when merging lists of unequal length
-    return _REPLACE_VALUE_RE.sub(" 0", line)
 
 
 def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
@@ -83,7 +56,7 @@ def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
         after_lines = read_sanitised_lines(after_dir / name)
         max_len = max(len(before_lines), len(after_lines))
         out_path = output_dir / name.replace("average", "comparison/compare")
-        out_path.parent.mkdir(parents=True, exist_ok=True)
+        ensure_dir(out_path)
         with out_path.open("w", encoding="utf-8") as out:
             for i in range(max_len):
                 b = before_lines[i] if i < len(before_lines) else zero_pad(after_lines[i])

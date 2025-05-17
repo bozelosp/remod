@@ -24,16 +24,15 @@ from statistics_swc import (
 )
 from utils import (
     round_to,
-    write_json,
-    write_value,
     average_list,
     average_dict,
     remove_empty_keys,
+    sample_random_dendrites,
+    ensure_dir,
 )
-from random_sampling import *
+from file_utils import write_json, write_value, write_swc
 from statistics_swc import *
 from take_action import execute_action
-from print_file import write_swc
 from warn import *
 from graph import *
 from index_reassignment import *
@@ -69,12 +68,12 @@ def analyze_main(argv=None):
         exist_downloads = directory / 'downloads'
         exist_statistics = directory / 'downloads' / 'statistics'
         stats_dir = exist_statistics
-        
+
         if not exist_downloads.exists():
-            exist_downloads.mkdir(parents=True, exist_ok=True)
+            ensure_dir(exist_downloads)
 
         if not exist_statistics.exists():
-            exist_statistics.mkdir(parents=True, exist_ok=True)
+            ensure_dir(exist_statistics)
         
         average_number_of_all_dendrites=[]
         average_number_of_all_terminal_dendrites=[]
@@ -933,24 +932,15 @@ def edit_main(argv=None):
         var_choice = args.var_choice
         diam_change = args.diam_change
     
-        def sample_random_dendrites(options, label):
-            # Pick random dendrites while ensuring a minimum length
-            """Return a valid random dendrite selection."""
-            valid = [d for d in options if len(dend_segments[d]) >= 3]
-            num = int(round_to(len(valid) * target_random_ratio, 1))
-            num = max(0, min(num, len(valid)))
-            selection = random.sample(valid, num)
-            which = f"random {label} ({target_random_ratio * 100}% ) "
-            return selection, which
     
         exist_downloads = directory / 'downloads'
         exist_downloads_files = directory / 'downloads' / 'files'
-        
+
         if not exist_downloads.exists():
-            exist_downloads.mkdir(parents=True, exist_ok=True)
-    
+            ensure_dir(exist_downloads)
+
         if not exist_downloads_files.exists():
-            exist_downloads_files.mkdir(parents=True, exist_ok=True)
+            ensure_dir(exist_downloads_files)
         
         print()
         print('Open file: ' + str(file_name))

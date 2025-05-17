@@ -18,12 +18,22 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from utils import read_value, read_values
+from file_utils import (
+    read_single_value,
+    read_table_data,
+    read_compare_values,
+    read_bulk_files,
+)
+from plot_utils import (
+    BAR_A,
+    BAR_B,
+    FIG_SIZE,
+    bar_plot,
+    grouped_bar_plot,
+    alternate_labels,
+    _configure_figure_size,
+)
 
-
-BAR_A = "#406cbe"
-BAR_B = "#40be72"
-
-FIG_SIZE = (30, 15)
 
 REGIONS = ["All", "Basal", "Apical"]
 
@@ -159,129 +169,16 @@ COMPARE_OTHER = [
 
 
 
-def read_single_value(path: Path) -> float:
-    """Return the single float stored in ``path`` or ``0.0`` on failure."""
-
-    try:
-        return float(read_value(path))
-    except Exception:
-        return 0.0
 
 
-def read_table_data(path: Path, with_error: bool = False):
-    """Return parsed columns from ``path`` or empty lists on failure."""
-
-    if not path.is_file():
-        return [], [], [] if with_error else []
-
-    try:
-        data = np.loadtxt(path)
-    except Exception:
-        return [], [], [] if with_error else []
-
-    data = np.atleast_2d(data)
-    labels = data[:, 0].astype(int).tolist()
-    means = data[:, 1].astype(float).tolist()
-
-    if with_error and data.shape[1] > 2:
-        errors = data[:, 2].astype(float).tolist()
-        return labels, means, errors
-
-    return labels, means
-
-
-def read_compare_values(path: Path) -> tuple[float, float, float, float]:
-    """Return means and errors for two groups stored in ``path``."""
-
-    try:
-        a_mean, a_err, b_mean, b_err = read_values(path)[:4]
-    except Exception:
-        return 0.0, 0.0, 0.0, 0.0
-    return a_mean, a_err, b_mean, b_err
-
-
-def bar_plot(
-    labels: Sequence[str | int],
-    values: Sequence[float],
-    file_path: Path,
-    *,
-    ylabel: str = "",
-    xlabel: str = "",
-    color: str = BAR_A,
-    err: Sequence[float] | None = None,
-    width: float = 0.5,
-) -> None:
-    """Create a single bar plot and write it to ``file_path``."""
-    # Wrapper around matplotlib with sane defaults for this project
-
-    fig, ax = plt.subplots()
-    indices = np.arange(len(labels))
-    ax.bar(indices, values, width, color=color, yerr=err)
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(xlabel)
-    ax.set_xticks(indices)
-    ax.set_xticklabels([str(l) for l in labels])
-    plt.tight_layout()
-    plt.savefig(file_path, format="svg", dpi=1000)
-    plt.close()
-
-
-def grouped_bar_plot(
-    labels: Sequence[str | int],
-    series: Sequence[Sequence[float]],
-    legends: Sequence[str],
-    file_path: Path,
-    *,
-    ylabel: str = "",
-    xlabel: str = "",
-    errs: Sequence[Sequence[float]] | None = None,
-    width: float = 0.4,
-) -> None:
-    """Create a grouped bar chart and save it to ``file_path``."""
-    # Expects ``series`` to be a sequence of value sequences
-
-    fig, ax = plt.subplots()
-    indices = np.arange(len(labels))
-    for i, data in enumerate(series):
-        error = errs[i] if errs else None
-        ax.bar(indices + i * width, data, width, color=[BAR_A, BAR_B][i % 2], yerr=error, label=legends[i])
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(xlabel)
-    ax.set_xticks(indices + width * (len(series) - 1) / 2)
-    ax.set_xticklabels([str(l) for l in labels])
-    ax.legend()
-    plt.tight_layout()
-    plt.savefig(file_path, format="svg", dpi=1000)
-    plt.close()
-
-
-def _alternate_labels(labels: Sequence[str]) -> list[str]:
-    """Return ``labels`` with every other label replaced by ``""``."""
-
-    return ["" if i % 2 else label for i, label in enumerate(labels)]
-
-
-def _configure_figure_size() -> None:
-    """Apply the default figure size."""
-    # Matplotlib inherits this size for all plots in this session
-    from pylab import rcParams
-
-    rcParams["figure.figsize"] = FIG_SIZE
-
-
-def _read_bulk_files(directory: Path, files: Sequence[str], reader):
-    """Return ``reader`` applied to each file in ``directory``."""
-    # Used by several plotting routines to load multiple data files at once
-
-    return [reader(directory / name) for name in files]
 
 
 def _plot_counts(directory: Path, with_error: bool) -> None:
     """Plot total dendrite counts for each region."""
     # Plot bar charts showing total dendrite counts for each region
     reader = read_values if with_error else read_single_value
-    counts = _read_bulk_files(directory, COUNT_FILES, reader)
-    terminals = _read_bulk_files(directory, TERMINAL_FILES, reader)
+    counts = read_bulk_files(directory, COUNT_FILES, reader)
+    terminals = read_bulk_files(directory, TERMINAL_FILES, reader)
     if with_error:
         values = [[c[0] for c in counts], [c[0] for c in terminals]]
         errs = [[c[1] for c in counts], [c[1] for c in terminals]]
@@ -304,7 +201,7 @@ def _plot_totals(directory: Path, with_error: bool) -> None:
     # Plot bar charts for aggregated totals across dendrite regions
     reader = read_values if with_error else read_single_value
     for out_name, ylabel, files in TOTAL_SPECS:
-        vals = _read_bulk_files(directory, files, reader)
+        vals = read_bulk_files(directory, files, reader)
         values = [v[0] for v in vals] if with_error else vals
         errs = [v[1] for v in vals] if with_error else None
         bar_plot(
@@ -336,7 +233,7 @@ def _plot_from_specs(
         labels, means = result[:2]
         errors = result[2] if with_error and len(result) > 2 else None
         if alt:
-            labels = _alternate_labels([str(l) for l in labels])
+            labels = alternate_labels([str(l) for l in labels])
         bar_plot(
             labels,
             means,
@@ -463,7 +360,7 @@ def plot_compare_data(directory: str) -> None:
         data = np.loadtxt(path)
         labels = data[:, 0].astype(int).tolist()
         if alt:
-            labels = _alternate_labels([str(l) for l in labels])
+            labels = alternate_labels([str(l) for l in labels])
         grouped_bar_plot(
             labels,
             [data[:, 1].tolist(), data[:, 4].tolist()],

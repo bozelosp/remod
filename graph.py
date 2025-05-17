@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from file_utils import write_plot
 from utils import round_to
 from extract_swc_morphology import parse_swc_lines
 
@@ -54,17 +55,6 @@ def _build_plot(point_map: PointMap, segments: Iterable[int]) -> list[PlotEntry]
     return plot
 
 
-def _write_plot(path: Path | str, before: list[PlotEntry], after: list[PlotEntry], skip: int = 2) -> None:
-    """Write combined plot data to ``path``."""
-    # The output format is compatible with NEURON's CellBuilder
-
-    out_path = Path(path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", encoding="utf-8") as f:
-        for x, y, z, d in before[skip:]:
-            f.write(f"{x[0]} {y[0]} {z[0]} {x[1]} {y[1]} {z[1]} {d} 0x0000FF\n")
-        for x, y, z, d in after[skip:]:
-            f.write(f"{x[0]} {y[0]} {z[0]} {x[1]} {y[1]} {z[1]} {d} 0xFF0000\n")
 
 
 def graph(
@@ -89,7 +79,7 @@ def graph(
         after_plot = [p for p in after_plot if p not in before_plot]
 
     fname = Path(directory) / f"{file_name.replace('.swc', '')}_neuron.txt"
-    _write_plot(fname, before_plot, after_plot)
+    write_plot(fname, before_plot, after_plot)
 
 
 __all__ = [
