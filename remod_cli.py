@@ -7,10 +7,10 @@ import numpy as np
 import collections
 from pathlib import Path
 
-from extract_swc_morphology import *
+from swc_parser import *
 read_file = parse_swc_file
-from neuron_visualization import *
-from statistics_swc import (
+from neuron_export import *
+from morphology_statistics import (
     total_length,
     total_area,
     branch_order_frequency,
@@ -22,7 +22,7 @@ from statistics_swc import (
     sholl_intersections,
     branch_order,
 )
-from utils import (
+from core_utils import (
     round_to,
     average_list,
     average_dict,
@@ -34,11 +34,11 @@ from utils import (
     shrink_warning,
     check_indices,
 )
-from file_utils import write_json, write_value, write_swc, write_dict, write_pickle
-from statistics_swc import *
-from take_action import execute_action
-from graph import *
-from index_reassignment import *
+from file_io import write_json, write_value, write_swc, write_dict, write_pickle
+from morphology_statistics import *
+from remodeling_actions import execute_action
+from overlay_graph import *
+from reassign_indices import *
 
 def analyze_main(argv=None):
         """Compute morphometric statistics for one or more SWC files."""
@@ -442,7 +442,7 @@ def analyze_main(argv=None):
                                 pass
                         vector.append(sholl_apical_intersections[length])
         
-                from plot_data import plot_the_data
+                from plot_statistics import plot_the_data
                 prefix = stats_dir / f'{file_name}_'
                 plot_the_data(prefix)
         
@@ -767,7 +767,7 @@ def analyze_main(argv=None):
         f_average_sholl_apical_intersections=os.path.join(stats_dir, 'average_sholl_apical_intersections.txt')
         write_dict(f_average_sholl_apical_intersections, average_sholl_apical_intersections)
         
-        from plot_data import plot_average_data
+        from plot_statistics import plot_average_data
         prefix=os.path.join(stats_dir, 'average_')
         plot_average_data(prefix)
         
@@ -903,7 +903,7 @@ def edit_main(argv=None):
         
         print('\nSWC parsing is completed!\n')
         
-        #from graph import *
+        #from overlay_graph import *
         #local_plot(swc_lines)
         
         #regex_who=re.search('(.*)', choices[0])
@@ -1016,7 +1016,7 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     if not argv:
-        print("Usage: run.py <analyze|edit> [options]")
+        print("Usage: remod_cli.py <analyze|edit> [options]")
         return
 
     command, *sub_args = argv

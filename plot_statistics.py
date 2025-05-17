@@ -16,8 +16,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from utils import parse_plot_args
-from file_utils import (
+from core_utils import parse_plot_args
+from file_io import (
     read_value,
     read_values,
     read_single_value,
@@ -25,7 +25,7 @@ from file_utils import (
     read_compare_values,
     read_bulk_files,
 )
-from plot_utils import (
+from plotting_helpers import (
     BAR_A,
     BAR_B,
     FIG_SIZE,

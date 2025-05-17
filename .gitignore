@@ -44,12 +44,12 @@ paper_info.txt
 scale_down.py
 test.py
 tree_graph.txt
-extract_swc_morphology.pyc
-graph.pyc
-index_reassignment.pyc
+swc_parser.pyc
+overlay_graph.pyc
+reassign_indices.pyc
 neuron_before_swc.pyc
 plot_individual_data.pyc
 print_file.pyc
 random_sampling.pyc
-statistics_swc.pyc
+morphology_statistics.pyc
 warn.pyc

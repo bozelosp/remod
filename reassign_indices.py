@@ -3,7 +3,7 @@
 The :func:`index_reassign` function updates the indices of all segments in the
 morphology so that they form a continuous sequence starting from 1.  It keeps
 the connectivity intact by adjusting the parent references of each segment. The
-function is used internally by ``run.py edit`` after dendrites have been
+function is used internally by ``remod_cli.py edit`` after dendrites have been
 removed, extended or otherwise modified.
 """
 

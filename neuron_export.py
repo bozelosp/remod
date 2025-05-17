@@ -6,7 +6,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Sequence
 
-from file_utils import write_lines
+from file_io import write_lines
 
 
 Color = str

@@ -94,7 +94,7 @@ def remove_empty_keys(data):
 
 
 def parse_plot_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`plot_data`-style scripts."""
+    """Return parsed CLI options for :mod:`plot_statistics`-style scripts."""
     parser = argparse.ArgumentParser(
         description="Generate summary plots from statistics files."
     )
@@ -115,7 +115,7 @@ def parse_plot_args(args: list[str] | None = None):
 
 
 def parse_analyze_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`run` analyze commands."""
+    """Return parsed CLI options for :mod:`remod_cli` analyze commands."""
     parser = argparse.ArgumentParser(
         description="Compute morphometric statistics for SWC files.",
     )
@@ -135,7 +135,7 @@ def parse_analyze_args(args: list[str] | None = None):
 
 
 def parse_edit_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`run` edit commands."""
+    """Return parsed CLI options for :mod:`remod_cli` edit commands."""
     parser = argparse.ArgumentParser(
         description="Apply remodeling actions to a SWC file.",
     )
@@ -183,7 +183,7 @@ def parse_edit_args(args: list[str] | None = None):
 
 
 def parse_merge_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`merge_stats` commands."""
+    """Return parsed CLI options for :mod:`merge_statistics` commands."""
     parser = argparse.ArgumentParser(
         description="Merge statistic files from different runs",
     )
