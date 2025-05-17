@@ -81,5 +81,7 @@ The typical pipeline is:
 - `remodeling_actions.py` implements the individual remodeling operations.
 - Merging functionality is integrated into `plot_statistics.py`.
 - `plot_statistics.py` now includes the plotting helpers previously found in `plotting_helpers.py`.
+- `swc_parser.py` exposes an `SWCParser` class wrapping the old `parse_swc_file` function.
+- `logger_utils.py` features a small `MarkdownLogger` for writing logs.
 
 Run any script with the `--help` flag for a description of its command line options.
