@@ -61,7 +61,7 @@ The typical pipeline is:
 ## More tools
 
 - `index_reassignment.py` contains the logic used to renumber nodes after editing.
-- `random_sampling.py` demonstrates weighted dendrite sampling utilities.
+- `utils.py` provides weighted dendrite sampling utilities and warning helpers once kept in `warn.py`.
 - `take_action.py` implements the individual remodeling operations.
 
 Run any script with the `--help` flag for a description of its command line options.

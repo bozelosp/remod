@@ -30,11 +30,12 @@ from utils import (
     ensure_dir,
     parse_analyze_args,
     parse_edit_args,
+    shrink_warning,
+    check_indices,
 )
 from file_utils import write_json, write_value, write_swc, write_dict, write_pickle
 from statistics_swc import *
 from take_action import execute_action
-from warn import *
 from graph import *
 from index_reassignment import *
 
