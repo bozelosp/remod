@@ -13,51 +13,51 @@ from math import cos, sin, pi, sqrt, radians, degrees
 
 import collections
 
-def total_length(dlist, dist): #soma_included
+def total_length(dendrite_list, dist): #soma_included
 
 	t_length=0
-	for dend in dlist:
+	for dend in dendrite_list:
 		t_length+=dist[dend]
 	return t_length
 
-def total_area(dlist, area): #soma_included
+def total_area(dendrite_list, area): #soma_included
 
 	t_area=0
-	for dend in dlist:
+	for dend in dendrite_list:
 		t_area+=area[dend]
 
 	return t_area
 
-def path_length(dlist, path, dist):
+def path_length(dendrite_list, path, dist):
 	plength=dict()
-	for dend in dlist:
+	for dend in dendrite_list:
 		d=0
 		for i in path[dend]:
 			d+=dist[i]
 		plength[dend]=d
 	return plength
 
-def median_diameter(dlist, dend_add3d):
+def median_diameter(dendrite_list, dend_add3d):
 
 	med_diam=dict()
-	for dend in dlist:
+	for dend in dendrite_list:
 		m=len(dend_add3d[dend])/2
 		med_diam[dend]=float(dend_add3d[dend][m][5])*2
 	return med_diam
 
-def print_branch_order(dlist, bo):
+def print_branch_order(dendrite_list, bo):
 
 	bo_dict=dict()
 
-	for i in dlist:
+	for i in dendrite_list:
 		bo_dict[i]=bo[i]
 
 	return sorted(list(bo_dict.items()), key=lambda x: x[0])
 
-def bo_frequency(dlist, bo):
+def bo_frequency(dendrite_list, bo):
 
 	orders=[]
-	for dend in dlist:
+	for dend in dendrite_list:
 		orders.append(bo[dend])
 
 	bo_min=1 # min(orders)
@@ -74,14 +74,14 @@ def bo_frequency(dlist, bo):
 
 	return bo_freq, bo_max
 
-def bo_dlength(dlist, bo, bo_max, dist):
+def bo_dlength(dendrite_list, bo, bo_max, dist):
 
 	bo_dlen={}
 	for i in range(1, bo_max+1):
 		k=0
 		add_length=0
 
-		for dend in dlist:
+		for dend in dendrite_list:
 			if i==bo[dend]:
 				k+=1
 				add_length+=dist[dend]
@@ -91,7 +91,7 @@ def bo_dlength(dlist, bo, bo_max, dist):
 
 	return bo_dlen
 
-def bo_plength(dlist, bo, bo_max, plength):
+def bo_plength(dendrite_list, bo, bo_max, plength):
 
 	bo_plen={}
 	for i in range(1, bo_max+1):
@@ -99,7 +99,7 @@ def bo_plength(dlist, bo, bo_max, plength):
 		k=0
 		add_length=0
 
-		for dend in dlist:
+		for dend in dendrite_list:
 			if i==bo[dend]:
 				k+=1
 				add_length+=plength[dend]
@@ -266,11 +266,11 @@ def sholl_length(points, parental_points, soma_index, radius, parameter):
 
 	return sholl_list
 
-def dist_angle_analysis(dlist, dend_add3d, soma_root, principal_axis):
+def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
 
 	dist_angle=[]
 
-	for dend in dlist:
+	for dend in dendrite_list:
 
 		point_list=[]
 

@@ -37,17 +37,17 @@ def comments_and_3dpoints(swc_lines):
 			d=float(p.group(6))
 			c=int(p.group(7))
 
-			mylist=[i, l, x, y, z, d, c]
-			points[i]=mylist
+			segment_list=[i, l, x, y, z, d, c]
+			points[i]=segment_list
 
 	return comment_lines, points
 
 def index(points):
 
-	mylist=[]
+	segment_list=[]
 	for i in points:
-		mylist.append(points[i][0])
-	max_index=max(mylist)
+		segment_list.append(points[i][0])
+	max_index=max(segment_list)
 	return max_index
 
 def branching_points(points):
@@ -111,19 +111,19 @@ def parental(points):
 
 def d_list(bpoints):
 
-	dlist=[]
+	dendrite_list=[]
 
 	for n in bpoints:
-		dlist.append(n)
-	dlist.sort()
+		dendrite_list.append(n)
+	dendrite_list.sort()
 
-	return dlist
+	return dendrite_list
 
-def dend_point(dlist, points):
+def dend_point(dendrite_list, points):
 
 	dend_indices={} 
 
-	for i in dlist:
+	for i in dendrite_list:
 		next=i
 		dendrite=[]
 
@@ -132,9 +132,9 @@ def dend_point(dlist, points):
 		for k in points:
 			if k>1:
 				if next==points[k][6]:
-					if next in dlist and next>i:
+					if next in dendrite_list and next>i:
 						break
-					elif points[k][0] in dlist and points[k][0]>i:
+					elif points[k][0] in dendrite_list and points[k][0]>i:
 						break
 					else:
 						next=points[k][0]
@@ -144,7 +144,7 @@ def dend_point(dlist, points):
 		
 	return dend_indices
 
-def dend_name(dlist, points):
+def dend_name(dendrite_list, points):
 
 	dend_names={}
 
@@ -158,7 +158,7 @@ def dend_name(dlist, points):
 	basal_index=0
 	apic_index=0
 
-	for i in dlist:
+	for i in dendrite_list:
 		if points[i][1]==2:
 			dend_names[i]='axon' + '[' + str(axon_index) + ']'
 			axon.append(i)
@@ -178,19 +178,19 @@ def dend_name(dlist, points):
 
 	return dend_names, axon, basal, apical, elsep
 
-def dend_add3d_points(dlist, dend_indices, points):
+def dend_add3d_points(dendrite_list, dend_indices, points):
 
 	dend_add3d={}
 
-	for i in dlist:
+	for i in dendrite_list:
 		pts=[]
 		for k in dend_indices[i]:
-			mylist=[points[k][0], points[k][1], points[k][2], points[k][3], points[k][4], points[k][5], points[k][6]]
-			pts.append(mylist)
+			segment_list=[points[k][0], points[k][1], points[k][2], points[k][3], points[k][4], points[k][5], points[k][6]]
+			pts.append(segment_list)
 		dend_add3d[i]=pts
 	return dend_add3d
 
-def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to root of all dendrites
+def pathways(dendrite_list, points, dend_indices, soma_index): #returns the pathway to root of all dendrites
 
 	path={}
 
@@ -198,7 +198,7 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 	for k in soma_index:
 		soma.append(k[0])
 
-	for i in dlist:
+	for i in dendrite_list:
 
 		word=i
 		pathway=[]
@@ -208,7 +208,7 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 		for num in range(int(i)+10):
 			#points[con][1]!=1:
 			con=points[word][6]
-			for k in dlist:
+			for k in dendrite_list:
 				if con in dend_indices[k]:
 					word=dend_indices[k][0]
 					pathway.append(word)
@@ -219,13 +219,13 @@ def pathways(dlist, points, dend_indices, soma_index): #returns the pathway to r
 
 	return path
 
-def terminal(dlist, path, basal, apical): #returns a list of the terminal dendrites
+def terminal(dendrite_list, path, basal, apical): #returns a list of the terminal dendrites
 
 	all_terminal=[]
-	for i in dlist:
+	for i in dendrite_list:
 		if i!=1:
 			value=0
-			for n in dlist:
+			for n in dendrite_list:
 				for k in path[n]:
 					if i==k:
 						value+=1
@@ -240,13 +240,13 @@ def terminal(dlist, path, basal, apical): #returns a list of the terminal dendri
 
 	return all_terminal, basal_terminal, apical_terminal
 
-def descend(dlist, all_terminal, path):
+def descend(dendrite_list, all_terminal, path):
 
 	descendants={}
-	for dend in dlist:
+	for dend in dendrite_list:
 		if dend not in all_terminal:
 			descendants[dend]=[]
-			for n in dlist:
+			for n in dendrite_list:
 				if dend in path[n]:
 					tmp_list=path[n][::-1]
 					allow=False
@@ -280,10 +280,10 @@ def soma_center(soma_index):
 
 	return soma_centroid
 
-def dend_length(dend_add3d, dlist, parental_points, points): #returns a list of dendrites' lengths
+def dend_length(dend_add3d, dendrite_list, parental_points, points): #returns a list of dendrites' lengths
 
 	dist={}
-	for i in dlist:
+	for i in dendrite_list:
 
 		dist_sum=[]
 		current=dend_add3d[i][0]
@@ -306,10 +306,10 @@ def dend_length(dend_add3d, dlist, parental_points, points): #returns a list of 
 
 	return dist
 
-def dend_area(dend_add3d, dlist, parental_points, points): #returns a list of dendrites' lengths
+def dend_area(dend_add3d, dendrite_list, parental_points, points): #returns a list of dendrites' lengths
 
 	area={}
-	for i in dlist:
+	for i in dendrite_list:
 
 		area_sum=[]
 		current=dend_add3d[i][0]
@@ -335,15 +335,15 @@ def dend_area(dend_add3d, dlist, parental_points, points): #returns a list of de
 
 	return area
 
-def branch_order(dlist, path):
+def branch_order(dendrite_list, path):
 	bo={}
-	for dend in dlist:
+	for dend in dendrite_list:
 		bo[dend]=len(path[dend])
 	return bo
 
-def connected(dlist, path):
+def connected(dendrite_list, path):
 	con={}
-	for dend in dlist:
+	for dend in dendrite_list:
 		if len(path[dend])==1:
 			con[dend]=1
 		else:
@@ -356,29 +356,29 @@ def read_file(fname):
 	comment_lines, points=comments_and_3dpoints(swc_lines)
 	bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index=branching_points(points)
 	parental_points=parental(points)
-	dlist=d_list(bpoints)
-	dend_indices=dend_point(dlist, points)
-	dend_names, axon, basal, apical, elsep=dend_name(dlist, points)
-	dend_add3d=dend_add3d_points(dlist, dend_indices, points)
-	path=pathways(dlist, points, dend_indices, soma_index)
-	all_terminal, basal_terminal, apical_terminal=terminal(dlist, path, basal, apical)
-	descendants=descend(dlist, all_terminal, path)
+	dendrite_list=d_list(bpoints)
+	dend_indices=dend_point(dendrite_list, points)
+	dend_names, axon, basal, apical, elsep=dend_name(dendrite_list, points)
+	dend_add3d=dend_add3d_points(dendrite_list, dend_indices, points)
+	path=pathways(dendrite_list, points, dend_indices, soma_index)
+	all_terminal, basal_terminal, apical_terminal=terminal(dendrite_list, path, basal, apical)
+	descendants=descend(dendrite_list, all_terminal, path)
 	soma_centroid=soma_center(soma_index)
-	dist=dend_length(dend_add3d, dlist, parental_points, points)
-	area=dend_area(dend_add3d, dlist, parental_points, points)
+	dist=dend_length(dend_add3d, dendrite_list, parental_points, points)
+	area=dend_area(dend_add3d, dendrite_list, parental_points, points)
 	max_index=index(points)
-	bo=branch_order(dlist, path)
-	con=connected(dlist, path)
+	bo=branch_order(dendrite_list, path)
+	con=connected(dendrite_list, path)
 	parents=[]
 
-	dlist=basal+apical
+	dendrite_list=basal+apical
 	bpoints=basal_bpoints+apical_bpoints
 
-	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
+	return (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)
 
 #points, parents, bpoints, soma_index, dend_indices, dend_names, exceptions, dend_add3d, path
 #hoc_lines - swc_lines
-#dlist - dlist
+#dendrite_list - dendrite_list
 #basal - basal
 #apical - apical
 #all_terminal - all_terminal

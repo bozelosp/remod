@@ -53,7 +53,7 @@ print()
 print('Open file: ' + str(file_name))
 print()
 
-(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 
 print('\nSWC parsing is completed!\n')
 
@@ -129,7 +129,7 @@ who.sort()
 print('The dendrites stemming from these segments will be edited: ')
 print(str(who))
 
-(bo_freq, bo_max)=bo_frequency(dlist, bo)
+(bo_freq, bo_max)=bo_frequency(dendrite_list, bo)
 
 if action == 'shrink':
 	if hm_choice == 'micrometers':
@@ -146,18 +146,18 @@ print('\nRemodeling the neuron begins!\n')
 
 edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
-(newfile, dlist, mylist)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+(newfile, dendrite_list, segment_list)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
 if action in ['shrink', 'remove', 'scale']:
-	newfile=index_reassign(dlist, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
+	newfile=index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
 
 newfile=comment_lines + newfile
 check_indices(newfile) #check if indices are continuous from 0 and u
 print_newfile(directory, file_name, newfile, edit)
 
 fname=directory+'downloads/files/'+file_name.replace('.swc','') + '_new.swc'
-(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname)
-second_graph(directory, file_name, dlist, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
+(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname)
+second_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
 
 print()
 print('File: ' + str(file_name) + ' was succesfully edited!')
@@ -167,4 +167,4 @@ print('--------------------------------')
 print()
 
 
-#graph(swc_lines, newfile, action, dend_add3d, dlist, directory, file_name) #plots the original and modified tree (overlaying one another)
+#graph(swc_lines, newfile, action, dend_add3d, dendrite_list, directory, file_name) #plots the original and modified tree (overlaying one another)
