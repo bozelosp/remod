@@ -19,10 +19,10 @@ def check_terminal(who, all_terminal):
 			not_terminal.append(dend)
 
 	if len(not_terminal)>0:
-		print '\nYou have to remove the following non-terminal dendrites from the modification list:\n'
+		print('\nYou have to remove the following non-terminal dendrites from the modification list:\n')
 		for dend in not_terminal:
-			print '> ' + str(dend)
-		print '\nProgram stopped\n'
+			print('> ' + str(dend))
+		print('\nProgram stopped\n')
 		exit(1)
 
 def check_indices(newfile):
@@ -40,7 +40,7 @@ def check_indices(newfile):
 
 	for i in range(len(ilist)-1):
 		if ilist[i+1][0]-ilist[i][0]!=1:
-			print "Error! Non-continuity of segment indices found at:", ilist[i][0], ilist[i][1]
+			print("Error! Non-continuity of segment indices found at:", ilist[i][0], ilist[i][1])
 			status=False
 
 	if status==True:

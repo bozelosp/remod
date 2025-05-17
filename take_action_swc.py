@@ -5,7 +5,7 @@ def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, 
 	
 	mylist=[]
 
-	print action
+	print(action)
 
 	if action != 'none':
 
