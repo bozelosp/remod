@@ -1,29 +1,34 @@
 #!/usr/bin/env python3
-"""Command-line interface for generating summary plots.
+"""Generate plots summarising computed statistics.
 
-This script provides a light wrapper around the plotting helpers in
-:mod:`plot_individual_data`. It accepts the directory where statistics
-are stored and delegates the heavy lifting to the helper module.
+This module merely parses command-line arguments and dispatches to the
+plotting helpers defined in :mod:`plot_individual_data`.
 """
 
+from __future__ import annotations
+
 import argparse
+from pathlib import Path
+import sys
 
 from plot_individual_data import (
-    plot_the_data,
+    plot_the_data as plot_raw_data,
     plot_average_data,
-    plot_compare_data,
+    plot_compare_data as plot_comparative_data,
 )
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
+def parse_arguments(arguments: list[str] | None = None) -> argparse.Namespace:
+    """Return parsed command-line options."""
+    argument_parser = argparse.ArgumentParser(
         description="Generate summary plots from statistics files.",
     )
-    parser.add_argument(
+    argument_parser.add_argument(
         "directory",
+        type=Path,
         help="Path to the directory containing statistics files.",
     )
-    mode = parser.add_mutually_exclusive_group()
+    mode = argument_parser.add_mutually_exclusive_group()
     mode.add_argument(
         "--average",
         action="store_true",
@@ -34,15 +39,28 @@ def main() -> None:
         action="store_true",
         help="Plot comparison statistics between groups.",
     )
-    arguments = parser.parse_args()
+    parsed_arguments = argument_parser.parse_args(arguments)
 
-    if arguments.compare:
-        plot_compare_data(arguments.directory)
-    elif arguments.average:
-        plot_average_data(arguments.directory)
+    if not parsed_arguments.directory.is_dir():
+        argument_parser.error(f"{parsed_arguments.directory} is not a valid directory")
+
+    return parsed_arguments
+
+
+def main(arguments: list[str] | None = None) -> int:
+    """Run the CLI with *arguments* if given."""
+    options = parse_arguments(arguments)
+
+    directory = str(options.directory)
+    if options.compare:
+        plot_comparative_data(directory)
+    elif options.average:
+        plot_average_data(directory)
     else:
-        plot_the_data(arguments.directory)
+        plot_raw_data(directory)
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
