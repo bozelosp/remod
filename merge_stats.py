@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 from itertools import zip_longest
 from pathlib import Path
 import os
@@ -15,7 +14,7 @@ from file_utils import (
     zero_pad,
     zero_line,
 )
-from utils import ensure_dir
+from utils import ensure_dir, parse_merge_args
 
 
 
@@ -68,20 +67,7 @@ def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
 
 
 def main(argv=None) -> None:
-    parser = argparse.ArgumentParser(description="Merge statistic files from different runs")
-    # Provides ``simple`` and ``smart`` subcommands
-    sub = parser.add_subparsers(dest="command", required=True)
-
-    p_simple = sub.add_parser("simple", help="Combine raw statistics using before/ and after/ subdirectories")
-    p_simple.add_argument("--directory", required=True, type=Path,
-                          help="Base directory containing before/ and after/ folders")
-
-    p_smart = sub.add_parser("smart", help="Merge average statistics and generate plots")
-    p_smart.add_argument("--before-dir", required=True, type=Path, help="Directory with files before editing")
-    p_smart.add_argument("--after-dir", required=True, type=Path, help="Directory with files after editing")
-    p_smart.add_argument("--output-dir", required=True, type=Path, help="Destination directory for merged files")
-
-    args = parser.parse_args(argv)
+    args = parse_merge_args(argv)
 
     if args.command == "simple":
         merge_simple(args.directory)

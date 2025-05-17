@@ -29,8 +29,10 @@ from utils import (
     remove_empty_keys,
     sample_random_dendrites,
     ensure_dir,
+    parse_analyze_args,
+    parse_edit_args,
 )
-from file_utils import write_json, write_value, write_swc
+from file_utils import write_json, write_value, write_swc, write_dict
 from statistics_swc import *
 from take_action import execute_action
 from warn import *
@@ -40,20 +42,12 @@ from index_reassignment import *
 def analyze_main(argv=None):
         """Compute morphometric statistics for one or more SWC files."""
         # Top-level routine for computing morphometric statistics
-    
-        start_time = time.time()
-        if argv is None:
-            argv = sys.argv[1:]
-        if len(argv) != 2:
-            print(
-                "The program failed.\n"
-                f"The number of argument(s) given is {len(argv)}.\n"
-                "2 arguments are needed: directory path and file name."
-            )
-            sys.exit(0)
 
-        directory = Path(argv[0])
-        file_names = [f for f in argv[1].split(',') if f]
+        start_time = time.time()
+        options = parse_analyze_args(argv)
+
+        directory = options.directory
+        file_names = [f for f in options.files.split(',') if f]
 
         parsed_files = set()
         log_file = directory / 'log_parsed_files.txt'
@@ -671,28 +665,19 @@ def analyze_main(argv=None):
         print("Average Number of All Dendrites per Branch Order: ") 
         average_dict(average_all_branch_order_frequency)
         f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_all_dendrites_per_branch_order.txt')
-        with open(f_average_branch_order_frequency, 'w+') as f:
-                for i in average_all_branch_order_frequency:
-                        print(i,  ' '.join(map(str, average_all_branch_order_frequency[i])))
-                        print(i, ' '.join(map(str, average_all_branch_order_frequency[i])), file=f)
+        write_dict(f_average_branch_order_frequency, average_all_branch_order_frequency)
         
         print()
         print("Average Number of Basal Dendrites per Branch Order: ")
         average_dict(average_basal_branch_order_frequency)
         f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_basal_dendrites_per_branch_order.txt')
-        with open(f_average_branch_order_frequency, 'w+') as f:
-                for i in average_basal_branch_order_frequency:
-                        print(i,  ' '.join(map(str, average_basal_branch_order_frequency[i])))
-                        print(i, ' '.join(map(str, average_basal_branch_order_frequency[i])), file=f)
+        write_dict(f_average_branch_order_frequency, average_basal_branch_order_frequency)
         
         print()
         print("Average Number of Apical Dendrites per Branch Order: ")
         average_dict(average_apical_branch_order_frequency)
         f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_apical_dendrites_per_branch_order.txt')
-        with open(f_average_branch_order_frequency, 'w+') as f:
-                for i in average_apical_branch_order_frequency:
-                        print(i,  ' '.join(map(str, average_apical_branch_order_frequency[i])))
-                        print(i, ' '.join(map(str, average_apical_branch_order_frequency[i])), file=f)
+        write_dict(f_average_branch_order_frequency, average_apical_branch_order_frequency)
         
         print()
         print("Average All Dendritic Length per Branch Order: ")
@@ -900,22 +885,8 @@ def analyze_main(argv=None):
 def edit_main(argv=None):
         """Perform remodeling operations on a single SWC file."""
         # Entry point for remodeling actions on a single SWC file
-        parser = argparse.ArgumentParser(description="Apply remodeling actions to SWC data")
-        parser.add_argument("--directory", required=True, help="Base directory for the SWC file")
-        parser.add_argument("--file-name", required=True, help="SWC filename")
-        parser.add_argument("--who", required=True, help="Target dendrite selection")
-        parser.add_argument("--random-ratio", type=float, default=0.0,
-                            help="Ratio for random selection (percent)")
-        parser.add_argument("--who-manual-variable", default="none", help="Comma separated manual dendrite ids")
-        parser.add_argument("--action", required=True, help="Remodeling action")
-        parser.add_argument("--hm-choice", required=True, help="percent or micrometers for extent")
-        parser.add_argument("--amount", type=float, default=None,
-                            help="Extent of the action")
-        parser.add_argument("--var-choice", required=True, help="percent or micrometers for diameter change")
-        parser.add_argument("--diam-change", type=float, default=None,
-                            help="Extent of diameter change")
-        args = parser.parse_args(argv)
-    
+        args = parse_edit_args(argv)
+
         directory = Path(args.directory)
         file_name = args.file_name
         fname = directory / file_name
