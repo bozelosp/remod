@@ -263,7 +263,7 @@ def soma_centroid(soma_index: Iterable[List[float]]) -> List[float]:
 def dendrite_lengths(
     coords_map: Dict[int, List[List[float]]],
     dendrite_list: Iterable[int],
-    parental_points: Dict[int, int],
+    parent_indices: Dict[int, int],
     points: Dict[int, List[float]],
 ) -> Dict[int, float]:
     """Compute the length of each dendrite."""
@@ -272,7 +272,7 @@ def dendrite_lengths(
     dist: Dict[int, float] = {}
     for idx in dendrite_list:
         dend = coords_map[idx]
-        segs = [points[parental_points[dend[0][0]]]] + dend
+        segs = [points[parent_indices[dend[0][0]]]] + dend
         lengths = [
             distance(a[2], b[2], a[3], b[3], a[4], b[4])
             for a, b in zip(segs[:-1], segs[1:])
@@ -284,7 +284,7 @@ def dendrite_lengths(
 def dendrite_areas(
     coords_map: Dict[int, List[List[float]]],
     dendrite_list: Iterable[int],
-    parental_points: Dict[int, int],
+    parent_indices: Dict[int, int],
     points: Dict[int, List[float]],
 ) -> Dict[int, float]:
     """Approximate surface area for each dendrite."""
@@ -293,7 +293,7 @@ def dendrite_areas(
     area: Dict[int, float] = {}
     for idx in dendrite_list:
         dend = coords_map[idx]
-        segs = [points[parental_points[dend[0][0]]]] + dend
+        segs = [points[parent_indices[dend[0][0]]]] + dend
         contributions = []
         for a, b in zip(segs[:-1], segs[1:]):
             diam = b[5]
@@ -330,7 +330,7 @@ def parse_swc_file(file_path: str):
         soma_bpoints,
         soma_index,
     ) = find_branch_points(points)
-    parental_points = parent_map(points)
+    parent_indices = parent_map(points)
     dendrite_list = sort_dendrites(branch_points)
     dend_indices = dendrite_segments(dendrite_list, points)
     dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_list, points)
@@ -338,8 +338,8 @@ def parse_swc_file(file_path: str):
     path = paths_to_soma(dendrite_list, points, dend_indices, soma_index)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
     subtrees = build_subtree_map(dendrite_list, all_terminal, path)
-    dist = dendrite_lengths(dend_coords, dendrite_list, parental_points, points)
-    area = dendrite_areas(dend_coords, dendrite_list, parental_points, points)
+    dist = dendrite_lengths(dend_coords, dendrite_list, parent_indices, points)
+    area = dendrite_areas(dend_coords, dendrite_list, parent_indices, points)
     max_index_value = max_index(points)
     branch_order_map = compute_branch_order(dendrite_list, path)
     connectivity_map = connection_to_parent(dendrite_list, path)
@@ -377,5 +377,5 @@ def parse_swc_file(file_path: str):
         area,
         branch_order_map,
         connectivity_map,
-        parental_points,
+        parent_indices,
     )

@@ -37,7 +37,7 @@ Using a virtual environment is recommended but not mandatory.
    python run.py edit \
       --directory /path/to/swc \
       --file-name 0-2.swc \
-      --who who_all_terminal \
+      --who all_terminal \
       --action remove \
       --hm-choice percent \
       --amount 50 \
