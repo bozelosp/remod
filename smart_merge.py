@@ -2,6 +2,7 @@ from plot_individual_data import *
 import os
 import re
 import sys
+import argparse
 
 def read_files(directory):
 
@@ -21,69 +22,74 @@ def append_lines(fname):
                         lines.append(line.rstrip('\n'))
         return lines
 
-if (len(sys.argv)==4):
+def main():
+    parser = argparse.ArgumentParser(description="Merge average statistics from two directories")
+    parser.add_argument("--before-dir", required=True, dest="before_dir", help="Directory containing files before editing")
+    parser.add_argument("--after-dir", required=True, dest="after_dir", help="Directory containing files after editing")
+    parser.add_argument("--output-dir", required=True, dest="output_dir", help="Output directory for comparison files")
+    args = parser.parse_args()
 
-	before_dir=str(sys.argv[1])
-	after_dir=str(sys.argv[2])
-	fwi=str(sys.argv[3])
+    before_dir = args.before_dir
+    after_dir = args.after_dir
+    fwi = args.output_dir
 
-else:
-	print("error")
-	sys.exit(0)
+    before_files = read_files(before_dir)
+    before_files = [x for x in before_files if re.search('average', x)]
 
-before_files=read_files(before_dir)
-before_files=[x for x in before_files if re.search('average', x)]
+    after_files = read_files(after_dir)
+    after_files = [x for x in after_files if re.search('average', x)]
 
-after_files=read_files(after_dir)
-after_files=[x for x in after_files if re.search('average', x)]
+    to_merge_files = [x for x in before_files if x in after_files]
 
-to_merge_files=[x for x in before_files if x in after_files]
+    #to_merge_files=["average_branch_order_frequency.txt","average_total_apical_length.txt","average_total_basal_length.txt","average_number_of_basal_dendrites.txt","average_number_of_apical_dendrites.txt","average_number_of_apical_dendrites.txt","average_sholl_apical_bp.txt", "average_sholl_apical_length.txt", "average_sholl_basal_bp.txt", "average_sholl_basal_length.txt"]#,"average_dendritic_length_per_branch_order.txt"]
+    #to_merge_files=["sholl_apical_length.txt","sholl_basal_length.txt","branch_order_frequency.txt"]#,"average_dendritic_length_per_branch_order.txt"]
 
-#to_merge_files=["average_branch_order_frequency.txt","average_total_apical_length.txt","average_total_basal_length.txt","average_number_of_basal_dendrites.txt","average_number_of_apical_dendrites.txt","average_number_of_apical_dendrites.txt","average_sholl_apical_bp.txt", "average_sholl_apical_length.txt", "average_sholl_basal_bp.txt", "average_sholl_basal_length.txt"]#,"average_dendritic_length_per_branch_order.txt"]
-#to_merge_files=["sholl_apical_length.txt","sholl_basal_length.txt","branch_order_frequency.txt"]#,"average_dendritic_length_per_branch_order.txt"]
+    for f in to_merge_files:
 
-for f in to_merge_files:
+        f_before = os.path.join(before_dir, f)
+        lines_before = append_lines(f_before)
 
-	f_before=str(before_dir)+str(f)
-	lines_before=append_lines(f_before)
+        f_after = os.path.join(after_dir, f)
+        lines_after = append_lines(f_after)
 
-	f_after=str(after_dir)+str(f)
-	lines_after=append_lines(f_after)
+        if len(lines_before) > len(lines_after):
+            max_len = len(lines_before)
+            min_len = len(lines_after)
+            k = 0
+        else:
+            max_len = len(lines_after)
+            min_len = len(lines_before)
+            k = 1
 
-	if len(lines_before)>len(lines_after):
-		max_len=len(lines_before)
-		min_len=len(lines_after)
-		k=0
-	else:
-		max_len=len(lines_after)
-		min_len=len(lines_before)
-		k=1
-	
-	f=f.replace('average','comparison/compare')
-	fw=fwi+f
+        f = f.replace('average', 'comparison/compare')
+        fw = fwi + f
 
         with open(fw, 'w+') as f_write:
 
-                print(fw)
+            print(fw)
 
-                if k==0:
+            if k == 0:
 
-                        for i in range(max_len):
-                                if i<min_len:
-                                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-                                else:
-                                        print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)',r' 0',lines_before[i]), file=f_write)
+                for i in range(max_len):
+                    if i < min_len:
+                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
+                    else:
+                        print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)', r' 0', lines_before[i]), file=f_write)
 
-                if k==1:
+            if k == 1:
 
-                        for i in range(max_len):
-                                if i<min_len:
-                                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-                                else:
-                                        print(re.sub(r'\s(\S+)',r' 0',lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
+                for i in range(max_len):
+                    if i < min_len:
+                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
+                    else:
+                        print(re.sub(r'\s(\S+)', r' 0', lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
 
 
-if not os.path.exists(fwi+'comparison/'):
-    os.makedirs(fwi+'comparison/')
+    if not os.path.exists(fwi + 'comparison/'):
+        os.makedirs(fwi + 'comparison/')
 
-plot_compare_data(fwi+'comparison/')
+    plot_compare_data(fwi + 'comparison/')
+
+
+if __name__ == "__main__":
+    main()
