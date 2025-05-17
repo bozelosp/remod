@@ -40,9 +40,9 @@ def select_length(lengths: List[float], cumulative_indices: List[int]) -> float:
     """Return a random length based on ``cumulative_indices``."""
     # Uses weighted sampling so frequent lengths occur more often
 
-    random_value = randint(0, cumulative_indices[-1])
+    random_value = randrange(cumulative_indices[-1])
     for index in range(len(cumulative_indices) - 1):
-        if cumulative_indices[index] < random_value < cumulative_indices[index + 1]:
+        if cumulative_indices[index] <= random_value < cumulative_indices[index + 1]:
             return lengths[index]
     return lengths[-1]
 
