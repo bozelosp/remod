@@ -39,7 +39,8 @@ from graph import *
 from index_reassignment import *
 
 def analyze_main(argv=None):
-    # Top-level routine for computing morphometric statistics
+        """Compute morphometric statistics for one or more SWC files."""
+        # Top-level routine for computing morphometric statistics
     
         start_time = time.time()
         if argv is None:
@@ -898,7 +899,8 @@ def analyze_main(argv=None):
     
 
 def edit_main(argv=None):
-    # Entry point for remodeling actions on a single SWC file
+        """Perform remodeling operations on a single SWC file."""
+        # Entry point for remodeling actions on a single SWC file
         parser = argparse.ArgumentParser(description="Apply remodeling actions to SWC data")
         parser.add_argument("--directory", required=True, help="Base directory for the SWC file")
         parser.add_argument("--file-name", required=True, help="SWC filename")
@@ -1037,6 +1039,7 @@ def edit_main(argv=None):
     
     
 def main(argv=None):
+    """Dispatch command line arguments to analysis or editing routines."""
     # Command line interface dispatching to analyze/edit modes
     parser = argparse.ArgumentParser(
         description='Compute statistics or remodel SWC files',
