@@ -115,7 +115,7 @@ def dendrite_segments(dendrite_list: Iterable[int], points: Dict[int, List[float
         parent = int(vals[6])
         children.setdefault(parent, []).append(idx)
 
-    dend_indices: Dict[int, List[int]] = {}
+    segment_indices: Dict[int, List[int]] = {}
     for start in dendrite_list:
         dendrite = [start]
         current = start
@@ -131,9 +131,9 @@ def dendrite_segments(dendrite_list: Iterable[int], points: Dict[int, List[float
             dendrite.append(nxt)
             current = nxt
 
-        dend_indices[start] = dendrite
+        segment_indices[start] = dendrite
 
-    return dend_indices
+    return segment_indices
 
 def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[float]]):
     """Classify dendrites by type and assign readable names."""
@@ -169,7 +169,7 @@ def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[floa
 
 def dendrite_coordinates(
     dendrite_list: Iterable[int],
-    dend_indices: Dict[int, List[int]],
+    segment_indices: Dict[int, List[int]],
     points: Dict[int, List[float]],
 ) -> Dict[int, List[List[float]]]:
     """Collect 3‑D coordinates for every dendrite."""
@@ -177,14 +177,14 @@ def dendrite_coordinates(
 
     coords: Dict[int, List[List[float]]] = {}
     for idx in dendrite_list:
-        pts = [points[k][:7] for k in dend_indices[idx]]
+        pts = [points[k][:7] for k in segment_indices[idx]]
         coords[idx] = pts
     return coords
 
 def paths_to_soma(
     dendrite_list: Iterable[int],
     points: Dict[int, List[float]],
-    dend_indices: Dict[int, List[int]],
+    segment_indices: Dict[int, List[int]],
     soma_segments: Iterable[List[float]],
 ) -> Dict[int, List[int]]:
     """Return the pathway from each dendrite to the soma."""
@@ -201,7 +201,7 @@ def paths_to_soma(
             if parent in soma_set or parent == -1:
                 break
             # if the parent is also a dendrite start, jump to its first index
-            current = dend_indices.get(parent, [parent])[0]
+            current = segment_indices.get(parent, [parent])[0]
             pathway.append(current)
 
         path[dend] = pathway
@@ -234,7 +234,7 @@ def build_descendant_map(
     all_terminal: Iterable[int],
     path: Dict[int, List[int]],
 ) -> Dict[int, List[int]]:
-    """Return all subtree dendrites for each non‑terminal dendrite."""
+    """Return all descendant dendrites for each non-terminal dendrite."""
 
     descendants: Dict[int, List[int]] = {}
     terminal_set = set(all_terminal)
@@ -332,10 +332,10 @@ def parse_swc_file(file_path: str):
     ) = find_branch_points(points)
     parent_indices = parent_map(points)
     dendrite_list = sort_dendrites(branch_points)
-    dend_indices = dendrite_segments(dendrite_list, points)
+    segment_indices = dendrite_segments(dendrite_list, points)
     dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_list, points)
-    dend_coords = dendrite_coordinates(dendrite_list, dend_indices, points)
-    path = paths_to_soma(dendrite_list, points, dend_indices, soma_segments)
+    dend_coords = dendrite_coordinates(dendrite_list, segment_indices, points)
+    path = paths_to_soma(dendrite_list, points, segment_indices, soma_segments)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
     descendants = build_descendant_map(dendrite_list, all_terminal, path)
     dist = dendrite_lengths(dend_coords, dendrite_list, parent_indices, points)
@@ -359,7 +359,7 @@ def parse_swc_file(file_path: str):
         max_index_value,
         dendrite_list,
         descendants,
-        dend_indices,
+        segment_indices,
         dend_names,
         axon,
         basal,

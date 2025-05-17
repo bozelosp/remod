@@ -67,11 +67,11 @@ def zero_pad(line: str) -> str:
     return _def_replace.sub(" 0", line)
 
 
-def write_swc(directory: Path | str, file_name: str, lines, comment: str = "", tmp: bool = False) -> Path:
+def write_swc(directory: Path | str, file_name: str, lines, comment: str = "", use_temp_file: bool = False) -> Path:
     """Write an edited SWC file to ``directory`` and return its path."""
-    dir_path = Path(directory) if tmp else Path(directory) / "downloads" / "files"
+    dir_path = Path(directory) if use_temp_file else Path(directory) / "downloads" / "files"
     ensure_dir(dir_path)
-    suffix = "_new_tmp.swc" if tmp else "_new.swc"
+    suffix = "_new_tmp.swc" if use_temp_file else "_new.swc"
     out_path = dir_path / (file_name.replace(".swc", "") + suffix)
     with out_path.open("w", encoding="utf-8") as f:
         if comment:
