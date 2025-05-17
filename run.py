@@ -852,8 +852,8 @@ def edit_main(argv=None):
         action = args.action
         extent_unit = args.extent_unit
         amount = args.amount
-        diam_unit = args.diam_unit
-        diam_change = args.diam_change
+        radius_unit = args.radius_unit
+        radius_change = args.radius_change
     
     
         downloads_dir = directory / 'downloads'
@@ -954,9 +954,9 @@ def edit_main(argv=None):
         
         print('\nRemodeling the neuron begins!\n')
         
-        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(extent_unit) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(diam_unit) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
+        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(extent_unit) + ', amount: ' + str(amount) + ', radius percent/um: ' + str(radius_unit) + ', radius change: ' + str(radius_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
-        (new_lines, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, extent_unit, dend_coords, dist, max_index, diam_change, dendrite_list, soma_segments, points, parent_indices, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+        (new_lines, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, extent_unit, dend_coords, dist, max_index, radius_change, dendrite_list, soma_segments, points, parent_indices, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
         if action in ['shrink', 'remove', 'scale']:
             new_lines=index_reassign(dendrite_list, dend_coords, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_segments, branch_order_max, action)
@@ -1033,12 +1033,12 @@ def main(argv=None):
             '--manual-dendrites', args.manual_dendrites,
             '--action', args.action,
             '--hm-choice', args.extent_unit,
-            '--var-choice', args.diam_unit,
+            '--var-choice', args.radius_unit,
         ]
         if args.amount is not None:
             arglist.extend(['--amount', str(args.amount)])
-        if args.diam_change is not None:
-            arglist.extend(['--diam-change', str(args.diam_change)])
+        if args.radius_change is not None:
+            arglist.extend(['--radius-change', str(args.radius_change)])
         edit_main(arglist)
     else:
         print(f"Unknown command: {command}")

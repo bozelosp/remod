@@ -6,7 +6,7 @@
 
 - Parse SWC files and compute branch counts, branch order distributions, path and total lengths, surface areas and Sholl measurements.
 - Automatically store aggregated statistics in `downloads/statistics/`.
-- Remodel morphologies via `run.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and diameters can be adjusted.
+- Remodel morphologies via `run.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and radii can be adjusted.
 - Node indices are renumbered automatically after editing.
 - Visualise original and modified trees with `neuron_visualization.py` or overlay plots from `graph.py`.
 - Generate summary graphs with `plot_data.py` and combine results from multiple runs using `merge_stats.py`.
@@ -42,7 +42,7 @@ Using a virtual environment is recommended but not mandatory.
       --hm-choice percent \
       --amount 50 \
       --var-choice percent \
-      --diam-change 10
+      --radius-change 10
    ```
 
    Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--manual-dendrites`.

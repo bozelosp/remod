@@ -403,21 +403,21 @@ def shrink(
 
                         num_seg_1=len(dend_coords[dend])
 
-                        diam=[]
+                        radius_steps=[]
                         run_length=1
 
-                        diam.append([0, dend_coords[dend][0][5]])
+                        radius_steps.append([0, dend_coords[dend][0][5]])
                         for i in range(len(dend_coords[dend])-1):
 
-                                diameter=dend_coords[dend][i][5]
-                                diam_next=dend_coords[dend][i+1][5]
+                                radius_curr=dend_coords[dend][i][5]
+                                radius_next=dend_coords[dend][i+1][5]
 
                                 if i==len(dend_coords[dend])-2:
-                                        diam.append([i+1, diam_next])
-                                        break                   
+                                        radius_steps.append([i+1, radius_next])
+                                        break
 
-                                if diameter!=diam_next:
-                                        diam.append([i+1, diam_next])
+                                if radius_curr!=radius_next:
+                                        radius_steps.append([i+1, radius_next])
                                         run_length=1
                                 else:
                                         run_length+=1
@@ -523,26 +523,25 @@ def shrink(
 
                         ratio=float(num_seg_2)/num_seg_1
 
-                        new_ns=[]
-                        for k in diam:
+                        scaled_segments=[]
+                        for k in radius_steps:
 
                                 new_num_seg=int(round_to((k[0]*ratio),1))
-                                new_ns.append(new_num_seg)
+                                scaled_segments.append(new_num_seg)
 
-                        new_ns=new_ns[:-1]
-                        new_ns.append(num_seg_2)
+                        scaled_segments=scaled_segments[:-1]
+                        scaled_segments.append(num_seg_2)
 
                         n=0
                         for j in range(len(dend_coords[dend])):
 
-                                if j>=new_ns[n] and j<new_ns[n+1]:
-                                        #print j, new_ns[n], new_ns[n+1]
-                                        my_diam=diam[n][1]
-                                        dend_coords[dend][j][5]=my_diam
+                                if j>=scaled_segments[n] and j<scaled_segments[n+1]:
+                                        radius_value=radius_steps[n][1]
+                                        dend_coords[dend][j][5]=radius_value
                                 else:
                                         n+=1
-                                        my_diam=diam[n][1]
-                                        dend_coords[dend][j][5]=my_diam
+                                        radius_value=radius_steps[n][1]
+                                        dend_coords[dend][j][5]=radius_value
 
         segment_list=[]
 
@@ -637,29 +636,29 @@ def extend(
 
                         parent_updates=[]
                         initial_position=dend_coords[dend][-1]
-                        will_not_be_bp_anymore=initial_position[0]
-                        for mine in parent_indices:
-                                if parent_indices[mine]==will_not_be_bp_anymore:
-                                        parent_updates.append(mine)
+                        obsolete_bp_idx=initial_position[0]
+                        for seg_id in parent_indices:
+                                if parent_indices[seg_id]==obsolete_bp_idx:
+                                        parent_updates.append(seg_id)
 
 
                 num_seg_1=len(dend_coords[dend])
 
-                diameter_bins=[]
+                radius_bins=[]
                 run_length=1
 
-                diameter_bins.append([0, dend_coords[dend][0][5]])
+                radius_bins.append([0, dend_coords[dend][0][5]])
                 for i in range(len(dend_coords[dend])-1):
 
-                        diam=dend_coords[dend][i][5]
-                        diam_next=dend_coords[dend][i+1][5]
+                        current_radius=dend_coords[dend][i][5]
+                        next_radius=dend_coords[dend][i+1][5]
 
                         if i==len(dend_coords[dend])-2:
-                                diameter_bins.append([i+1, diam_next])
-                                break                   
+                                radius_bins.append([i+1, next_radius])
+                                break
 
-                        if diam!=diam_next:
-                                diameter_bins.append([i+1, diam_next])
+                        if current_radius!=next_radius:
+                                radius_bins.append([i+1, next_radius])
                                 run_length=1
                         else:
                                 run_length+=1
@@ -692,25 +691,25 @@ def extend(
 
                 ratio=float(num_seg_2)/num_seg_1
 
-                new_ns=[]
-                for bin_start in diameter_bins:
+                scaled_segments=[]
+                for bin_start in radius_bins:
 
                         new_num_seg=int(round_to((bin_start[0]*ratio),1))
-                        new_ns.append(new_num_seg)
+                        scaled_segments.append(new_num_seg)
 
-                new_ns.append(num_seg_2)
+                scaled_segments.append(num_seg_2)
 
                 n=0
 
                 for j in range(len(dend_coords[dend])):
 
-                        if j>=new_ns[n] and j<new_ns[n+1]:
-                                my_diam=diameter_bins[n][1]
-                                dend_coords[dend][j][5]=my_diam
+                        if j>=scaled_segments[n] and j<scaled_segments[n+1]:
+                                radius_value=radius_bins[n][1]
+                                dend_coords[dend][j][5]=radius_value
                         else:
                                 n+=1
-                                my_diam=diameter_bins[n][1]
-                                dend_coords[dend][j][5]=my_diam
+                                radius_value=radius_bins[n][1]
+                                dend_coords[dend][j][5]=radius_value
 
                 if dend not in all_terminal:
 
@@ -846,15 +845,16 @@ def branch(
 
 (LENGTHS, CUMULATIVE_INDICES) = parse_length_distribution()
 
-def diameter_change(target_dendrites, diam_change, dend_coords, dendrite_list, soma_segments):
 
-        """Scale dendrite diameters by ``diam_change`` percent."""
+def radius_change(target_dendrites, change_percent, dend_coords, dendrite_list, soma_segments):
 
-        diam_change=int(diam_change)
+        """Scale dendrite radii by ``change_percent`` percent."""
+
+        change_percent=int(change_percent)
         for dend in target_dendrites:
 
                 for i in range(len(dend_coords[dend])):
-                        x=dend_coords[dend][i][5]+(diam_change*dend_coords[dend][i][5]/100)
+                        x=dend_coords[dend][i][5]+(change_percent*dend_coords[dend][i][5]/100)
                         dend_coords[dend][i][5]=x
 
 
@@ -996,7 +996,7 @@ def execute_action(
     dend_coords: Dict[int, List[List[Any]]],
     dist: Dict[int, float],
     max_index: int,
-    diam_change: Any,
+    change_percent: Any,
     dendrite_list: List[int],
     soma_segments: List[List[Any]],
     points: Dict[int, List[Any]],
@@ -1004,7 +1004,7 @@ def execute_action(
     descendants: Dict[int, List[int]],
     all_terminal: List[int],
 ) -> Tuple[List[str], List[int], List[List[Any]]]:
-    """Execute a remodeling action and optionally change diameters."""
+    """Execute a remodeling action and optionally change radii."""
     # Delegates to the appropriate action implementation
 
     segment_list: List[List[Any]] = []
@@ -1035,9 +1035,9 @@ def execute_action(
             except KeyError as exc:
                 raise ValueError(f"Unknown action: {action}") from exc
 
-    if diam_change != "none":
-        new_lines = diameter_change(
-            target_dendrites, diam_change, dend_coords, dendrite_list, soma_segments
+    if change_percent != "none":
+        new_lines = radius_change(
+            target_dendrites, change_percent, dend_coords, dendrite_list, soma_segments
         )
 
     return new_lines, dendrite_list, segment_list
