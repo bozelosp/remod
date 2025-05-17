@@ -24,7 +24,7 @@ import argparse
 #python second_run.py /Users/bozelosp/Desktop/spruston01/ DH052814X100.swc who_manual none 780,1096,1205,1499,1775,1948,2069,2169 shrink percent 80 none none
 #python second_run.py /Users/bozelosp/Desktop/spruston01/ DH052814X100.swc who_manual none 780,1096,1205,1499,1775,1948,2069,2169 remove none none none none
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description="Apply remodeling actions to SWC data")
     parser.add_argument("--directory", required=True, help="Base directory for the SWC file")
     parser.add_argument("--file-name", required=True, help="SWC filename")
@@ -39,7 +39,7 @@ def main():
     parser.add_argument("--var-choice", required=True, help="percent or micrometers for diameter change")
     parser.add_argument("--diam-change", type=float, default=None,
                         help="Extent of diameter change")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     directory = Path(args.directory)
     file_name = args.file_name

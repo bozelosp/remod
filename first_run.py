@@ -65,14 +65,16 @@ def median_dict(d):
 
         return d
 
+
 # example usage: python first_run.py /path/to/swc/ 0-2.swc
-def main():
+def main(argv=None):
 
     start_time = time.time()
-    if (len(sys.argv)==3):
-    
-            directory = Path(sys.argv[1])
-            file_names=str(sys.argv[2]).split(',')
+    if argv is None:
+            argv = sys.argv[1:]
+    if len(argv)==2:
+            directory = Path(argv[0])
+            file_names=str(argv[1]).split(',')
             file_names=[x for x in file_names if x != '']
     
             parsed_files=[]
@@ -92,7 +94,7 @@ def main():
                     parsed_count=len(parsed_files)
     
     else:
-            print("The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. ")
+            print("The program failed.\nThe number of argument(s) given is " + str(len(argv)) + ".\n2 arguments are needed: directory path and file name.")
             sys.exit(0)
     
     exist_downloads = directory / 'downloads'
