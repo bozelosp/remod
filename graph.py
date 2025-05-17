@@ -130,9 +130,9 @@ def plot_(my_file, my_plot, dendrite_list):
 
                         di=distance(x[1],x[0],y[1],y[0],z[1],z[0])
                         distance_list.append(di)
-                        dsu=sum(distance_list)
+                        distance_total=sum(distance_list)
 
-                        #print ' %d %d %.2f %.2f %.2f %.2f %d - %.2f' % (point_map[i][0], point_map[i][1], point_map[i][2], point_map[i][3], point_map[i][4], point_map[i][5], point_map[i][6], dsu)
+                        #print ' %d %d %.2f %.2f %.2f %.2f %d - %.2f' % (point_map[i][0], point_map[i][1], point_map[i][2], point_map[i][3], point_map[i][4], point_map[i][5], point_map[i][6], distance_total)
                         d=point_map[i][5]
                         parameters=[x, y, z, d]
 
