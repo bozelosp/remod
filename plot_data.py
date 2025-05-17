@@ -176,10 +176,10 @@ means=[]
 
 countl=0
 for line in open(d+"number_of_all_dendrites_per_branch_order.txt"):
-	data=line.split()
-	labels.append(int(data[0]))
-	means.append(float(data[1]))
-	countl+=1
+        data=line.split()
+        labels.append(int(data[0]))
+        means.append(float(data[1]))
+        countl+=1
 
 ind = np.arange(len(labels))
 myl=tuple([str(i) for i in labels])
@@ -212,10 +212,10 @@ means=[]
 
 countl=0
 for line in open(d+"number_of_basal_dendrites_per_branch_order.txt"):
-	data=line.split()
-	labels.append(int(data[0]))
-	means.append(float(data[1]))
-	countl+=1
+        data=line.split()
+        labels.append(int(data[0]))
+        means.append(float(data[1]))
+        countl+=1
 
 ind = np.arange(len(labels))
 myl=tuple([str(i) for i in labels])
@@ -248,10 +248,10 @@ means=[]
 
 countl=0
 for line in open(d+"number_of_apical_dendrites_per_branch_order.txt"):
-	data=line.split()
-	labels.append(int(data[0]))
-	means.append(float(data[1]))
-	countl+=1
+        data=line.split()
+        labels.append(int(data[0]))
+        means.append(float(data[1]))
+        countl+=1
 
 ind = np.arange(len(labels))
 myl=tuple([str(i) for i in labels])
@@ -284,10 +284,10 @@ means=[]
 
 countl=0
 for line in open(d+"all_dendritic_length_per_branch_order.txt"):
-	data=line.split()
-	labels.append(int(data[0]))
-	means.append(float(data[1]))
-	countl+=1
+        data=line.split()
+        labels.append(int(data[0]))
+        means.append(float(data[1]))
+        countl+=1
 
 ind = np.arange(len(labels))
 myl=tuple([str(i) for i in labels])
@@ -320,10 +320,10 @@ means=[]
 
 countl=0
 for line in open(d+"basal_dendritic_length_per_branch_order.txt"):
-	data=line.split()
-	labels.append(int(data[0]))
-	means.append(float(data[1]))
-	countl+=1
+        data=line.split()
+        labels.append(int(data[0]))
+        means.append(float(data[1]))
+        countl+=1
 
 ind = np.arange(len(labels))
 myl=tuple([str(i) for i in labels])
@@ -355,9 +355,9 @@ plt.show()'''
 means=[]
 
 for line in open(d+"apical_dendritic_length_per_branch_order.txt"):
-	data=line.split()
-	labels.append(int(data[0]))
-	means.append(float(data[1]))
+        data=line.split()
+        labels.append(int(data[0]))
+        means.append(float(data[1]))
 
 ind = np.arange(len(labels))
 myl=tuple([str(i) for i in labels])

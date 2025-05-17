@@ -6,10 +6,10 @@ import argparse
 
 def read_files(directory):
 
-	stat_files=os.listdir(directory)
-	stat_files = [x for x in stat_files if re.search(r"txt", x)]
+        stat_files=os.listdir(directory)
+        stat_files = [x for x in stat_files if re.search(r"txt", x)]
 
-	return stat_files
+        return stat_files
 
 def append_lines(fname):
 

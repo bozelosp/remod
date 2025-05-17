@@ -2,30 +2,30 @@ from actions_swc import *
 from print_file import *
 
 def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal):
-	
-	segment_list=[]
+        
+        segment_list=[]
 
-	print(action)
+        print(action)
 
-	if action != 'none':
+        if action != 'none':
 
-		if action == 'shrink':
-			newfile=shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal)
+                if action == 'shrink':
+                        newfile=shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal)
 
-		if action == 'remove':
-			newfile=remove(who, action, dend_add3d, soma_index, points, parental_points, descendants, all_terminal)
+                if action == 'remove':
+                        newfile=remove(who, action, dend_add3d, soma_index, points, parental_points, descendants, all_terminal)
 
-		if action == 'extend':
-			newfile=extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal)
+                if action == 'extend':
+                        newfile=extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal)
 
-		if action == 'branch':
-			(newfile,dendrite_list,segment_list)=branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dendrite_list)
+                if action == 'branch':
+                        (newfile,dendrite_list,segment_list)=branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dendrite_list)
 
-		if action == 'scale':
-			newfile=scale(who, soma_index, dend_add3d, amount)
+                if action == 'scale':
+                        newfile=scale(who, soma_index, dend_add3d, amount)
 
-	if diam_change != 'none':
+        if diam_change != 'none':
 
-		newfile=diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index)
+                newfile=diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index)
 
-	return (newfile, dendrite_list, segment_list)
+        return (newfile, dendrite_list, segment_list)
