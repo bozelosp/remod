@@ -20,7 +20,6 @@ from pathlib import Path
 import time
 
 from random_sampling import *
-from actions_swc import *
 from statistics_swc import *
 import collections
 def remove_empty_keys(d):
