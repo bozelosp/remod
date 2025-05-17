@@ -1,31 +1,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-d="/Users/bozelosp/Desktop/spruston01/downloads/statistics/DH052814X100_"
+stats_dir="/Users/bozelosp/Desktop/spruston01/downloads/statistics/DH052814X100_"
 
 #plots the total number of all the dendrites, the basal, andd the apical ones compared side-by-side with the respective number of the terminals
 
-'''f=open(d+"number_of_basal_dendrites.txt")
+'''f=open((stats_dir +"number_of_basal_dendrites.txt")
 nbd=f.readline()
 nbd=nbd.rstrip('\n')
 
-f=open(d+"number_of_basal_terminal_dendrites.txt")
+f=open((stats_dir +"number_of_basal_terminal_dendrites.txt")
 nbtd=f.readline()
 nbtd=nbtd.rstrip('\n')
 
-f=open(d+"number_of_apical_dendrites.txt")
+f=open((stats_dir +"number_of_apical_dendrites.txt")
 nad=f.readline()
 nad=nad.rstrip('\n')
 
-f=open(d+"number_of_apical_terminal_dendrites.txt")
+f=open((stats_dir +"number_of_apical_terminal_dendrites.txt")
 natd=f.readline()
 natd=natd.rstrip('\n')
 
-f=open(d+"number_of_all_dendrites.txt")
+f=open((stats_dir +"number_of_all_dendrites.txt")
 nald=f.readline()
 nald=nald.rstrip('\n')
 
-f=open(d+"number_of_all_terminal_dendrites.txt")
+f=open((stats_dir +"number_of_all_terminal_dendrites.txt")
 naltd=f.readline()
 naltd=naltd.rstrip('\n')
 
@@ -38,7 +38,7 @@ bar1=[int(x) for x in bar1]
 bar2=[int(x) for x in bar2]
 
 ind = np.arange(len(label1))
-myl=tuple([str(i) for i in label1])
+label_strings=tuple([str(i) for i in label1])
 width = 0.4       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -51,7 +51,7 @@ ax.set_ylabel('Average Dendritic Length (um)')
 ax.set_xlabel('Radian Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(3.2+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 ax.legend( (rects1[0], rects2[0]), ('All Dendrites', 'Terminal Dendrites') )
 
@@ -70,15 +70,15 @@ plt.show()'''
 
 #plots the total number of branchpoints from all the tree, as well as the basal and the apical
 
-'''f=open(d+"number_of_all_branchpoints.txt")
+'''f=open((stats_dir +"number_of_all_branchpoints.txt")
 nalb=f.readline()
 nalb=nalb.rstrip('\n')
 
-f=open(d+"number_of_basal_branchpoints.txt")
+f=open((stats_dir +"number_of_basal_branchpoints.txt")
 nbb=f.readline()
 nbb=nbb.rstrip('\n')
 
-f=open(d+"number_of_apical_branchpoints.txt")
+f=open((stats_dir +"number_of_apical_branchpoints.txt")
 nab=f.readline()
 nab=nab.rstrip('\n')
 
@@ -104,15 +104,15 @@ plt.show()'''
 #plots the total dendritic length from all the tree, as well as the basal and the apical regions
 
 '''
-f=open(d+"all_total_length.txt")
+f=open((stats_dir +"all_total_length.txt")
 altl=f.readline()
 altl=altl.rstrip('\n')
 
-f=open(d+"basal_total_length.txt")
+f=open((stats_dir +"basal_total_length.txt")
 btl=f.readline()
 btl=btl.rstrip('\n')
 
-f=open(d+"apical_total_length.txt")
+f=open((stats_dir +"apical_total_length.txt")
 atl=f.readline()
 atl=atl.rstrip('\n')
 
@@ -138,15 +138,15 @@ plt.show()
 
 #plots the total dendritic area from all the tree, as well as the basal and the apical regions
 
-'''f=open(d+"all_total_area.txt")
+'''f=open((stats_dir +"all_total_area.txt")
 alta=f.readline()
 alta=alta.rstrip('\n')
 
-f=open(d+"basal_total_area.txt")
+f=open((stats_dir +"basal_total_area.txt")
 bta=f.readline()
 bta=bta.rstrip('\n')
 
-f=open(d+"apical_total_area.txt")
+f=open((stats_dir +"apical_total_area.txt")
 ata=f.readline()
 ata=ata.rstrip('\n')
 
@@ -175,14 +175,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"number_of_all_dendrites_per_branch_order.txt"):
+for line in open((stats_dir +"number_of_all_dendrites_per_branch_order.txt"):
         data=line.split()
         labels.append(int(data[0]))
         means.append(float(data[1]))
         countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -193,7 +193,7 @@ ax.set_ylabel('Number of All Dendrites')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -211,14 +211,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"number_of_basal_dendrites_per_branch_order.txt"):
+for line in open((stats_dir +"number_of_basal_dendrites_per_branch_order.txt"):
         data=line.split()
         labels.append(int(data[0]))
         means.append(float(data[1]))
         countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -229,7 +229,7 @@ ax.set_ylabel('Number of Basal Dendrites')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -247,14 +247,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"number_of_apical_dendrites_per_branch_order.txt"):
+for line in open((stats_dir +"number_of_apical_dendrites_per_branch_order.txt"):
         data=line.split()
         labels.append(int(data[0]))
         means.append(float(data[1]))
         countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -265,7 +265,7 @@ ax.set_ylabel('Number of Apical Dendrites')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -283,14 +283,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"all_dendritic_length_per_branch_order.txt"):
+for line in open((stats_dir +"all_dendritic_length_per_branch_order.txt"):
         data=line.split()
         labels.append(int(data[0]))
         means.append(float(data[1]))
         countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -301,7 +301,7 @@ ax.set_ylabel('Average Dendritic Length (um)')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -319,14 +319,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"basal_dendritic_length_per_branch_order.txt"):
+for line in open((stats_dir +"basal_dendritic_length_per_branch_order.txt"):
         data=line.split()
         labels.append(int(data[0]))
         means.append(float(data[1]))
         countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -337,7 +337,7 @@ ax.set_ylabel('Average Basal Dendritic Length (um)')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -354,13 +354,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"apical_dendritic_length_per_branch_order.txt"):
+for line in open((stats_dir +"apical_dendritic_length_per_branch_order.txt"):
         data=line.split()
         labels.append(int(data[0]))
         means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -371,7 +371,7 @@ ax.set_ylabel('Average Apical Dendritic Length (um)')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -389,14 +389,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"all_path_length_per_branch_order.txt"):
+for line in open((stats_dir +"all_path_length_per_branch_order.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
     countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -407,7 +407,7 @@ ax.set_ylabel('Average Path Length (um)')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -425,14 +425,14 @@ plt.show()'''
 means=[]
 
 countl=0
-for line in open(d+"basal_path_length_per_branch_order.txt"):
+for line in open((stats_dir +"basal_path_length_per_branch_order.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
     countl+=1
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -443,7 +443,7 @@ ax.set_ylabel('Average Basal Path Length (um)')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -460,13 +460,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"apical_path_length_per_branch_order.txt"):
+for line in open((stats_dir +"apical_path_length_per_branch_order.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -477,7 +477,7 @@ ax.set_ylabel('Average Apical Path Length (um)')
 ax.set_xlabel('Branch Order')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -494,13 +494,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_all_length.txt"):
+for line in open((stats_dir +"sholl_all_length.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -511,7 +511,7 @@ ax.set_ylabel('Average Dendritic Length (um)')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -528,13 +528,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_basal_length.txt"):
+for line in open((stats_dir +"sholl_basal_length.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -545,7 +545,7 @@ ax.set_ylabel('Average Basal Dendritic Length (um)')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -562,13 +562,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_apical_length.txt"):
+for line in open((stats_dir +"sholl_apical_length.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -579,7 +579,7 @@ ax.set_ylabel('Average Apical Dendritic Length (um)')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -596,13 +596,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_all_branchpoints.txt"):
+for line in open((stats_dir +"sholl_all_branchpoints.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -613,7 +613,7 @@ ax.set_ylabel('Average Number of Branchpoints')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -630,13 +630,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_basal_branchpoints.txt"):
+for line in open((stats_dir +"sholl_basal_branchpoints.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -647,7 +647,7 @@ ax.set_ylabel('Average Number of Basal Branchpoints')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -664,13 +664,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_apical_branchpoints.txt"):
+for line in open((stats_dir +"sholl_apical_branchpoints.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -681,7 +681,7 @@ ax.set_ylabel('Average Number of Apical Branchpoints')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -698,13 +698,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_all_intersections.txt"):
+for line in open((stats_dir +"sholl_all_intersections.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -715,7 +715,7 @@ ax.set_ylabel('Average Number of Intersections')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -732,13 +732,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_basal_intersections.txt"):
+for line in open((stats_dir +"sholl_basal_intersections.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -749,7 +749,7 @@ ax.set_ylabel('Average Number of Basal Intersections')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels
@@ -766,13 +766,13 @@ plt.show()'''
 '''labels=[]
 means=[]
 
-for line in open(d+"sholl_apical_intersections.txt"):
+for line in open((stats_dir +"sholl_apical_intersections.txt"):
     data=line.split()
     labels.append(int(data[0]))
     means.append(float(data[1]))
 
 ind = np.arange(len(labels))
-myl=tuple([str(i) for i in labels])
+label_strings=tuple([str(i) for i in labels])
 width = 0.5       # the width of the bars
 
 fig, ax = plt.subplots()
@@ -783,7 +783,7 @@ ax.set_ylabel('Average Number of Apical Intersections')
 ax.set_xlabel('Radial Distance from the Soma (um)')
 ax.set_title('')
 ax.set_xticks(2.25+ind+width)
-ax.set_xticklabels( myl )
+ax.set_xticklabels( label_strings )
 
 def autolabel(rects):
     # attach some text labels

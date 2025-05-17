@@ -22,9 +22,9 @@ def first_graph(abs_path, file_name, dendrite_list, dend_add3d, points, parental
                         y=point[3]
                         z=point[4]
                         d=point[5]
-                        c=point[6]
+                        parent_id=point[6]
         
-                        if c==k[0]:
+                        if parent_id==k[0]:
 
                                 xp=k[2]
                                 yp=k[3]
@@ -41,9 +41,9 @@ def first_graph(abs_path, file_name, dendrite_list, dend_add3d, points, parental
                         y=point[3]
                         z=point[4]
                         d=point[5]
-                        c=point[6]
+                        parent_id=point[6]
 
-                        to_whom_is_connected=parental_points[c]
+                        to_whom_is_connected=parental_points[parent_id]
         
                         if to_whom_is_connected==-1 or point[1]==2:
                                 continue
@@ -74,9 +74,9 @@ def second_graph(abs_path,file_name, dendrite_list, dend_add3d, points, parental
                         y=point[3]
                         z=point[4]
                         d=point[5]
-                        c=point[6]
-        
-                        if c==k[0]:
+                        parent_id=point[6]
+
+                        if parent_id==k[0]:
 
                                 xp=k[2]
                                 yp=k[3]
@@ -93,9 +93,9 @@ def second_graph(abs_path,file_name, dendrite_list, dend_add3d, points, parental
                         y=point[3]
                         z=point[4]
                         d=point[5]
-                        c=point[6]
+                        parent_id=point[6]
 
-                        to_whom_is_connected=parental_points[c]
+                        to_whom_is_connected=parental_points[parent_id]
         
                         if to_whom_is_connected==-1 or point[1]==2:
                                 continue
