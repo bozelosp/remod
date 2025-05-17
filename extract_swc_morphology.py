@@ -1,4 +1,5 @@
 import re
+import csv
 import numpy as np
 #import matplotlib as mpl
 #from mpl_toolkits.mplot3d import Axes3D
@@ -8,40 +9,42 @@ from math import cos, sin, pi, sqrt, radians, degrees
 
 def swc_line(fname):
 
-        swc_lines=[]
-        with open(fname) as f:
-                for line in f:
-                        swc_lines.append(line.rstrip('\n'))
+    swc_lines = []
+    with open(fname) as f:
+        for line in f:
+            swc_lines.append(line.rstrip('\n'))
 
-	return swc_lines
+    return swc_lines
 
 def comments_and_3dpoints(swc_lines):
 
-	comment_lines=[]
-	points={}
+    comment_lines = []
+    points = {}
 
-	for line in swc_lines:
-	
-		comment=re.search(r'#', line)
-		p=re.search(r'(\d+)\s+(\d+)\s+(.*?)\s+(.*?)\s+(.*?)\s+(.*?)\s+(-?\d+)', line)
+    for line in swc_lines:
+        row = next(csv.reader([line], delimiter=' ', skipinitialspace=True))
+        if not row:
+            continue
+        if row[0].startswith('#'):
+            comment_lines.append(line)
+            continue
+        if len(row) < 7:
+            continue
+        try:
+            i = int(row[0])
+            l = int(row[1])
+            x = float(row[2])
+            y = float(row[3])
+            z = float(row[4])
+            d = float(row[5])
+            c = int(row[6])
+        except ValueError:
+            continue
 
-		if comment:
-			comment_lines.append(line)
+        segment_list = [i, l, x, y, z, d, c]
+        points[i] = segment_list
 
-		elif p:
-
-			i=int(p.group(1))
-			l=int(p.group(2))
-			x=float(p.group(3))
-			y=float(p.group(4))
-			z=float(p.group(5))
-			d=float(p.group(6))
-			c=int(p.group(7))
-
-			segment_list=[i, l, x, y, z, d, c]
-			points[i]=segment_list
-
-	return comment_lines, points
+    return comment_lines, points
 
 def index(points):
 
