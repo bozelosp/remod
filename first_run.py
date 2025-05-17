@@ -3,7 +3,7 @@ from neuron_visualization import *
 from statistics_swc import *
 from random_sampling import *
 from actions_swc import *
-from utils import round_to
+from utils import round_to, save_json
 import sys
 import numpy as np
 import os
@@ -184,121 +184,77 @@ for file_name in file_names:
         (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
         first_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
 
-        fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
-        with open(fnumdend, 'w+') as f:
-                print(str(len(dendrite_list)), file=f)
+        stats = {}
+
+        stats['number_of_all_dendrites'] = len(dendrite_list)
         average_number_of_all_dendrites.append(len(dendrite_list))
 
-        fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_terminal_dendrites.txt'
-        with open(fnumdend, 'w+') as f:
-                print(str(len(all_terminal)), file=f)
+        stats['number_of_all_terminal_dendrites'] = len(all_terminal)
         average_number_of_all_terminal_dendrites.append(len(all_terminal))
         
-        fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_basal_dendrites.txt'
-        with open(fnumdend, 'w+') as f:
-                print(str(len(basal)), file=f)
+        stats['number_of_basal_dendrites'] = len(basal)
         average_number_of_basal_dendrites.append(len(basal))
         
-        fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_basal_terminal_dendrites.txt'
-        with open(fnumdend, 'w+') as f:
-                print(str(len(basal_terminal)), file=f)
+        stats['number_of_basal_terminal_dendrites'] = len(basal_terminal)
         average_number_of_basal_terminal_dendrites.append(len(basal_terminal))
         
-        fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_apical_dendrites.txt'
-        with open(fnumdend, 'w+') as f:
-                print(str(len(apical)), file=f)
+        stats['number_of_apical_dendrites'] = len(apical)
         average_number_of_apical_dendrites.append(len(apical))
         
-        fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_apical_terminal_dendrites.txt'
-        with open(fnumdend, 'w+') as f:
-                print(str(len(apical_terminal)), file=f)
+        stats['number_of_apical_terminal_dendrites'] = len(apical_terminal)
         average_number_of_apical_terminal_dendrites.append(len(apical_terminal))
 
-        t_length=total_length(dendrite_list, dist)
-        ftotlength=directory+'downloads/statistics/'+file_name+'_all_total_length.txt'
-        with open(ftotlength, 'w+') as f:
-                print(t_length, file=f)
+        t_length = total_length(dendrite_list, dist)
+        stats['all_total_length'] = t_length
         average_t_length.append(t_length)
 
-        basal_t_length=total_length(basal, dist)
-        ftotblength=directory+'downloads/statistics/'+file_name+'_basal_total_length.txt'
-        with open(ftotblength, 'w+') as f:
-                print(basal_t_length, file=f)
+        basal_t_length = total_length(basal, dist)
+        stats['basal_total_length'] = basal_t_length
         average_basal_t_length.append(basal_t_length)
 
-        apical_t_length=total_length(apical, dist)
-        ftotalength=directory+'downloads/statistics/'+file_name+'_apical_total_length.txt'
-        with open(ftotalength, 'w+') as f:
-                print(apical_t_length, file=f)
+        apical_t_length = total_length(apical, dist)
+        stats['apical_total_length'] = apical_t_length
         average_apical_t_length.append(apical_t_length)
 
-        t_area=total_area(dendrite_list, area)
-        stats_file_path=directory+'downloads/statistics/'+file_name+'_all_total_area.txt'
-        with open(stats_file_path, 'w+') as f:
-                print(t_area, file=f)
+        t_area = total_area(dendrite_list, area)
+        stats['all_total_area'] = t_area
         average_t_area.append(t_area)
         
-        basal_t_area=total_area(basal, area)
-        stats_file_path=directory+'downloads/statistics/'+file_name+'_basal_total_area.txt'
-        with open(stats_file_path, 'w+') as f:
-                print(basal_t_area, file=f)
+        basal_t_area = total_area(basal, area)
+        stats['basal_total_area'] = basal_t_area
         average_basal_t_area.append(basal_t_area)
         
-        apical_t_area=total_area(apical, area)
-        stats_file_path=directory+'downloads/statistics/'+file_name+'_apical_total_area.txt'
-        with open(stats_file_path, 'w+') as f:
-                print(apical_t_area, file=f)
+        apical_t_area = total_area(apical, area)
+        stats['apical_total_area'] = apical_t_area
         average_apical_t_area.append(apical_t_area)
 
         #print list(set([parental_points[x] for x in bpoints]))
         #print len(list(set([parental_points[x] for x in bpoints])))
 
-        fnum_all_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_all_branchpoints.txt'
-        with open(fnum_all_bpoints, 'w+') as f:
+        soma = [x[0] for x in soma_index]
+        num_all_bp = len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma])))
+        stats['number_of_all_branchpoints'] = num_all_bp
+        average_num_all_bpoints.append(num_all_bp)
 
-                soma=[x[0] for x in soma_index]
-                print(len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma]))), file=f)
-        average_num_all_bpoints.append(len(list(set([parental_points[x] for x in bpoints if parental_points[x] not in soma]))))
+        num_basal_bp = len(list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma])))
+        stats['number_of_basal_branchpoints'] = num_basal_bp
+        average_num_basal_bpoints.append(num_basal_bp)
 
-        fnum_basal_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_basal_branchpoints.txt'
-        with open(fnum_basal_bpoints, 'w+') as f:
-                print(len(list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma]))), file=f)
-        average_num_basal_bpoints.append(len(list(set([parental_points[x] for x in basal_bpoints if parental_points[x] not in soma]))))
+        num_apical_bp = len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma])))
+        stats['number_of_apical_branchpoints'] = num_apical_bp
+        average_num_apical_bpoints.append(num_apical_bp)
 
-        fnum_apical_bpoints=directory+'downloads/statistics/'+file_name+'_number_of_apical_branchpoints.txt'
-        with open(fnum_apical_bpoints, 'w+') as f:
-                print(len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma]))), file=f)
-        average_num_apical_bpoints.append(len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma]))))
-
-        stats_file_path=directory+'downloads/statistics/'+file_name+'_list_of_all_dendrites.txt'
-        with open(stats_file_path, 'w+') as f:
-                for dend in dendrite_list:
-                        print(dend, file=f)
+        stats['list_of_all_dendrites'] = dendrite_list
         
-        stats_file_path=directory+'downloads/statistics/'+file_name+'_list_of_basal_dendrites.txt'
-        with open(stats_file_path, 'w+') as f:
-                for dend in basal:
-                        print(dend, file=f)
+        stats['list_of_basal_dendrites'] = basal
         
-        stats_file_path=directory+'downloads/statistics/'+file_name+'_list_of_apical_dendrites.txt'
-        with open(stats_file_path, 'w+') as f:
-                for dend in apical:
-                        print(dend, file=f)
+        stats['list_of_apical_dendrites'] = apical
 
-        fdendlength=directory+'downloads/statistics/'+file_name+'_list_of_all_dendritic_lengths.txt' # <--------- temporary
-        with open(fdendlength, 'w+') as f:
-                for dend in dendrite_list:
-                        print(str(dend) + ' ' + str(dist[dend]), file=f)
+        stats['list_of_all_dendritic_lengths'] = {dend: dist[dend] for dend in dendrite_list}
 
-        fdendlength=directory+'downloads/statistics/'+file_name+'_list_of_basal_dendritic_lengths.txt' # <--------- temporary
-        with open(fdendlength, 'w+') as f:
-                for dend in basal:
-                        print(str(dend) + ' ' + str(dist[dend]), file=f)
+        stats['list_of_basal_dendritic_lengths'] = {dend: dist[dend] for dend in basal}
 
-        fdendlength=directory+'downloads/statistics/'+file_name+'_list_of_apical_dendritic_lengths.txt' # <--------- temporary
-        with open(fdendlength, 'w+') as f:
-                for dend in apical:
-                        print(str(dend) + ' ' + str(dist[dend]), file=f)
+        stats['list_of_apical_dendritic_lengths'] = {dend: dist[dend] for dend in apical}
 
         '''if basal_t_length<150 or apical_t_length<150:
 
@@ -502,6 +458,8 @@ for file_name in file_names:
         print("Successful parsing and calculation of morphometric statistics!\n\n------------------------------------------\n")
 
         #length_metrics.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
+
+        save_json(directory+'downloads/statistics/'+file_name+'_stats.json', stats)
 
         clearall()
 

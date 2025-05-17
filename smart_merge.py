@@ -64,25 +64,26 @@ def main():
         f = f.replace('average', 'comparison/compare')
         fw = fwi + f
 
-        with open(fw, 'w+') as f_write:
+        data = []
 
-            print(fw)
+        print(fw)
 
-            if k == 0:
+        if k == 0:
+            for i in range(max_len):
+                if i < min_len:
+                    data.append([lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n')])
+                else:
+                    data.append([lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)', r' 0', lines_before[i])])
 
-                for i in range(max_len):
-                    if i < min_len:
-                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-                    else:
-                        print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)', r' 0', lines_before[i]), file=f_write)
+        if k == 1:
+            for i in range(max_len):
+                if i < min_len:
+                    data.append([lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n')])
+                else:
+                    data.append([re.sub(r'\s(\S+)', r' 0', lines_after[i]), lines_after[i].rstrip('\n')])
 
-            if k == 1:
-
-                for i in range(max_len):
-                    if i < min_len:
-                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-                    else:
-                        print(re.sub(r'\s(\S+)', r' 0', lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
+        from utils import save_json
+        save_json(fw.replace('.txt', '.json'), data)
 
 
     if not os.path.exists(fwi + 'comparison/'):
