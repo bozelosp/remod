@@ -243,22 +243,22 @@ for file_name in file_names:
 	average_apical_t_length.append(apical_t_length)
 
 	t_area=total_area(dendrite_list, area)
-	fdendlist=directory+'downloads/statistics/'+file_name+'_all_total_area.txt'
-	f = open(fdendlist, 'w+')
+	stats_file_path=directory+'downloads/statistics/'+file_name+'_all_total_area.txt'
+	f = open(stats_file_path, 'w+')
 	print(t_area, file=f)
 	f.close()
 	average_t_area.append(t_area)
-
+	
 	basal_t_area=total_area(basal, area)
-	fdendlist=directory+'downloads/statistics/'+file_name+'_basal_total_area.txt'
-	f = open(fdendlist, 'w+')
+	stats_file_path=directory+'downloads/statistics/'+file_name+'_basal_total_area.txt'
+	f = open(stats_file_path, 'w+')
 	print(basal_t_area, file=f)
 	f.close()
 	average_basal_t_area.append(basal_t_area)
-
+	
 	apical_t_area=total_area(apical, area)
-	fdendlist=directory+'downloads/statistics/'+file_name+'_apical_total_area.txt'
-	f = open(fdendlist, 'w+')
+	stats_file_path=directory+'downloads/statistics/'+file_name+'_apical_total_area.txt'
+	f = open(stats_file_path, 'w+')
 	print(apical_t_area, file=f)
 	f.close()
 	average_apical_t_area.append(apical_t_area)
@@ -286,20 +286,20 @@ for file_name in file_names:
 	f.close()
 	average_num_apical_bpoints.append(len(list(set([parental_points[x] for x in apical_bpoints if parental_points[x] not in soma]))))
 
-	fdendlist=directory+'downloads/statistics/'+file_name+'_list_of_all_dendrites.txt'
-	f = open(fdendlist, 'w+')
+	stats_file_path=directory+'downloads/statistics/'+file_name+'_list_of_all_dendrites.txt'
+	f = open(stats_file_path, 'w+')
 	for dend in dendrite_list:
 		print(dend, file=f)
 	f.close()
-
-	fdendlist=directory+'downloads/statistics/'+file_name+'_list_of_basal_dendrites.txt'
-	f = open(fdendlist, 'w+')
+	
+	stats_file_path=directory+'downloads/statistics/'+file_name+'_list_of_basal_dendrites.txt'
+	f = open(stats_file_path, 'w+')
 	for dend in basal:
 		print(dend, file=f)
 	f.close()
-
-	fdendlist=directory+'downloads/statistics/'+file_name+'_list_of_apical_dendrites.txt'
-	f = open(fdendlist, 'w+')
+	
+	stats_file_path=directory+'downloads/statistics/'+file_name+'_list_of_apical_dendrites.txt'
+	f = open(stats_file_path, 'w+')
 	for dend in apical:
 		print(dend, file=f)
 	f.close()
@@ -325,7 +325,7 @@ for file_name in file_names:
 	'''if basal_t_length<150 or apical_t_length<150:
 
 		import os
-		os.remove(fdendlist)
+                os.remove(stats_file_path)
 		os.remove(fdendlength)
 		os.remove(fnumdend)
 		os.remove(ftotlength)
