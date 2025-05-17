@@ -12,13 +12,14 @@ def read_files(directory):
 
 def append_lines(fname):
 
-	lines=[]
-	for line in open(fname):
-		line=line.replace('[', '')
-		line=line.replace(']', '')
-		line=line.replace(',', '')
-		lines.append(line.rstrip('\n'))
-	return lines
+        lines=[]
+        with open(fname) as f:
+                for line in f:
+                        line=line.replace('[', '')
+                        line=line.replace(']', '')
+                        line=line.replace(',', '')
+                        lines.append(line.rstrip('\n'))
+        return lines
 
 if (len(sys.argv)==4):
 
@@ -61,27 +62,26 @@ for f in to_merge_files:
 	f=f.replace('average','comparison/compare')
 	fw=fwi+f
 
-	f_write = open(fw, 'w+')
+        with open(fw, 'w+') as f_write:
 
-	print(fw)
+                print(fw)
 
-	if k==0:
+                if k==0:
 
-		for i in range(max_len):
-			if i<min_len:
-				print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-			else:
-				print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)',r' 0',lines_before[i]), file=f_write)
-	
-	if k==1:
+                        for i in range(max_len):
+                                if i<min_len:
+                                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
+                                else:
+                                        print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)',r' 0',lines_before[i]), file=f_write)
 
-		for i in range(max_len):
-			if i<min_len:
-				print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
-			else:
-				print(re.sub(r'\s(\S+)',r' 0',lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
+                if k==1:
 
-	f_write.close()
+                        for i in range(max_len):
+                                if i<min_len:
+                                        print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
+                                else:
+                                        print(re.sub(r'\s(\S+)',r' 0',lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
+
 
 if not os.path.exists(fwi+'comparison/'):
     os.makedirs(fwi+'comparison/')
