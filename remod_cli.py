@@ -21,8 +21,8 @@ from morphology_statistics import (
     sholl_length,
     sholl_branch_points,
     sholl_intersections,
-    branch_order,
 )
+from swc_parser import compute_branch_order
 from core_utils import (
     round_to,
     average_list,
@@ -316,7 +316,7 @@ def analyze_main(argv=None):
                 branch_order_max_basal = None
                 if len(basal) > 0:
     
-                        branch_order_basal = branch_order(basal, soma_paths)
+                        branch_order_basal = compute_branch_order(basal, soma_paths)
                         branch_order_freq, branch_order_max_basal = branch_order_frequency(basal, branch_order_values)
                         results['number_of_basal_dendrites_per_branch_order'] = branch_order_freq
                         for order in branch_order_freq:
@@ -326,7 +326,7 @@ def analyze_main(argv=None):
                 branch_order_max_apical = None
                 if len(apical) > 0:
     
-                        branch_order_apical = branch_order(apical, soma_paths)
+                        branch_order_apical = compute_branch_order(apical, soma_paths)
                         branch_order_freq, branch_order_max_apical = branch_order_frequency(apical, branch_order_values)
                         results['number_of_apical_dendrites_per_branch_order'] = branch_order_freq
                         for order in branch_order_freq:
