@@ -6,13 +6,13 @@ from pathlib import Path
 
 import numpy as np
 
-from utils import distance
-from file_utils import read_lines
+from core_utils import distance
+from file_io import read_lines
 
 
 def read_swc_lines(file_path: str) -> List[str]:
     """Return all lines from *file_path* without trailing newlines."""
-    # Use the helper from :mod:`file_utils` for consistency
+    # Use the helper from :mod:`file_io` for consistency
     return read_lines(Path(file_path))
 
 def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List[float]]]:

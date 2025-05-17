@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from file_utils import write_plot
+from file_io import write_plot
 
 # ``plot_segments`` originally provided :func:`build_plot_from_lines` and the
 # ``PlotEntry`` alias.  They are now defined here to avoid a separate module.
@@ -15,8 +15,8 @@ PlotEntry = list[Sequence[float]]
 def build_plot_from_lines(lines: Iterable[str]) -> list[PlotEntry]:
     """Return plot segments for ``lines`` of an SWC file."""
 
-    from extract_swc_morphology import parse_swc_lines
-    from utils import round_to
+    from swc_parser import parse_swc_lines
+    from core_utils import round_to
 
     _, samples = parse_swc_lines(lines)
     plot: list[PlotEntry] = []

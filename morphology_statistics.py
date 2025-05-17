@@ -6,7 +6,7 @@ from collections import OrderedDict, Counter, defaultdict
 from numpy import linalg as LA
 
 import numpy as np
-from utils import distance
+from core_utils import distance
 
 
 def _soma_coords(soma_samples):
