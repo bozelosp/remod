@@ -11,12 +11,14 @@ from utils import distance
 
 def _soma_coords(soma_index):
     """Return the xyz coordinates of the soma root as a numpy array."""
+    # Helper for distance calculations relative to the soma
     soma = next(i for i in soma_index if i[6] == -1)
     return np.array([soma[2], soma[3], soma[4]])
 
 
 def _coords(points, indices):
     """Return a numpy array of xyz coordinates for ``indices``."""
+    # Extract coordinates only once for efficiency
     return np.array([[points[i][2], points[i][3], points[i][4]] for i in indices])
 
 
@@ -31,12 +33,12 @@ def _mean_by_branch_order(dendrite_list, branch_order, values):
 
 def total_length(dendrite_list, dist):  # soma_included
         """Return the total length of *dendrite_list* using ``dist`` mapping."""
-
+        # Each dendrite's precomputed length is summed
         return sum(dist[d] for d in dendrite_list)
 
 def total_area(dendrite_list, area):  # soma_included
         """Return the total surface area of *dendrite_list* using ``area`` mapping."""
-
+        # Aggregates surface areas returned by ``dendrite_areas``
         return sum(area[d] for d in dendrite_list)
 
 def path_length(dendrite_list, path, dist):
@@ -47,7 +49,7 @@ def path_length(dendrite_list, path, dist):
 
 def median_diameter(dendrite_list, dend_add3d):
         """Return the median diameter for each dendrite in *dendrite_list*."""
-
+        # Diameter at the midpoint acts as a robust representative
         med_diam = {}
         for dend in dendrite_list:
                 mid_idx = len(dend_add3d[dend]) // 2
@@ -56,12 +58,13 @@ def median_diameter(dendrite_list, dend_add3d):
 
 def print_branch_order(dendrite_list, branch_order):
         """Return a sorted list of (dendrite, branch_order) tuples."""
-
+        # Useful for debugging the traversal order
         branch_order_dict = {d: branch_order[d] for d in dendrite_list}
         return sorted(branch_order_dict.items(), key=lambda x: x[0])
 
 def branch_order_frequency(dendrite_list, branch_order):
         """Return the frequency of each branch order."""
+        # Counts how many dendrites occur at each order
 
         orders = [branch_order[d] for d in dendrite_list]
         counter = Counter(orders)
@@ -72,16 +75,17 @@ def branch_order_frequency(dendrite_list, branch_order):
 
 def branch_order_dlength(dendrite_list, branch_order, branch_order_max, dist):
         """Return average dendrite length per branch order."""
-
+        # Groups lengths by branch order then averages them
         return _mean_by_branch_order(dendrite_list, branch_order, dist)
 
 def branch_order_plength(dendrite_list, branch_order, branch_order_max, plength):
         """Return average path length per branch order."""
-
+        # Path lengths are summed for each order before averaging
         return _mean_by_branch_order(dendrite_list, branch_order, plength)
 
 def sholl_intersections(points, parental_points, soma_index, radius, parameter):
         """Compute Sholl intersection counts for the given radius."""
+        # Measures crossings of concentric shells centred at the soma
 
         soma_coords = _soma_coords(soma_index)
 
@@ -102,6 +106,7 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 
 def sholl_bp(branch_points, points, soma_index, radius):
         """Compute number of branch points crossing each Sholl shell."""
+        # Each branch point is assigned to a radial distance bin
 
         soma_coords = _soma_coords(soma_index)
 
@@ -118,6 +123,7 @@ def sholl_bp(branch_points, points, soma_index, radius):
 
 def remove_trailing_zeros(sholl_list, values, radius):
         """Trim trailing zeros from ``sholl_list``."""
+        # Simplifies plots by omitting empty bins at the end
 
         idx = 0
         for i, v in enumerate(values[:-1]):
@@ -129,6 +135,7 @@ def remove_trailing_zeros(sholl_list, values, radius):
 
 def sholl_length(points, parental_points, soma_index, radius, parameter):
         """Compute total dendrite length inside successive Sholl shells."""
+        # Sums segment lengths that fall within each radial bin
 
         soma_coords = _soma_coords(soma_index)
 
@@ -149,6 +156,7 @@ def sholl_length(points, parental_points, soma_index, radius, parameter):
 
 def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
         """Return list of [distance, angle] pairs for dendrite points."""
+        # Calculates angle relative to the main apical axis
 
         soma_root = np.array(soma_root)
         axis_vec = np.array(principal_axis) - soma_root
@@ -168,6 +176,7 @@ def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
 
 def dist_angle_frequency(dist_angle, radius):
         """Bin distances and angles to compute frequency tables."""
+        # Generates histograms used for polar plots
 
         dist_arr = np.array([d[0] for d in dist_angle])
         angle_arr = np.array([d[1] for d in dist_angle])
@@ -188,6 +197,7 @@ def dist_angle_frequency(dist_angle, radius):
 
 def axis(apical, dend_add3d, soma_index): #weighted linear regression
         """Return principal axis and soma location using weighted regression."""
+        # Weighted by diameter so thicker dendrites influence the fit
 
         x_soma, y_soma, z_soma = soma_index[0][2], soma_index[0][3], soma_index[0][4]
 
