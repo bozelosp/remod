@@ -16,6 +16,7 @@ def round_to(x, rounder):
 
 def write_json(path, data):
     """Write *data* as JSON to *path* using UTF-8 encoding."""
+    # Used by many scripts to persist intermediate results
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
@@ -34,12 +35,14 @@ def read_values(path):
 
 def read_value(path):
     """Return the first float found in ``path``."""
+    # Convenience wrapper around ``read_values`` for single numbers
     values = read_values(path)
     return values[0] if values else 0.0
 
 
 def average_list(values):
     """Return the mean and standard deviation of ``values``."""
+    # Avoid statistics errors on empty sequences
     if not values:
         return 0.0, 0.0
     return mean(values), pstdev(values)
@@ -47,6 +50,7 @@ def average_list(values):
 
 def average_dict(data):
     """Replace lists in ``data`` with (mean, stdev) pairs and return it."""
+    # Mutates the dict in place for convenience
     for key, values in data.items():
         data[key] = average_list(values)
     return data
@@ -54,4 +58,5 @@ def average_dict(data):
 
 def remove_empty_keys(data):
     """Return ``data`` without keys that have empty lists."""
+    # Useful when collecting only non-empty measurements
     return {k: v for k, v in data.items() if v}

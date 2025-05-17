@@ -12,6 +12,7 @@ from typing import Dict, Iterable, List
 
 def _sorted_dendrites(dendrites: Iterable[int], branch_order: Dict[int, int]) -> List[int]:
     """Return *dendrites* sorted by their branch order."""
+    # Lower branch order dendrites are renumbered first
     return sorted(dendrites, key=lambda d: branch_order[d])
 
 
@@ -45,6 +46,7 @@ def _renumber_dendrite(
     int
         The next free index after processing this dendrite.
     """
+    # Walk through the dendrite and assign new sequential indices
 
     order = branch_order[dend_id]
     dend = dend_segments[dend_id]
@@ -85,6 +87,7 @@ def index_reassign(
     action: str,
 ) -> List[str]:
     """Return SWC lines with continuous indices for all segments."""
+    # Handles soma first then each dendrite group in order
 
     if action == "branch":
         branch_order_max += 1  # keep backwards compatibility
