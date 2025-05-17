@@ -212,6 +212,7 @@ def bar_plot(
     width: float = 0.5,
 ) -> None:
     """Create a single bar plot and write it to ``file_path``."""
+    # Wrapper around matplotlib with sane defaults for this project
 
     fig, ax = plt.subplots()
     indices = np.arange(len(labels))
@@ -237,6 +238,7 @@ def grouped_bar_plot(
     width: float = 0.4,
 ) -> None:
     """Create a grouped bar chart and save it to ``file_path``."""
+    # Expects ``series`` to be a sequence of value sequences
 
     fig, ax = plt.subplots()
     indices = np.arange(len(labels))

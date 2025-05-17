@@ -13,6 +13,7 @@ def parse_length_distribution(
     path: Path = Path("length_distribution.txt"),
 ) -> Tuple[List[float], List[int]]:
     """Return lengths and cumulative indices parsed from ``path``."""
+    # Distribution file defines how far extensions should grow
 
     lengths: List[float] = []
     frequencies: List[float] = []
@@ -37,6 +38,7 @@ def parse_length_distribution(
 
 def select_length(lengths: List[float], cumulative_indices: List[int]) -> float:
     """Return a random length based on ``cumulative_indices``."""
+    # Uses weighted sampling so frequent lengths occur more often
 
     random_value = randint(0, cumulative_indices[-1])
     for index in range(len(cumulative_indices) - 1):
@@ -53,6 +55,7 @@ def create_points(
     flag: int,
 ) -> List[List[float]]:
     """Return one or two new NEURON ``pt3dadd`` points."""
+    # The flag controls whether branching occurs
 
     rotation_angle = radians(angle)
 
@@ -127,6 +130,7 @@ def add_random_point(
     cumulative_indices: List[int],
 ) -> Tuple[List[List[float]], float]:
     """Return one or two new points and their length."""
+    # Builds upon ``create_points`` with a randomised length
 
     end_point = [point_one[2], point_one[3], point_one[4]]
     start_point = [point_two[2], point_two[3], point_two[4]]
@@ -145,6 +149,7 @@ def translate_descendants(
     dendrites: Dict[int, List[List[Any]]],
 ) -> Dict[int, List[List[Any]]]:
     """Translate descendant dendrites by ``translation_vector``."""
+    # Needed when shortening or removing upstream segments
 
     x, y, z = translation_vector
 
@@ -159,6 +164,7 @@ def translate_descendants(
 
 def allocate_new_dendrites(max_index: int) -> Tuple[int, int, int]:
     """Return two new dendrite IDs for branching."""
+    # Allocates sequential ids for child dendrites
 
     dendrite_a = max_index + 1
     dendrite_b = max_index + 2
@@ -174,6 +180,7 @@ def extend_dendrite(
     branch_flag: int,
 ) -> Tuple[int, List[List[Any]]]:
     """Grow the dendrite and return its new segments."""
+    # Repeatedly adds points until the desired distance is reached
 
     new_lines: List[List[Any]] = []
     cumulative_distance = 0.0
@@ -230,6 +237,7 @@ def extend_dendrite(
     return max_index, new_lines
 
 def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal): # return the updated .hoc lines with the selected dendrites shortened
+        # Shorten dendrites by a fixed percent or absolute length
 
         amount=int(amount)
 
@@ -538,6 +546,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
         return newfile'''
 
 def remove(who, action, dend_add3d, soma_index, points, parental_points, descendants, all_terminal): # return the updated .hoc lines with the selected dendrites removed
+        # Completely delete chosen dendrites from the morphology
 
         new_lines=[]
 

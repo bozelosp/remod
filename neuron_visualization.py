@@ -13,6 +13,7 @@ DEFAULT_COLOR: Color = "0x0000FF"
 
 def _write_lines(path: Path, lines: Iterable[Sequence]) -> None:
     """Write formatted ``lines`` to ``path`` as space separated values."""
+    # Helper used by ``first_graph`` and ``second_graph``
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
@@ -22,6 +23,7 @@ def _write_lines(path: Path, lines: Iterable[Sequence]) -> None:
 
 def _soma_connections(soma_points: Sequence[Sequence]) -> Iterator[List]:
     """Yield line segments connecting soma points to their parent."""
+    # Every soma section is drawn in blue to distinguish it from dendrites
 
     lookup = {p[0]: p for p in soma_points}
     for p in soma_points:
@@ -46,6 +48,7 @@ def _dendrite_connections(
     parental_points: Dict[int, int],
 ) -> List[List]:
     """Return line segments between dendrite points and their parents."""
+    # Skips axon points which are marked with type 2
 
     for dend in dendrite_list:
         for point in dend_add3d[dend]:
@@ -73,6 +76,7 @@ def _collect_segments(
     soma_index: Sequence[Sequence],
 ) -> List[List]:
     """Gather all line segments for soma and dendrites."""
+    # Internally chains helpers for cleaner export functions
 
     return list(
         chain(
@@ -96,6 +100,7 @@ def _export_graph(
     verbose: bool = False,
 ) -> None:
     """Export coordinates for a morphology to ``*_suffix.txt``."""
+    # Handles creation of output files for visualization
 
     segments = _collect_segments(
         dendrite_list, dend_add3d, points, parental_points, soma_index
@@ -119,6 +124,7 @@ def first_graph(
     soma_index: Sequence[Sequence],
 ) -> None:
     """Write coordinates of the original morphology to ``*_before.txt``."""
+    # Called before any edits are applied
 
     _export_graph(
         abs_path,
@@ -141,6 +147,7 @@ def second_graph(
     soma_index: Sequence[Sequence],
 ) -> None:
     """Write coordinates of the edited morphology to ``*_after.txt``."""
+    # Generates output after remodeling for comparison
 
     _export_graph(
         abs_path,
