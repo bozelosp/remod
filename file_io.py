@@ -255,8 +255,9 @@ def _export_graph(
     )
 
     if verbose:
-        print(f">>{len(segments)}")
-        print(file_name)
+        from logger_utils import log
+        log(f"{len(segments)} segments")
+        log(file_name)
 
     out_path = Path(abs_path) / f"{file_name.replace('.swc', '')}_{suffix}.txt"
     write_lines(out_path, segments)

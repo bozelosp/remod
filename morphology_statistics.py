@@ -120,13 +120,11 @@ def sholl_fork_points(fork_points, samples, soma_samples, radius):
 
 def remove_trailing_zeros(sholl_list, values, radius):
         """Trim trailing zeros from ``sholl_list``."""
-        # Simplifies plots by omitting empty bins at the end
-
-        idx = 0
-        for i, v in enumerate(values[:-1]):
-                if sholl_list.get(v + radius, 0) != 0:
-                        idx = i + 1
-
+        arr = np.array([sholl_list.get(v + radius, 0) for v in values[:-1]])
+        non_zero = np.nonzero(arr)[0]
+        if non_zero.size == 0:
+                return {}
+        idx = non_zero[-1] + 1
         return {values[i] + radius: sholl_list[values[i] + radius] for i in range(idx)}
 
 
@@ -147,7 +145,7 @@ def sholl_length(samples, parents, soma_samples, radius, parameter):
         sholl_list = {}
         for prev, nxt in zip(values[:-1], values[1:]):
                 mask = (dist1 > prev) & (dist1 < nxt)
-        sholl_list[nxt] = float(lengths[mask].sum())
+                sholl_list[nxt] = float(lengths[mask].sum())
 
         return sholl_list
 

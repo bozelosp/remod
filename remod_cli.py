@@ -6,6 +6,7 @@ import datetime
 import numpy as np
 import collections
 from pathlib import Path
+from logger_utils import log
 
 from swc_parser import parse_swc_file, index_reassign
 read_file = parse_swc_file
@@ -120,16 +121,16 @@ def analyze_main(argv=None):
         length_metrics=[]
         
         if len(parsed_files)>0:
-                print("The following list of files won't be parsed again. Morphometric statistics already have been saved for them: " + str(parsed_files))
+                log(
+                    "The following files won't be parsed again. "
+                    f"Morphometric statistics already saved: {parsed_files}"
+                )
         
         import pickle, os
         
         
         if parsed_count>0:
-        
-                print()
-                print('Retrieving previously calculated morphometric statistics')
-                print()
+                log("Retrieving previously calculated morphometric statistics")
         
                 stats_pickle_path = directory / 'current_average_statistics.p'
                 with open(stats_pickle_path, "rb") as f:
@@ -179,9 +180,7 @@ def analyze_main(argv=None):
         
                 file_name=file_name.replace('.swc','')
         
-                print()
-                print('Extracting morphometric statistics for file: ' + str(file_name+'.swc'))
-                print()
+                log(f"Extracting morphometric statistics for file: {file_name}.swc")
         
                 (
                     swc_lines,
@@ -444,7 +443,9 @@ def analyze_main(argv=None):
                 prefix = stats_dir / f'{file_name}_'
                 plot_the_data(prefix)
         
-                print("Successful parsing and calculation of morphometric statistics!\n\n------------------------------------------\n")
+                log(
+                    "Successful parsing and calculation of morphometric statistics!"
+                )
         
                 #length_metrics.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
         
@@ -506,7 +507,7 @@ def analyze_main(argv=None):
         kmeans_file.close()'''
         
         if len(file_names)==1:
-                print("Average statistics are not available if only one file provided (obviously).")
+                log("Average statistics are not available if only one file provided.")
                 import sys
                 sys.exit(0)
         
@@ -536,49 +537,49 @@ def analyze_main(argv=None):
         average_sholl_basal_intersections=remove_empty_keys(average_sholl_basal_intersections)
         average_sholl_apical_intersections=remove_empty_keys(average_sholl_apical_intersections)
         
-        print()
-        print("Average statistics:")
-        print()
-        
-        print()
+        log("")
+        log("Average statistics:")
+        log("")
+
+        log("")
         avg_num_all_dendrites = average_list(average_number_of_all_dendrites)
-        print("Number of All Dendrites: " + str(avg_num_all_dendrites))
+        log(f"Number of All Dendrites: {avg_num_all_dendrites}")
         f_average_number_of_all_dendrites = stats_dir / 'average_number_of_all_dendrites.txt'
         write_value(
             f_average_number_of_all_dendrites,
             f"{avg_num_all_dendrites[0]} {avg_num_all_dendrites[1]}"
         )
         
-        print()
+        log("")
         avg_all_terminal = average_list(average_number_of_all_terminal_dendrites)
-        print("Number of All Terminal Dendrites: " + str(avg_all_terminal))
+        log(f"Number of All Terminal Dendrites: {avg_all_terminal}")
         f_average_number_of_all_terminal_dendrites = stats_dir / 'average_number_of_all_terminal_dendrites.txt'
         write_value(
             f_average_number_of_all_terminal_dendrites,
             f"{avg_all_terminal[0]} {avg_all_terminal[1]}"
         )
         
-        print()
+        log("")
         avg_basal_dendrites = average_list(average_number_of_basal_dendrites)
-        print("Number of Basal Dendrites: " + str(avg_basal_dendrites))
+        log(f"Number of Basal Dendrites: {avg_basal_dendrites}")
         f_average_number_of_basal_dendrites = stats_dir / 'average_number_of_basal_dendrites.txt'
         write_value(
             f_average_number_of_basal_dendrites,
             f"{avg_basal_dendrites[0]} {avg_basal_dendrites[1]}"
         )
         
-        print()
+        log("")
         avg_basal_terminal = average_list(average_number_of_basal_terminal_dendrites)
-        print("Number of Basal Terminal Dendrites: " + str(avg_basal_terminal))
+        log(f"Number of Basal Terminal Dendrites: {avg_basal_terminal}")
         f_average_number_of_basal_terminal_dendrites = stats_dir / 'average_number_of_basal_terminal_dendrites.txt'
         write_value(
             f_average_number_of_basal_terminal_dendrites,
             f"{avg_basal_terminal[0]} {avg_basal_terminal[1]}"
         )
         
-        print()
+        log("")
         avg_apical_dendrites = average_list(average_number_of_apical_dendrites)
-        print("Number of Apical Dendrites: " + str(avg_apical_dendrites))
+        log(f"Number of Apical Dendrites: {avg_apical_dendrites}")
         f_average_number_of_apical_dendrites = stats_dir / 'average_number_of_apical_dendrites.txt'
         write_value(
             f_average_number_of_apical_dendrites,
@@ -587,70 +588,70 @@ def analyze_main(argv=None):
         
         print()
         avg_apical_terminal = average_list(average_number_of_apical_terminal_dendrites)
-        print("Number of Apical Terminal Dendrites: " + str(avg_apical_terminal))
+        log(f"Number of Apical Terminal Dendrites: {avg_apical_terminal}")
         f_average_number_of_apical_terminal_dendrites = stats_dir / 'average_number_of_apical_terminal_dendrites.txt'
         write_value(
             f_average_number_of_apical_terminal_dendrites,
             f"{avg_apical_terminal[0]} {avg_apical_terminal[1]}"
         )
         
-        print()
+        log("")
         avg_total_length = average_list(average_t_length)
-        print("Total Length (all dendrites): " + str(avg_total_length))
+        log(f"Total Length (all dendrites): {avg_total_length}")
         f_average_total_length = stats_dir / 'average_all_total_length.txt'
         write_value(f_average_total_length, f"{avg_total_length[0]} {avg_total_length[1]}")
         
-        print()
+        log("")
         avg_total_basal_length = average_list(average_basal_t_length)
-        print("Total Length (basal dendrites): " + str(avg_total_basal_length))
+        log(f"Total Length (basal dendrites): {avg_total_basal_length}")
         f_average_total_basal_length = stats_dir / 'average_basal_total_length.txt'
         write_value(f_average_total_basal_length, f"{avg_total_basal_length[0]} {avg_total_basal_length[1]}")
         
-        print()
+        log("")
         avg_total_apical_length = average_list(average_apical_t_length)
-        print("Total Length (apical dendrites): " + str(avg_total_apical_length))
+        log(f"Total Length (apical dendrites): {avg_total_apical_length}")
         f_average_total_apical_length = stats_dir / 'average_apical_total_length.txt'
         write_value(f_average_total_apical_length, f"{avg_total_apical_length[0]} {avg_total_apical_length[1]}")
         
-        print()
+        log("")
         avg_total_area = average_list(average_t_area)
-        print("Total Area (all dendrites): " + str(avg_total_area))
+        log(f"Total Area (all dendrites): {avg_total_area}")
         f_average_total_area = stats_dir / 'average_all_total_area.txt'
         write_value(f_average_total_area, f"{avg_total_area[0]} {avg_total_area[1]}")
         
-        print()
+        log("")
         avg_total_basal_area = average_list(average_basal_t_area)
-        print("Total Area (basal dendrites): " + str(avg_total_basal_area))
+        log(f"Total Area (basal dendrites): {avg_total_basal_area}")
         f_average_total_basal_area = stats_dir / 'average_basal_total_area.txt'
         write_value(f_average_total_basal_area, f"{avg_total_basal_area[0]} {avg_total_basal_area[1]}")
         
-        print()
+        log("")
         avg_total_apical_area = average_list(average_apical_t_area)
-        print("Total Area (apical dendrites): " + str(avg_total_apical_area))
+        log(f"Total Area (apical dendrites): {avg_total_apical_area}")
         f_average_total_apical_area = stats_dir / 'average_apical_total_area.txt'
         write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
         
-        print()
+        log("")
         avg_all_forks = average_list(average_num_all_forks)
-        print("Number of all Fork Points: " + str(avg_all_forks[0]), str(avg_all_forks[1]))
+        log(f"Number of all Fork Points: {avg_all_forks[0]} {avg_all_forks[1]}")
         f_average_num_all_forks = stats_dir / 'average_number_of_all_forkpoints.txt'
         write_value(
             f_average_num_all_forks,
             f"{avg_all_forks[0]} {avg_all_forks[1]}",
         )
         
-        print()
+        log("")
         avg_basal_forks = average_list(average_num_basal_forks)
-        print("Number of all Basal Fork Points: " + str(avg_basal_forks[0]), str(avg_basal_forks[1]))
+        log(f"Number of all Basal Fork Points: {avg_basal_forks[0]} {avg_basal_forks[1]}")
         f_average_num_basal_forks = stats_dir / 'average_number_of_basal_forkpoints.txt'
         write_value(
             f_average_num_basal_forks,
             f"{avg_basal_forks[0]} {avg_basal_forks[1]}",
         )
         
-        print()
+        log("")
         avg_apical_forks = average_list(average_num_apical_forks)
-        print("Number of all Apical Fork Points: " + str(avg_apical_forks[0]), str(avg_apical_forks[1]))
+        log(f"Number of all Apical Fork Points: {avg_apical_forks[0]} {avg_apical_forks[1]}")
         f_average_num_apical_forks = stats_dir / 'average_number_of_apical_forkpoints.txt'
         write_value(
             f_average_num_apical_forks,

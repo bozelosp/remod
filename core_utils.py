@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from math import sqrt
 import argparse
-import random
 from collections.abc import Sequence
 from pathlib import Path
 from statistics import mean, pstdev
 import re
+import numpy as np
 
 
 
 def distance(x1, x2, y1, y2, z1, z2):
     """Return the Euclidean distance between two 3D points."""
-    # Basic geometric helper used throughout the package
-    return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2 + (z2 - z1) ** 2)
+    diff = np.array([x2 - x1, y2 - y1, z2 - z1], dtype=float)
+    return float(np.linalg.norm(diff))
 
 
 def round_to(x, rounder):
@@ -25,13 +24,13 @@ def round_to(x, rounder):
 
 def weighted_sample(population: Sequence, weights: Sequence[float], k: int):
     """Return ``k`` unique items from ``population`` weighted by ``weights``."""
-    import numpy as np
 
     if k <= 0 or not population:
         return []
     probs = np.array(weights, dtype=float)
     probs = probs / probs.sum()
-    idx = np.random.choice(len(population), size=min(k, len(population)), replace=False, p=probs)
+    rng = np.random.default_rng()
+    idx = rng.choice(len(population), size=min(k, len(population)), replace=False, p=probs)
     return [population[i] for i in idx]
 
 
@@ -42,10 +41,13 @@ def sample_random_dendrites(
     ratio: float,
 ) -> tuple[list[int], str]:
     """Return a random selection of dendrites respecting ``ratio``."""
-    valid = [d for d in options if len(dendrite_samples[d]) >= 3]
+    valid = np.array([d for d in options if len(dendrite_samples[d]) >= 3])
     num = int(round_to(len(valid) * ratio, 1))
     num = max(0, min(num, len(valid)))
-    selection = random.sample(valid, num)
+    if num:
+        selection = np.random.default_rng().choice(valid, size=num, replace=False).tolist()
+    else:
+        selection = []
     which = f"random {label} ({ratio * 100}% ) "
     return selection, which
 
