@@ -141,7 +141,7 @@ def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[floa
     axon: List[int] = []
     basal: List[int] = []
     apical: List[int] = []
-    elsep: List[int] = []
+    undefined_dendrites: List[int] = []
 
     undef_index = axon_index = basal_index = apic_index = 0
 
@@ -161,10 +161,10 @@ def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[floa
             apic_index += 1
         else:
             dend_names[idx] = f"undef[{undef_index}]"
-            elsep.append(idx)
+            undefined_dendrites.append(idx)
             undef_index += 1
 
-    return dend_names, axon, basal, apical, elsep
+    return dend_names, axon, basal, apical, undefined_dendrites
 
 def dendrite_coordinates(
     dendrite_list: Iterable[int],
@@ -332,7 +332,7 @@ def parse_swc_file(file_path: str):
     parental_points = parent_map(points)
     dendrite_list = sort_dendrites(branch_points)
     dend_indices = dendrite_segments(dendrite_list, points)
-    dend_names, axon, basal, apical, elsep = classify_dendrites(dendrite_list, points)
+    dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_list, points)
     dend_coords = dendrite_coordinates(dendrite_list, dend_indices, points)
     path = paths_to_soma(dendrite_list, points, dend_indices, soma_index)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
@@ -341,7 +341,7 @@ def parse_swc_file(file_path: str):
     area = dendrite_areas(dend_coords, dendrite_list, parental_points, points)
     max_index_value = max_index(points)
     branch_order_map = compute_branch_order(dendrite_list, path)
-    con = connection_to_parent(dendrite_list, path)
+    connectivity_map = connection_to_parent(dendrite_list, path)
     parents: List[int] = []
 
     dendrite_list = basal + apical
@@ -366,7 +366,7 @@ def parse_swc_file(file_path: str):
         axon,
         basal,
         apical,
-        elsep,
+        undefined_dendrites,
         dend_coords,
         path,
         all_terminal,
@@ -375,6 +375,6 @@ def parse_swc_file(file_path: str):
         dist,
         area,
         branch_order_map,
-        con,
+        connectivity_map,
         parental_points,
     )

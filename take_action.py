@@ -237,11 +237,11 @@ def extend_dendrite(
     return max_index, new_lines
 
 def shrink(
-    who,
+    target_dendrites,
     action,
     amount,
     hm_choice,
-    dend_add3d,
+    dend_segments,
     dist,
     soma_index,
     points,
@@ -258,9 +258,9 @@ def shrink(
 
         step=dict()
 
-        for dend in who:
+        for dend in target_dendrites:
         
-                current_point=dend_add3d[dend][0]
+                current_point=dend_segments[dend][0]
                 next_point=points[parental_points[current_point[0]]]
 
                 xp=current_point[2]
@@ -273,11 +273,11 @@ def shrink(
 
                 step[dend]=distance(x,xp,y,yp,z,zp)
 
-        for dend in who:
+        for dend in target_dendrites:
 
                 if dend not in all_terminal:
 
-                        initial_position=dend_add3d[dend][-1]
+                        initial_position=dend_segments[dend][-1]
 
                 segment_list=[]
                 cumulative_distance=step[dend]
@@ -288,12 +288,12 @@ def shrink(
                 if hm_choice=='micrometers':
                         new_dist[dend]=dist[dend]-float(amount)
 
-                if len(dend_add3d[dend])>1:
+                if len(dend_segments[dend])>1:
 
-                        for i in range(len(dend_add3d[dend])-1):
+                        for i in range(len(dend_segments[dend])-1):
 
-                                current_point=dend_add3d[dend][i]
-                                next_point=dend_add3d[dend][i+1]
+                                current_point=dend_segments[dend][i]
+                                next_point=dend_segments[dend][i+1]
 
                                 xp=current_point[2]
                                 yp=current_point[3]
@@ -326,13 +326,13 @@ def shrink(
 
                                         # 1202 3 -43.5 27 19 0.15 1201
                                         segment_list[-1]=[current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]]
-                                        dend_add3d[dend]=segment_list
+                                        dend_segments[dend]=segment_list
 
                                         break
 
                 else:
 
-                        current_point=dend_add3d[dend][0]
+                        current_point=dend_segments[dend][0]
                         next_point=points[parental_points[current_point[0]]]
 
                         xp=current_point[2]
@@ -358,22 +358,22 @@ def shrink(
                         zn='%.2f' % (round_to((zp+per*zn),0.01))
 
                         segment_list.append([current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]])
-                        dend_add3d[dend]=segment_list
+                        dend_segments[dend]=segment_list
 
                 if dend not in all_terminal:
 
-                        final_position=dend_add3d[dend][-1]
+                        final_position=dend_segments[dend][-1]
 
                         vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
                         translation_vec = tuple(vec)
-                        dend_add3d = translate_descendants(
-                            translation_vec, dend, descendants, dend_add3d
+                        dend_segments = translate_descendants(
+                            translation_vec, dend, descendants, dend_segments
                         )
 
         segment_list=[]
 
-        for i in dend_add3d:
-                for k in dend_add3d[i]:
+        for i in dend_segments:
+                for k in dend_segments[i]:
                         if k not in segment_list:
                                 segment_list.append(k)
 
@@ -385,7 +385,7 @@ def shrink(
 
         return newfile
 
-'''def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
+'''def shrink(target_dendrites, action, amount, hm_choice, dend_segments, dist, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
         amount=int(amount)
 
@@ -393,22 +393,22 @@ def shrink(
 
         new_dist=dict()
 
-        for dend in who:
+        for dend in target_dendrites:
 
-                if len(dend_add3d[dend])>1:
+                if len(dend_segments[dend])>1:
 
-                        num_seg_1=len(dend_add3d[dend])
+                        num_seg_1=len(dend_segments[dend])
 
                         diam=[]
                         run_length=1
 
-                        diam.append([0, dend_add3d[dend][0][5]])
-                        for i in range(len(dend_add3d[dend])-1):
+                        diam.append([0, dend_segments[dend][0][5]])
+                        for i in range(len(dend_segments[dend])-1):
 
-                                diameter=dend_add3d[dend][i][5]
-                                diam_next=dend_add3d[dend][i+1][5]
+                                diameter=dend_segments[dend][i][5]
+                                diam_next=dend_segments[dend][i+1][5]
 
-                                if i==len(dend_add3d[dend])-2:
+                                if i==len(dend_segments[dend])-2:
                                         diam.append([i+1, diam_next])
                                         break                   
 
@@ -420,7 +420,7 @@ def shrink(
 
                 cumulative_distance=0
 
-                current_point=dend_add3d[dend][0]
+                current_point=dend_segments[dend][0]
                 next_point=points[parental_points[current_point[0]]]
 
                 xp=current_point[2]
@@ -441,10 +441,10 @@ def shrink(
 
                 segment_list=[]
 
-                for i in range(len(dend_add3d[dend])-1):
+                for i in range(len(dend_segments[dend])-1):
 
-                        current_point=dend_add3d[dend][i]
-                        next_point=dend_add3d[dend][i+1]
+                        current_point=dend_segments[dend][i]
+                        next_point=dend_segments[dend][i+1]
 
                         xp=current_point[2]
                         yp=current_point[3]
@@ -478,13 +478,13 @@ def shrink(
                                 # 1202 3 -43.5 27 19 0.15 1201
                                 segment_list[-1]=[current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]]
                                 
-                                dend_add3d[dend]=segment_list   
+                                dend_segments[dend]=segment_list   
 
                                 break
 
-                if len(dend_add3d[dend])==1:
+                if len(dend_segments[dend])==1:
 
-                        current_point=dend_add3d[dend][0]
+                        current_point=dend_segments[dend][0]
                         next_point=points[parental_points[current_point[0]]]
 
                         xp=current_point[2]
@@ -511,11 +511,11 @@ def shrink(
 
                         # 1202 3 -43.5 27 19 0.15 1201
                         segment_list.append([current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]])
-                        dend_add3d[dend]=segment_list   
+                        dend_segments[dend]=segment_list   
 
-                if len(dend_add3d[dend])>1:
+                if len(dend_segments[dend])>1:
 
-                        num_seg_2=len(dend_add3d[dend])
+                        num_seg_2=len(dend_segments[dend])
 
                         ratio=float(num_seg_2)/num_seg_1
 
@@ -529,24 +529,24 @@ def shrink(
                         new_ns.append(num_seg_2)
 
                         n=0
-                        for j in range(len(dend_add3d[dend])):
+                        for j in range(len(dend_segments[dend])):
 
                                 if j>=new_ns[n] and j<new_ns[n+1]:
                                         #print j, new_ns[n], new_ns[n+1]
                                         my_diam=diam[n][1]
-                                        dend_add3d[dend][j][5]=my_diam
+                                        dend_segments[dend][j][5]=my_diam
                                 else:
                                         n+=1
                                         my_diam=diam[n][1]
-                                        dend_add3d[dend][j][5]=my_diam
+                                        dend_segments[dend][j][5]=my_diam
 
         segment_list=[]
 
         for i in soma_index:
                 segment_list.append(i)
 
-        for i in dend_add3d:
-                for k in dend_add3d[i]:
+        for i in dend_segments:
+                for k in dend_segments[i]:
                         if k not in segment_list:
                                 segment_list.append(k)
 
@@ -559,9 +559,9 @@ def shrink(
         return newfile'''
 
 def remove(
-    who,
+    target_dendrites,
     action,
-    dend_add3d,
+    dend_segments,
     soma_index,
     points,
     parental_points,
@@ -575,23 +575,23 @@ def remove(
 
         print(all_terminal)
 
-        for dend in who:
+        for dend in target_dendrites:
                 if dend not in all_terminal:
                         for d in descendants[dend]:
-                                if d not in who:
-                                        who.append(d)
+                                if d not in target_dendrites:
+                                        target_dendrites.append(d)
 
-        for dend in who:
+        for dend in target_dendrites:
 
-                dend_add3d[dend]=[]
+                dend_segments[dend]=[]
 
         segment_list=[]
 
         for i in soma_index:
                 segment_list.append(i)
 
-        for i in dend_add3d:
-                for k in dend_add3d[i]:
+        for i in dend_segments:
+                for k in dend_segments[i]:
                         if k not in segment_list:
                                 segment_list.append(k)
         segment_list.sort(key=lambda x: x[0])
@@ -603,11 +603,11 @@ def remove(
         return newfile
 
 def extend(
-    who,
+    target_dendrites,
     action,
     amount,
     hm_choice,
-    dend_add3d,
+    dend_segments,
     dist,
     max_index,
     soma_index,
@@ -627,30 +627,30 @@ def extend(
         for i in soma_index:
                 segment_list.append(i)
 
-        for dend in who:
+        for dend in target_dendrites:
 
                 if dend not in all_terminal:
 
                         change_these=[]
-                        initial_position=dend_add3d[dend][-1]
+                        initial_position=dend_segments[dend][-1]
                         will_not_be_bp_anymore=initial_position[0]
                         for mine in parental_points:
                                 if parental_points[mine]==will_not_be_bp_anymore:
                                         change_these.append(mine)
 
 
-                num_seg_1=len(dend_add3d[dend])
+                num_seg_1=len(dend_segments[dend])
 
                 diameter_bins=[]
                 run_length=1
 
-                diameter_bins.append([0, dend_add3d[dend][0][5]])
-                for i in range(len(dend_add3d[dend])-1):
+                diameter_bins.append([0, dend_segments[dend][0][5]])
+                for i in range(len(dend_segments[dend])-1):
 
-                        diam=dend_add3d[dend][i][5]
-                        diam_next=dend_add3d[dend][i+1][5]
+                        diam=dend_segments[dend][i][5]
+                        diam_next=dend_segments[dend][i+1][5]
 
-                        if i==len(dend_add3d[dend])-2:
+                        if i==len(dend_segments[dend])-2:
                                 diameter_bins.append([i+1, diam_next])
                                 break                   
 
@@ -666,13 +666,13 @@ def extend(
                 if hm_choice=='micrometers':
                         new_dist[dend]=float(amount)
 
-                if len(dend_add3d[dend])==1:
-                        point1=dend_add3d[dend][-1]
+                if len(dend_segments[dend])==1:
+                        point1=dend_segments[dend][-1]
                         point2=points[parental_points[point1[0]]]
 
                 else:
-                        point1=dend_add3d[dend][-1]
-                        point2=dend_add3d[dend][-2]
+                        point1=dend_segments[dend][-1]
+                        point2=dend_segments[dend][-2]
 
                 (max_index, add_these_lines[dend]) = extend_dendrite(
                     dend,
@@ -682,9 +682,9 @@ def extend(
                     max_index,
                     1,
                 )
-                dend_add3d[dend]=dend_add3d[dend]+add_these_lines[dend]
+                dend_segments[dend]=dend_segments[dend]+add_these_lines[dend]
 
-                num_seg_2=len(dend_add3d[dend])
+                num_seg_2=len(dend_segments[dend])
 
                 ratio=float(num_seg_2)/num_seg_1
 
@@ -698,15 +698,15 @@ def extend(
 
                 n=0
 
-                for j in range(len(dend_add3d[dend])):
+                for j in range(len(dend_segments[dend])):
 
                         if j>=new_ns[n] and j<new_ns[n+1]:
                                 my_diam=diameter_bins[n][1]
-                                dend_add3d[dend][j][5]=my_diam
+                                dend_segments[dend][j][5]=my_diam
                         else:
                                 n+=1
                                 my_diam=diameter_bins[n][1]
-                                dend_add3d[dend][j][5]=my_diam
+                                dend_segments[dend][j][5]=my_diam
 
                 if dend not in all_terminal:
 
@@ -714,15 +714,15 @@ def extend(
 
                         vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
                         translation_vec = tuple(vec)
-                        dend_add3d = translate_descendants(
-                            translation_vec, dend, descendants, dend_add3d
+                        dend_segments = translate_descendants(
+                            translation_vec, dend, descendants, dend_segments
                         )
 
-                        dend_add3d[change_these[0]][0][6]=dend_add3d[dend][-1][0]
-                        dend_add3d[change_these[1]][0][6]=dend_add3d[dend][-1][0]
+                        dend_segments[change_these[0]][0][6]=dend_segments[dend][-1][0]
+                        dend_segments[change_these[1]][0][6]=dend_segments[dend][-1][0]
 
-        for i in dend_add3d:
-                for k in dend_add3d[i]:
+        for i in dend_segments:
+                for k in dend_segments[i]:
                         if k not in segment_list:
                                 segment_list.append(k)
 
@@ -736,11 +736,11 @@ def extend(
         return newfile
 
 def branch(
-    who,
+    target_dendrites,
     action,
     amount,
     hm_choice,
-    dend_add3d,
+    dend_segments,
     dist,
     max_index,
     soma_index,
@@ -757,14 +757,14 @@ def branch(
         for i in soma_index:
                 segment_list.append(i)
 
-        for dend in who:
+        for dend in target_dendrites:
 
                 (new_dend_a, new_dend_b, max_index) = allocate_new_dendrites(max_index)
                 dendrite_list.append(new_dend_a)
                 dendrite_list.append(new_dend_b)
 
-                point1=dend_add3d[dend][-1]
-                point2=dend_add3d[dend][-2]
+                point1=dend_segments[dend][-1]
+                point2=dend_segments[dend][-2]
 
                 new_point, length = add_random_point(
                     point1,
@@ -774,8 +774,8 @@ def branch(
                     CUMULATIVE_INDICES,
                 )
 
-                new_point_a=[new_dend_a, point2[1], new_point[0][0], new_point[0][1], new_point[0][2], point2[5], dend_add3d[dend][-1][0]]
-                new_point_b=[new_dend_b, point2[1], new_point[1][0], new_point[1][1], new_point[1][2], point2[5], dend_add3d[dend][-1][0]]
+                new_point_a=[new_dend_a, point2[1], new_point[0][0], new_point[0][1], new_point[0][2], point2[5], dend_segments[dend][-1][0]]
+                new_point_b=[new_dend_b, point2[1], new_point[1][0], new_point[1][1], new_point[1][2], point2[5], dend_segments[dend][-1][0]]
 
                 if hm_choice=='percent':
                         new_dist[new_dend_a]=dist[dend]*amount/100
@@ -784,7 +784,7 @@ def branch(
                         new_dist[new_dend_a]=amount
 
                 point1=new_point_a
-                point2=dend_add3d[dend][-1]
+                point2=dend_segments[dend][-1]
 
                 (
                     max_index,
@@ -798,7 +798,7 @@ def branch(
                     1,
                 )
                 add_these_lines[new_dend_a].insert(0, new_point_a)
-                dend_add3d[new_dend_a]=dend_add3d[dend]+add_these_lines[new_dend_a]
+                dend_segments[new_dend_a]=dend_segments[dend]+add_these_lines[new_dend_a]
 
                 if hm_choice=='percent':
                         new_dist[new_dend_b]=dist[dend]*amount/100
@@ -807,7 +807,7 @@ def branch(
                         new_dist[new_dend_b]=amount
 
                 point1=new_point_b
-                point2=dend_add3d[dend][-1]
+                point2=dend_segments[dend][-1]
 
                 (
                     max_index,
@@ -821,10 +821,10 @@ def branch(
                     1,
                 )
                 add_these_lines[new_dend_b].insert(0, new_point_b)
-                dend_add3d[new_dend_b]=dend_add3d[dend]+add_these_lines[new_dend_b]
+                dend_segments[new_dend_b]=dend_segments[dend]+add_these_lines[new_dend_b]
 
-                for i in dend_add3d:
-                        for k in dend_add3d[i]:
+                for i in dend_segments:
+                        for k in dend_segments[i]:
                                 if k not in segment_list:
                                         segment_list.append(k)
                 segment_list.sort(key=lambda x: x[0])
@@ -838,16 +838,16 @@ def branch(
 
 (LENGTHS, CUMULATIVE_INDICES) = parse_length_distribution()
 
-def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
+def diameter_change(target_dendrites, diam_change, dend_segments, dendrite_list, soma_index):
 
         """Scale dendrite diameters by ``diam_change`` percent."""
 
         diam_change=int(diam_change)
-        for dend in who:
+        for dend in target_dendrites:
 
-                for i in range(len(dend_add3d[dend])):
-                        x=dend_add3d[dend][i][5]+(diam_change*dend_add3d[dend][i][5]/100)
-                        dend_add3d[dend][i][5]=x
+                for i in range(len(dend_segments[dend])):
+                        x=dend_segments[dend][i][5]+(diam_change*dend_segments[dend][i][5]/100)
+                        dend_segments[dend][i][5]=x
 
 
         segment_list=[]
@@ -856,7 +856,7 @@ def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
                 segment_list.append(i)
                         
         for i in dendrite_list:
-                for k in dend_add3d[i]:
+                for k in dend_segments[i]:
                         segment_list.append(k)
                                 
         segment_list.sort(key=lambda x: x[0])
@@ -868,7 +868,7 @@ def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
 
         return newfile
 
-def scale(who, soma_index, dend_add3d, amount):
+def scale(target_dendrites, soma_index, dend_segments, amount):
         """Scale coordinates and diameter of dendrites by ``amount`` percent."""
 
         amount=float(amount)/100
@@ -878,17 +878,17 @@ def scale(who, soma_index, dend_add3d, amount):
         for i in soma_index:
                 segment_list.append(i)
 
-        for dend in who:
+        for dend in target_dendrites:
 
-                for i in dend_add3d[dend]:
+                for i in dend_segments[dend]:
 
                         i[2]=i[2]*amount
                         i[3]=i[3]*amount
                         i[4]=i[4]*amount
                         i[5]=i[5]*amount
 
-        for i in dend_add3d:
-                for k in dend_add3d[i]:
+        for i in dend_segments:
+                for k in dend_segments[i]:
                         if k not in segment_list:
                                 segment_list.append(k)
         segment_list.sort(key=lambda x: x[0])
@@ -908,11 +908,11 @@ BranchFunc = Callable[[], Tuple[List[str], List[int], List[List[Any]]]]
 
 
 def _build_actions(
-    who: Iterable[int],
+    target_dendrites: Iterable[int],
     action: str,
     amount: Any,
     hm_choice: str,
-    dend_add3d: Dict[int, List[List[Any]]],
+    dend_segments: Dict[int, List[List[Any]]],
     dist: Dict[int, float],
     max_index: int,
     soma_index: List[List[Any]],
@@ -928,11 +928,11 @@ def _build_actions(
     return (
         {
             "shrink": lambda: shrink(
-                who,
+                target_dendrites,
                 action,
                 amount,
                 hm_choice,
-                dend_add3d,
+                dend_segments,
                 dist,
                 soma_index,
                 points,
@@ -941,9 +941,9 @@ def _build_actions(
                 all_terminal,
             ),
             "remove": lambda: remove(
-                who,
+                target_dendrites,
                 action,
-                dend_add3d,
+                dend_segments,
                 soma_index,
                 points,
                 parental_points,
@@ -951,11 +951,11 @@ def _build_actions(
                 all_terminal,
             ),
             "extend": lambda: extend(
-                who,
+                target_dendrites,
                 action,
                 amount,
                 hm_choice,
-                dend_add3d,
+                dend_segments,
                 dist,
                 max_index,
                 soma_index,
@@ -964,14 +964,14 @@ def _build_actions(
                 descendants,
                 all_terminal,
             ),
-            "scale": lambda: scale(who, soma_index, dend_add3d, amount),
+            "scale": lambda: scale(target_dendrites, soma_index, dend_segments, amount),
         },
         lambda: branch(
-            who,
+            target_dendrites,
             action,
             amount,
             hm_choice,
-            dend_add3d,
+            dend_segments,
             dist,
             max_index,
             soma_index,
@@ -981,11 +981,11 @@ def _build_actions(
 
 
 def execute_action(
-    who: Iterable[int],
+    target_dendrites: Iterable[int],
     action: str,
     amount: Any,
     hm_choice: str,
-    dend_add3d: Dict[int, List[List[Any]]],
+    dend_segments: Dict[int, List[List[Any]]],
     dist: Dict[int, float],
     max_index: int,
     diam_change: Any,
@@ -1004,11 +1004,11 @@ def execute_action(
 
     if action != "none":
         actions, branch_func = _build_actions(
-            who,
+            target_dendrites,
             action,
             amount,
             hm_choice,
-            dend_add3d,
+            dend_segments,
             dist,
             max_index,
             soma_index,
@@ -1029,7 +1029,7 @@ def execute_action(
 
     if diam_change != "none":
         newfile = diameter_change(
-            who, diam_change, dend_add3d, dendrite_list, soma_index
+            target_dendrites, diam_change, dend_segments, dendrite_list, soma_index
         )
 
     return newfile, dendrite_list, segment_list
