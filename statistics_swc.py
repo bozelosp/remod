@@ -80,10 +80,10 @@ def branch_order_dlength(dendrite_list, branch_order, branch_order_max, dist):
         # Groups lengths by branch order then averages them
         return _mean_by_branch_order(dendrite_list, branch_order, dist)
 
-def branch_order_plength(dendrite_list, branch_order, branch_order_max, plength):
+def branch_order_plength(dendrite_list, branch_order, branch_order_max, path_lengths):
         """Return average path length per branch order."""
         # Path lengths are summed for each order before averaging
-        return _mean_by_branch_order(dendrite_list, branch_order, plength)
+        return _mean_by_branch_order(dendrite_list, branch_order, path_lengths)
 
 def sholl_intersections(points, parental_points, soma_index, radius, parameter):
         """Compute Sholl intersection counts for the given radius."""
