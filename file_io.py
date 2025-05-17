@@ -120,7 +120,7 @@ def read_single_value(path: Path) -> float:
     """Return the single float stored in ``path`` or ``0.0``."""
     try:
         return float(read_value(path))
-    except Exception:
+    except (OSError, ValueError):
         return 0.0
 
 
@@ -133,7 +133,7 @@ def read_table_data(path: Path, with_error: bool = False):
 
     try:
         data = np.loadtxt(path)
-    except Exception:
+    except (OSError, ValueError):
         return [], [], [] if with_error else []
 
     data = np.atleast_2d(data)
@@ -152,7 +152,7 @@ def read_compare_values(path: Path) -> tuple[float, float, float, float]:
 
     try:
         a_mean, a_err, b_mean, b_err = read_values(path)[:4]
-    except Exception:
+    except (OSError, ValueError):
         return 0.0, 0.0, 0.0, 0.0
     return a_mean, a_err, b_mean, b_err
 
