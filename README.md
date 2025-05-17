@@ -23,7 +23,7 @@ Using a virtual environment is recommended but not mandatory.
 
 ## Quick start
 
-1. **Prepare your SWC files** – place your `.swc` files in a directory. Example data are available under `trash/`.
+1. **Prepare your SWC files** – place your `.swc` files in a directory. Example data are available under `swc_files/`.
 2. **Compute statistics** – run `run.py analyze` with the directory and a comma separated list of file names:
 
    ```bash
