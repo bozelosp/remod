@@ -22,3 +22,15 @@ def write_value(path, value):
     """Write ``value`` to ``path`` using ``w+`` mode."""
     with open(path, "w+") as f:
         f.write(f"{value}\n")
+
+
+def read_values(path):
+    """Return a list of floats from the first line of ``path``."""
+    with open(path) as f:
+        return [float(x) for x in f.readline().split()]
+
+
+def read_value(path):
+    """Return the first float found in ``path``."""
+    values = read_values(path)
+    return values[0] if values else 0.0
