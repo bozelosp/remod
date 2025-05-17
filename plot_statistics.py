@@ -52,12 +52,12 @@ TERMINAL_FILES = [
 
 TOTAL_SPECS = [
     (
-        "total_number_of_branchpoints.svg",
-        "Total Number of Branchpoints",
+        "total_number_of_forkpoints.svg",
+        "Total Number of Forkpoints",
         [
-            "number_of_all_branchpoints.txt",
-            "number_of_basal_branchpoints.txt",
-            "number_of_apical_branchpoints.txt",
+            "number_of_all_forkpoints.txt",
+            "number_of_basal_forkpoints.txt",
+            "number_of_apical_forkpoints.txt",
         ],
     ),
     (
@@ -124,9 +124,9 @@ SHOLL_SPECS = [
     ("sholl_all_length.txt", "sholl_all_length.svg", "Average Dendritic Length (um)", True),
     ("sholl_basal_length.txt", "sholl_basal_length.svg", "Average Basal Dendritic Length (um)", False),
     ("sholl_apical_length.txt", "sholl_apical_length.svg", "Average Apical Dendritic Length (um)", True),
-    ("sholl_all_branchpoints.txt", "sholl_all_branchpoints.svg", "Average Number of Branchpoints", False),
-    ("sholl_basal_branchpoints.txt", "sholl_basal_branchpoints.svg", "Average Number of Basal Branchpoints", False),
-    ("sholl_apical_branchpoints.txt", "sholl_apical_branchpoints.svg", "Average Number of Apical Branchpoints", True),
+    ("sholl_all_forkpoints.txt", "sholl_all_forkpoints.svg", "Average Number of Forkpoints", False),
+    ("sholl_basal_forkpoints.txt", "sholl_basal_forkpoints.svg", "Average Number of Basal Forkpoints", False),
+    ("sholl_apical_forkpoints.txt", "sholl_apical_forkpoints.svg", "Average Number of Apical Forkpoints", True),
     ("sholl_all_intersections.txt", "sholl_all_intersections.svg", "Average Number of Intersections", True),
     ("sholl_basal_intersections.txt", "sholl_basal_intersections.svg", "Average Number of Basal Intersections", False),
     ("sholl_apical_intersections.txt", "sholl_apical_intersections.svg", "Average Number of Apical Intersections", True),
@@ -140,13 +140,13 @@ __all__ = [
 
 COMPARE_OTHER = [
     (
-        "compare_total_number_of_branchpoints.svg",
+        "compare_total_number_of_forkpoints.svg",
         [
-            "compare_number_of_all_branchpoints.txt",
-            "compare_number_of_basal_branchpoints.txt",
-            "compare_number_of_apical_branchpoints.txt",
+            "compare_number_of_all_forkpoints.txt",
+            "compare_number_of_basal_forkpoints.txt",
+            "compare_number_of_apical_forkpoints.txt",
         ],
-        "Total Number of Branchpoints",
+        "Total Number of Forkpoints",
     ),
     (
         "compare_total_dendritic_length.svg",
