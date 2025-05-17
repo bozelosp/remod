@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Iterable, Dict
+from logger_utils import log
 
 from swc_parser import parse_swc_file
 from morphology_statistics import (
@@ -140,7 +141,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.output:
         args.output.write_text(data, encoding="utf-8")
     else:
-        print(data)
+        log(data)
 
 
 if __name__ == "__main__":
