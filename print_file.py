@@ -1,24 +1,15 @@
-import os
 from pathlib import Path
 
-def print_newfile_tmp(directory, file_name, newfile, edit):
 
-        directory = Path(directory)
-        new_name = directory / (file_name.replace('.swc','') + '_new_tmp.swc')
+def write_swc(directory, file_name, lines, comment="", tmp=False):
+    """Write an edited SWC file to *directory* and return its path."""
+    dir_path = Path(directory) if tmp else Path(directory) / "downloads" / "files"
+    dir_path.mkdir(parents=True, exist_ok=True)
+    suffix = "_new_tmp.swc" if tmp else "_new.swc"
+    out_path = dir_path / (file_name.replace(".swc", "") + suffix)
 
-        with open(new_name, 'w') as f:
-                print(('\n').join(newfile), file=f)
-        return new_name
-
-def print_newfile(directory, file_name, newfile, edit):
-
-        directory = Path(directory) / 'downloads' / 'files'
-
-        if not directory.exists():
-                directory.mkdir(parents=True)
-
-        new_name = directory / (file_name.replace('.swc','') + '_new.swc')
-
-        with open(new_name, 'w') as f:
-                print(edit, file=f)
-                print(('\n').join(newfile), file=f)
+    with out_path.open("w", encoding="utf-8") as f:
+        if comment:
+            f.write(comment + "\n")
+        f.write("\n".join(lines) + "\n")
+    return out_path
