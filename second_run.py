@@ -1,6 +1,7 @@
 import random
 from extract_swc_morphology import *
-from take_action_swc import *
+from take_action import execute_action
+from print_file import print_newfile
 from neuron_visualization import *
 from warn import *
 from graph import *
