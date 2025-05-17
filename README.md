@@ -1,43 +1,55 @@
 # remod
 
-This repository contains Python scripts for exploring and remodeling neuronal morphologies stored in the [SWC format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/).
-The code parses morphometric information, computes statistics and can modify dendritic trees.
+**remod** is a small collection of Python utilities for exploring, analysing and
+remodelling neuronal morphologies stored in the
+[SWC format](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/).
+The tools can compute detailed morphometric statistics, apply structural changes
+to dendritic trees and visualise the results.
 
-## Requirements
+## Features
 
-* Python 3.8 or later
-* [NumPy](https://numpy.org/)
-* [Matplotlib](https://matplotlib.org/)
+- Parse SWC files and extract measurements such as branch counts, branch-order
+  distributions, total length/area and Sholl profiles.
+- Automatically store aggregated statistics in `downloads/statistics/`.
+- Modify morphologies using `second_run.py` (remove, extend or change the
+  diameter of dendrites).
+- Visualise original and edited trees with 3‑D plots.
+- Additional helper scripts to merge segments, reassign indices and plot data.
 
-Install the dependencies with:
+## Installation
+
+The code requires **Python 3.8 or later** and depends on
+[NumPy](https://numpy.org/) and [Matplotlib](https://matplotlib.org/).
+Install them with:
 
 ```bash
 pip install numpy matplotlib
 ```
 
-## Workflow
+Using a virtual environment is recommended but not mandatory.
 
-1. **Prepare your SWC files**
-   Place the morphology files in a directory of your choice.
+## Quick start
 
-2. **Extract metrics**
-   Run `first_run.py` to parse the SWC data and compute statistics such as branch counts,
-   length distributions and Sholl profiles. Results are written to `statistics.csv` in the
-   same directory.
+1. **Prepare your SWC files** – place your `.swc` files in a directory. Example
+   data can be found under `trash/`.
+
+2. **Compute statistics** – run `first_run.py` and provide the directory and a
+   comma-separated list of file names:
 
    ```bash
-   python first_run.py /path/to/swc/ 0-2.swc
+   python first_run.py /path/to/swc 0-2.swc
    ```
 
-3. **Apply remodeling actions**
-   Use `second_run.py` to modify the neuron. The script accepts several command line
-   arguments describing which dendrites to target and what operation to perform.
-   The example below removes all terminal dendrites from `0-2.swc` and stores the
-   modified file in the `downloads/` subdirectory.
+   Results such as total dendritic length, branch-order frequency and Sholl
+   intersections are saved in `downloads/statistics/`.
+
+3. **Remodel a morphology** – use `second_run.py` to apply structural changes.
+   The example below removes 50% of all terminal dendrites from `0-2.swc` and
+   writes the modified neuron to `downloads/files/0-2_new.swc`:
 
    ```bash
    python second_run.py \
-       --directory /path/to/swc/ \
+       --directory /path/to/swc \
        --file-name 0-2.swc \
        --who who_all_terminal \
        --action remove \
@@ -47,15 +59,16 @@ pip install numpy matplotlib
        --diam-change 10
    ```
 
-4. **Visualize the result**
-   Scripts such as `neuron_visualization.py` and `graph.py` generate 3D plots
-   comparing the original and remodeled morphologies.
+4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D
+   plots comparing the original and edited morphologies. Figures are stored in
+   the `downloads/` directory.
 
-## Additional Utilities
+## More tools
 
-* `merge.py` and `smart_merge.py` combine SWC segments.
-* `plot_data.py` and `plot_individual_data.py` produce graphs from computed statistics.
-* `index_reassignment.py` renumbers node indices after modifications.
+- `merge.py` and `smart_merge.py` combine SWC segments.
+- `plot_data.py` and `plot_individual_data.py` visualise computed statistics.
+- `index_reassignment.py` renumbers node indices after editing.
+- `random_sampling.py` demonstrates how to draw random dendrites.
 
-Each script contains inline documentation or a `--help` option that provides
-further details about its usage.
+Run any script with the `--help` flag for a description of its command-line
+options.
