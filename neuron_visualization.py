@@ -43,7 +43,7 @@ def _soma_connections(soma_points: Sequence[Sequence]) -> Iterator[List]:
 
 def _dendrite_connections(
     dendrite_list: Iterable[int],
-    dend_add3d: Dict[int, Sequence[Sequence]],
+    dend_segments: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
     parental_points: Dict[int, int],
 ) -> List[List]:
@@ -51,7 +51,7 @@ def _dendrite_connections(
     # Skips axon points which are marked with type 2
 
     for dend in dendrite_list:
-        for point in dend_add3d[dend]:
+        for point in dend_segments[dend]:
             parent_idx = parental_points.get(point[6], -1)
             if parent_idx == -1 or point[1] == 2:
                 continue
@@ -70,7 +70,7 @@ def _dendrite_connections(
 
 def _collect_segments(
     dendrite_list: Iterable[int],
-    dend_add3d: Dict[int, Sequence[Sequence]],
+    dend_segments: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
     parental_points: Dict[int, int],
     soma_index: Sequence[Sequence],
@@ -82,7 +82,7 @@ def _collect_segments(
         chain(
             _soma_connections(soma_index),
             _dendrite_connections(
-                dendrite_list, dend_add3d, points, parental_points
+                dendrite_list, dend_segments, points, parental_points
             ),
         )
     )
@@ -92,7 +92,7 @@ def _export_graph(
     abs_path: Path | str,
     file_name: str,
     dendrite_list: Iterable[int],
-    dend_add3d: Dict[int, Sequence[Sequence]],
+    dend_segments: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
     parental_points: Dict[int, int],
     soma_index: Sequence[Sequence],
@@ -103,7 +103,7 @@ def _export_graph(
     # Build the list of line segments and write them to disk
 
     segments = _collect_segments(
-        dendrite_list, dend_add3d, points, parental_points, soma_index
+        dendrite_list, dend_segments, points, parental_points, soma_index
     )
 
     if verbose:
@@ -118,7 +118,7 @@ def first_graph(
     abs_path: Path | str,
     file_name: str,
     dendrite_list: Iterable[int],
-    dend_add3d: Dict[int, Sequence[Sequence]],
+    dend_segments: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
     parental_points: Dict[int, int],
     soma_index: Sequence[Sequence],
@@ -130,7 +130,7 @@ def first_graph(
         abs_path,
         file_name,
         dendrite_list,
-        dend_add3d,
+        dend_segments,
         points,
         parental_points,
         soma_index,
@@ -141,7 +141,7 @@ def second_graph(
     abs_path: Path | str,
     file_name: str,
     dendrite_list: Iterable[int],
-    dend_add3d: Dict[int, Sequence[Sequence]],
+    dend_segments: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
     parental_points: Dict[int, int],
     soma_index: Sequence[Sequence],
@@ -153,7 +153,7 @@ def second_graph(
         abs_path,
         file_name,
         dendrite_list,
-        dend_add3d,
+        dend_segments,
         points,
         parental_points,
         soma_index,
