@@ -1,211 +1,233 @@
 """Combined remodeling actions and dispatcher."""
 
 import re
-from random import randint
-import copy
-import sys
-import os
+from random import randint, randrange
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Tuple
 
 import numpy as np
-from random import uniform, randrange
-from math import cos, sin, pi, sqrt, radians, degrees
+from math import cos, sin, radians
 from utils import distance, round_to
 
-def length_distribution(): #parses the length distribution
+def parse_length_distribution(
+    path: Path = Path("length_distribution.txt"),
+) -> Tuple[List[float], List[int]]:
+    """Return lengths and cumulative indices parsed from ``path``."""
 
-        length=[]
-        frequency=[]
-        current_directory = Path.cwd()
-        fname = current_directory / 'length_distribution.txt'
-        with open(fname) as f:
-                for line in f:
-                        line=line.rstrip('\n')
-                        if re.search(r'(\S+)\s-\s(\S+)', line):
-                                regex=re.search(r'(\S+)\s-\s(\S+)', line)
-                                length.append(float(regex.group(1)))
-                                frequency.append(float(regex.group(2)))
+    lengths: List[float] = []
+    frequencies: List[float] = []
 
-        cumulative_length_index=[]
-        cumulative_length_index.append(0)
-        limit_length=0
-        for i in range(len(length)):
-                cumulative_length_index.append(int(frequency[i]*1000000+limit_length))
-                limit_length=cumulative_length_index[i]
-        return length, cumulative_length_index
+    if not path.exists():
+        raise FileNotFoundError(path)
 
-def length_selection(cumulative_length_index): #returns a randomly chosen length value based on the distribution
+    with path.open() as distribution_file:
+        for line in distribution_file:
+            match = re.search(r"(\S+)\s-\s(\S+)", line.strip())
+            if match:
+                lengths.append(float(match.group(1)))
+                frequencies.append(float(match.group(2)))
 
-        random_value=randint(0, cumulative_length_index[-1]);
+    cumulative_indices: List[int] = [0]
+    current_limit = 0
+    for frequency in frequencies:
+        current_limit += int(frequency * 1_000_000)
+        cumulative_indices.append(current_limit)
 
-        for i in range(len(cumulative_length_index)):
-                if random_value>cumulative_length_index[i] and random_value<cumulative_length_index[i+1]:
-                        return length[i]
-                        break
+    return lengths, cumulative_indices
 
+def select_length(lengths: List[float], cumulative_indices: List[int]) -> float:
+    """Return a random length based on ``cumulative_indices``."""
 
-def createP(length, angle, p1, p2, flag): # return new pt3dadd lines formatted in the standard NEURON style
-
-        rotation_angle=radians(angle)
-
-        axis_origin=[0,0,1]
-        if p2[0]==p2[0] and p2[1]==p1[1]:
-                axis_origin=[0,1,0]
-
-        p1=np.matrix([float(p1[0]), float(p1[1]), float(p1[2])])
-        p2=np.matrix([float(p2[0]), float(p2[1]), float(p2[2])])
-
-        axis = p2-p1
-                
-        axis = axis / np.linalg.norm(axis) # normalize to a unit vector with the same direction
-        perp_vector = np.cross(axis, axis_origin)
-        perp_vector = perp_vector/np.linalg.norm(perp_vector)
-        
-        xt = perp_vector[0,0]
-        yt = perp_vector[0,1]
-        zt = perp_vector[0,2]
-
-        rotation_matrix_one = np.matrix([[cos(rotation_angle)+(xt**2)*(1-cos(rotation_angle)), xt*yt*(1-cos(rotation_angle))-zt*sin(rotation_angle), xt*zt*(1-cos(rotation_angle))+yt*sin(rotation_angle)],
-                [yt*xt*(1-cos(rotation_angle))+zt*sin(rotation_angle) , cos(rotation_angle) + (yt**2)*(1-cos(rotation_angle)), yt*zt*(1-cos(rotation_angle))-xt*sin(rotation_angle)],
-                [zt*xt*(1-cos(rotation_angle))-yt*sin(rotation_angle), zt*yt*(1-cos(rotation_angle))+xt*sin(rotation_angle), cos(rotation_angle)+(zt**2)*(1-cos(rotation_angle))]], float)
-
-        xa = axis[0,0]
-        ya = axis[0,1]
-        za = axis[0,2]
-
-        rotation_angle=randrange(360)
-        rotation_angle=radians(rotation_angle) # /!\ in rads /!\
-
-        rotation_matrix_two = np.matrix([[cos(rotation_angle)+(xa**2)*(1-cos(rotation_angle)), xa*ya*(1-cos(rotation_angle))-za*sin(rotation_angle), xa*za*(1-cos(rotation_angle))+ya*sin(rotation_angle)],
-                [ya*xa*(1-cos(rotation_angle))+za*sin(rotation_angle) , cos(rotation_angle) + (ya**2)*(1-cos(rotation_angle)), ya*za*(1-cos(rotation_angle))-xa*sin(rotation_angle)],
-                [za*xa*(1-cos(rotation_angle))-ya*sin(rotation_angle), za*ya*(1-cos(rotation_angle))+xa*sin(rotation_angle), cos(rotation_angle)+(za**2)*(1-cos(rotation_angle))]], float)
-
-        factor =  (axis.T * length)
-
-        vector_step_one = rotation_matrix_one * factor
-        vector_step_two = rotation_matrix_two * vector_step_one
-        vector_step_two = vector_step_two.T
-        v1 = vector_step_two + p2
-
-        new_point_one=[v1[0,0], v1[0,1], v1[0,2]]
-
-        new_points=[]
-        new_points.append(new_point_one)
-
-        if flag==2:
-                rotation_angle = rotation_angle + 3.1415
-                rotation_matrix_two_alt = np.matrix([[cos(rotation_angle)+(xa**2)*(1-cos(rotation_angle)), xa*ya*(1-cos(rotation_angle))-za*sin(rotation_angle), xa*za*(1-cos(rotation_angle))+ya*sin(rotation_angle)],
-                        [ya*xa*(1-cos(rotation_angle))+za*sin(rotation_angle) , cos(rotation_angle) + (ya**2)*(1-cos(rotation_angle)), ya*za*(1-cos(rotation_angle))-xa*sin(rotation_angle)],
-                        [za*xa*(1-cos(rotation_angle))-ya*sin(rotation_angle), za*ya*(1-cos(rotation_angle))+xa*sin(rotation_angle), cos(rotation_angle)+(za**2)*(1-cos(rotation_angle))]], float)
-                vector_step_three = rotation_matrix_two_alt * vector_step_one
-                vector_step_three = vector_step_three.T
-                v2 = vector_step_three + p2
-
-                new_point=[]
-                new_point.append(v2[0,0])
-                new_point.append(v2[0,1])
-                new_point.append(v2[0,2])
-
-                new_point_two=[v2[0,0], v2[0,1], v2[0,2]]
-
-                new_points.append(new_point_two)
-
-        return new_points
-
-def add_point(point1, point2, flag): # return one or two new points
-
-        p2=[point1[2], point1[3], point1[4]]
-        p1=[point2[2], point2[3], point2[4]]
-
-        length=length_selection(cumulative_length_index)
-        angle=5
-
-        new_point=createP(length, angle, p1, p2, flag)
-
-        return new_point, length
-
-def transpose(vec, dend, descendants, dend_add3d):
-
-        x=vec[0]
-        y=vec[1]
-        z=vec[2]
-
-        for d in descendants[dend]:
-
-                for i in range(len(dend_add3d[d])):
-
-                        dend_add3d[d][i][2]=dend_add3d[d][i][2]-x
-                        dend_add3d[d][i][3]=dend_add3d[d][i][3]-y
-                        dend_add3d[d][i][4]=dend_add3d[d][i][4]-z
-
-        return dend_add3d
+    random_value = randint(0, cumulative_indices[-1])
+    for index in range(len(cumulative_indices) - 1):
+        if cumulative_indices[index] < random_value < cumulative_indices[index + 1]:
+            return lengths[index]
+    return lengths[-1]
 
 
-def new_dend(max_index): # return two new dendrite IDs for branching
+def create_points(
+    length: float,
+    angle: float,
+    start_point: Iterable[float],
+    end_point: Iterable[float],
+    flag: int,
+) -> List[List[float]]:
+    """Return one or two new NEURON ``pt3dadd`` points."""
 
-        new_dend_a=max_index+1
-        new_dend_b=max_index+2
-        
-        max_index=new_dend_b
-        
-        return new_dend_a, new_dend_b, max_index
+    rotation_angle = radians(angle)
+
+    axis_origin = [0, 0, 1]
+    if end_point[0] == end_point[0] and end_point[1] == start_point[1]:
+        axis_origin = [0, 1, 0]
+
+    start_matrix = np.matrix([float(start_point[0]), float(start_point[1]), float(start_point[2])])
+    end_matrix = np.matrix([float(end_point[0]), float(end_point[1]), float(end_point[2])])
+
+    axis = end_matrix - start_matrix
+    axis = axis / np.linalg.norm(axis)
+
+    perp_vector = np.cross(axis, axis_origin)
+    perp_vector = perp_vector / np.linalg.norm(perp_vector)
+
+    xt, yt, zt = perp_vector[0, 0], perp_vector[0, 1], perp_vector[0, 2]
+
+    rotation_matrix_one = np.matrix(
+        [
+            [cos(rotation_angle) + (xt ** 2) * (1 - cos(rotation_angle)), xt * yt * (1 - cos(rotation_angle)) - zt * sin(rotation_angle), xt * zt * (1 - cos(rotation_angle)) + yt * sin(rotation_angle)],
+            [yt * xt * (1 - cos(rotation_angle)) + zt * sin(rotation_angle), cos(rotation_angle) + (yt ** 2) * (1 - cos(rotation_angle)), yt * zt * (1 - cos(rotation_angle)) - xt * sin(rotation_angle)],
+            [zt * xt * (1 - cos(rotation_angle)) - yt * sin(rotation_angle), zt * yt * (1 - cos(rotation_angle)) + xt * sin(rotation_angle), cos(rotation_angle) + (zt ** 2) * (1 - cos(rotation_angle))],
+        ],
+        float,
+    )
+
+    xa, ya, za = axis[0, 0], axis[0, 1], axis[0, 2]
+
+    rotation_angle = radians(randrange(360))
+    rotation_matrix_two = np.matrix(
+        [
+            [cos(rotation_angle) + (xa ** 2) * (1 - cos(rotation_angle)), xa * ya * (1 - cos(rotation_angle)) - za * sin(rotation_angle), xa * za * (1 - cos(rotation_angle)) + ya * sin(rotation_angle)],
+            [ya * xa * (1 - cos(rotation_angle)) + za * sin(rotation_angle), cos(rotation_angle) + (ya ** 2) * (1 - cos(rotation_angle)), ya * za * (1 - cos(rotation_angle)) - xa * sin(rotation_angle)],
+            [za * xa * (1 - cos(rotation_angle)) - ya * sin(rotation_angle), za * ya * (1 - cos(rotation_angle)) + xa * sin(rotation_angle), cos(rotation_angle) + (za ** 2) * (1 - cos(rotation_angle))],
+        ],
+        float,
+    )
+
+    factor = axis.T * length
+    vector_step_one = rotation_matrix_one * factor
+    vector_step_two = rotation_matrix_two * vector_step_one
+    vector_step_two = vector_step_two.T
+    v1 = vector_step_two + end_matrix
+
+    new_point_one = [v1[0, 0], v1[0, 1], v1[0, 2]]
+    new_points = [new_point_one]
+
+    if flag == 2:
+        rotation_angle += 3.1415
+        rotation_matrix_two_alt = np.matrix(
+            [
+                [cos(rotation_angle) + (xa ** 2) * (1 - cos(rotation_angle)), xa * ya * (1 - cos(rotation_angle)) - za * sin(rotation_angle), xa * za * (1 - cos(rotation_angle)) + ya * sin(rotation_angle)],
+                [ya * xa * (1 - cos(rotation_angle)) + za * sin(rotation_angle), cos(rotation_angle) + (ya ** 2) * (1 - cos(rotation_angle)), ya * za * (1 - cos(rotation_angle)) - xa * sin(rotation_angle)],
+                [za * xa * (1 - cos(rotation_angle)) - ya * sin(rotation_angle), za * ya * (1 - cos(rotation_angle)) + xa * sin(rotation_angle), cos(rotation_angle) + (za ** 2) * (1 - cos(rotation_angle))],
+            ],
+            float,
+        )
+        vector_step_three = rotation_matrix_two_alt * vector_step_one
+        vector_step_three = vector_step_three.T
+        v2 = vector_step_three + end_matrix
+        new_point_two = [v2[0, 0], v2[0, 1], v2[0, 2]]
+        new_points.append(new_point_two)
+
+    return new_points
+
+def add_random_point(
+    point_one: List[Any],
+    point_two: List[Any],
+    flag: int,
+    lengths: List[float],
+    cumulative_indices: List[int],
+) -> Tuple[List[List[float]], float]:
+    """Return one or two new points and their length."""
+
+    end_point = [point_one[2], point_one[3], point_one[4]]
+    start_point = [point_two[2], point_two[3], point_two[4]]
+
+    length = select_length(lengths, cumulative_indices)
+    angle = 5
+
+    new_point = create_points(length, angle, start_point, end_point, flag)
+
+    return new_point, length
+
+def translate_descendants(
+    translation_vector: Iterable[float],
+    dendrite: int,
+    descendants: Dict[int, List[int]],
+    dendrites: Dict[int, List[List[Any]]],
+) -> Dict[int, List[List[Any]]]:
+    """Translate descendant dendrites by ``translation_vector``."""
+
+    x, y, z = translation_vector
+
+    for child in descendants[dendrite]:
+        for i in range(len(dendrites[child])):
+            dendrites[child][i][2] -= x
+            dendrites[child][i][3] -= y
+            dendrites[child][i][4] -= z
+
+    return dendrites
 
 
-def extend_dendrite(dend, new_dist, point1, point2, max_index, flag): # grow the dendrite and return a list of new lines
+def allocate_new_dendrites(max_index: int) -> Tuple[int, int, int]:
+    """Return two new dendrite IDs for branching."""
 
-        new_lines=[]
-        cumulative_distance=0
+    dendrite_a = max_index + 1
+    dendrite_b = max_index + 2
+    return dendrite_a, dendrite_b, dendrite_b
 
-        my_point2=point2
 
-        seg_index=max_index
+def extend_dendrite(
+    dendrite_id: int,
+    target_distance: Dict[int, float],
+    point_one: List[Any],
+    point_two: List[Any],
+    max_index: int,
+    branch_flag: int,
+) -> Tuple[int, List[List[Any]]]:
+    """Grow the dendrite and return its new segments."""
 
-        while cumulative_distance<new_dist[dend]:
+    new_lines: List[List[Any]] = []
+    cumulative_distance = 0.0
 
-                (new_point, length)=add_point(point1, point2, flag)
-                
-                p=[seg_index+1, point2[1], new_point[0][0], new_point[0][1], new_point[0][2], point2[5], point1[0]]
-                new_lines.append(p)
+    original_point_two = point_two
 
-                seg_index+=1
+    segment_index = max_index
 
-                point2=point1
-                point1=p
+    while cumulative_distance < target_distance[dendrite_id]:
+        new_point, length = add_random_point(
+            point_one, point_two, branch_flag, LENGTHS, CUMULATIVE_INDICES
+        )
 
-                cumulative_distance+=length
+        segment = [
+            segment_index + 1,
+            point_two[1],
+            new_point[0][0],
+            new_point[0][1],
+            new_point[0][2],
+            point_two[5],
+            point_one[0],
+        ]
+        new_lines.append(segment)
 
-        diff=cumulative_distance-float(new_dist[dend])
+        segment_index += 1
+        point_two = point_one
+        point_one = segment
+        cumulative_distance += length
 
-        if len(new_lines)==1:
-                x2=my_point2[2]
-                y2=my_point2[3]
-                z2=my_point2[4]
-        else:
-                x2=new_lines[-2][2]
-                y2=new_lines[-2][3]
-                z2=new_lines[-2][4]
+    diff = cumulative_distance - float(target_distance[dendrite_id])
 
-        x1=new_lines[-1][2]
-        y1=new_lines[-1][3]
-        z1=new_lines[-1][4]
+    if len(new_lines) == 1:
+        x2, y2, z2 = original_point_two[2], original_point_two[3], original_point_two[4]
+    else:
+        x2, y2, z2 = new_lines[-2][2], new_lines[-2][3], new_lines[-2][4]
 
-        xn=x2-x1
-        yn=y2-y1        
-        zn=z2-z1
+    x1, y1, z1 = new_lines[-1][2], new_lines[-1][3], new_lines[-1][4]
 
-        per=1-(length-diff)/length
+    xn = x2 - x1
+    yn = y2 - y1
+    zn = z2 - z1
 
-        xn=round_to((x1+per*xn),0.01)
-        yn=round_to((y1+per*yn),0.01)
-        zn=round_to((z1+per*zn),0.01)
+    per = 1 - (length - diff) / length
 
-        newpoint=[seg_index, point2[1], xn, yn, zn, point2[5], point1[6]]
-        new_lines[-1]=newpoint
+    xn = round_to((x1 + per * xn), 0.01)
+    yn = round_to((y1 + per * yn), 0.01)
+    zn = round_to((z1 + per * zn), 0.01)
 
-        max_index=seg_index
+    newpoint = [segment_index, point_two[1], xn, yn, zn, point_two[5], point_one[6]]
+    new_lines[-1] = newpoint
 
-        return max_index, new_lines
+    max_index = segment_index
+
+    return max_index, new_lines
 
 def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points, parental_points, descendants, all_terminal): # return the updated .hoc lines with the selected dendrites shortened
 
@@ -322,8 +344,10 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                         final_position=dend_add3d[dend][-1]
 
                         vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-                        translation_vec=tuple(vec)
-                        dend_add3d=transpose(translation_vec, dend, descendants, dend_add3d)
+                        translation_vec = tuple(vec)
+                        dend_add3d = translate_descendants(
+                            translation_vec, dend, descendants, dend_add3d
+                        )
 
         segment_list=[]
 
@@ -604,7 +628,14 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
                         point1=dend_add3d[dend][-1]
                         point2=dend_add3d[dend][-2]
 
-                (max_index, add_these_lines[dend])=extend_dendrite(dend, new_dist, point1, point2, max_index, 1)
+                (max_index, add_these_lines[dend]) = extend_dendrite(
+                    dend,
+                    new_dist,
+                    point1,
+                    point2,
+                    max_index,
+                    1,
+                )
                 dend_add3d[dend]=dend_add3d[dend]+add_these_lines[dend]
 
                 num_seg_2=len(dend_add3d[dend])
@@ -636,8 +667,10 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
                         final_position=add_these_lines[dend][-1]
 
                         vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-                        translation_vec=tuple(vec)
-                        dend_add3d=transpose(translation_vec, dend, descendants, dend_add3d)
+                        translation_vec = tuple(vec)
+                        dend_add3d = translate_descendants(
+                            translation_vec, dend, descendants, dend_add3d
+                        )
 
                         dend_add3d[change_these[0]][0][6]=dend_add3d[dend][-1][0]
                         dend_add3d[change_these[1]][0][6]=dend_add3d[dend][-1][0]
@@ -669,14 +702,20 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
         for dend in who:
 
-                (new_dend_a, new_dend_b, max_index)=new_dend(max_index)
+                (new_dend_a, new_dend_b, max_index) = allocate_new_dendrites(max_index)
                 dendrite_list.append(new_dend_a)
                 dendrite_list.append(new_dend_b)
 
                 point1=dend_add3d[dend][-1]
                 point2=dend_add3d[dend][-2]
 
-                (new_point, length)=add_point(point1, point2, 2)
+                new_point, length = add_random_point(
+                    point1,
+                    point2,
+                    2,
+                    LENGTHS,
+                    CUMULATIVE_INDICES,
+                )
 
                 new_point_a=[new_dend_a, point2[1], new_point[0][0], new_point[0][1], new_point[0][2], point2[5], dend_add3d[dend][-1][0]]
                 new_point_b=[new_dend_b, point2[1], new_point[1][0], new_point[1][1], new_point[1][2], point2[5], dend_add3d[dend][-1][0]]
@@ -690,7 +729,17 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
                 point1=new_point_a
                 point2=dend_add3d[dend][-1]
 
-                (max_index, add_these_lines[new_dend_a])=extend_dendrite(new_dend_a, new_dist, point1, point2, max_index, 1)
+                (
+                    max_index,
+                    add_these_lines[new_dend_a],
+                ) = extend_dendrite(
+                    new_dend_a,
+                    new_dist,
+                    point1,
+                    point2,
+                    max_index,
+                    1,
+                )
                 add_these_lines[new_dend_a].insert(0, new_point_a)
                 dend_add3d[new_dend_a]=dend_add3d[dend]+add_these_lines[new_dend_a]
 
@@ -703,7 +752,17 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
                 point1=new_point_b
                 point2=dend_add3d[dend][-1]
 
-                (max_index, add_these_lines[new_dend_b])=extend_dendrite(new_dend_b, new_dist, point1, point2, max_index, 1)
+                (
+                    max_index,
+                    add_these_lines[new_dend_b],
+                ) = extend_dendrite(
+                    new_dend_b,
+                    new_dist,
+                    point1,
+                    point2,
+                    max_index,
+                    1,
+                )
                 add_these_lines[new_dend_b].insert(0, new_point_b)
                 dend_add3d[new_dend_b]=dend_add3d[dend]+add_these_lines[new_dend_b]
 
@@ -720,7 +779,7 @@ def branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
         return (newfile, dendrite_list, segment_list)
 
-(length, cumulative_length_index)=length_distribution()
+(LENGTHS, CUMULATIVE_INDICES) = parse_length_distribution()
 
 def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
 
