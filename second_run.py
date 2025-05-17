@@ -78,65 +78,65 @@ def main():
     #who=regex_who.group(1)
     
     if who=='who_all_terminal':
-    	who=all_terminal
-    	which_dendrites='all terminal '
+        who=all_terminal
+        which_dendrites='all terminal '
     elif who=='who_all_apical':
-    	who=apical
-    	which_dendrites='all apical '
+        who=apical
+        which_dendrites='all apical '
     elif who=='who_apical_terminal':
-    	who=apical_terminal
-    	which_dendrites='apical terminal '
+        who=apical_terminal
+        which_dendrites='apical terminal '
     elif who=='who_all_basal':
-    	who=basal
-    	which_dendrites='all basal '
+        who=basal
+        which_dendrites='all basal '
     elif who=='who_basal_terminal':
-    	who=basal_terminal
-    	which_dendrites='basal terminal '
+        who=basal_terminal
+        which_dendrites='basal terminal '
     elif who=='who_random_all':
-    	num=len(all_terminal)*float(who_random_variable)
-    	num=int(round_to(num, 1))
-    	check_nseg=False
-    	while check_nseg==False:
-    		who=random.sample(all_terminal, num)
-    		for dend in who:
-    			check_nseg=True
-    			if len(dend_add3d[dend])<3:
-    				check_nseg=False
-    				break
-    	which_dendrites='random (basal & apical) terminal (' + str(who_random_variable*100) + '%) '
+        num=len(all_terminal)*float(who_random_variable)
+        num=int(round_to(num, 1))
+        check_nseg=False
+        while check_nseg==False:
+                who=random.sample(all_terminal, num)
+                for dend in who:
+                        check_nseg=True
+                        if len(dend_add3d[dend])<3:
+                                check_nseg=False
+                                break
+        which_dendrites='random (basal & apical) terminal (' + str(who_random_variable*100) + '%) '
     elif who=='who_random_apical':
-    	num=len(apical_terminal)*float(who_random_variable)
-    	num=int(round_to(num, 1))
-    	check_nseg=False
-    	while check_nseg==False:
-    		who=random.sample(apical_terminal, num)
-    		for dend in who:
-    			check_nseg=True
-    			if len(dend_add3d[dend])<3:
-    				check_nseg=False
-    				break
-    	which_dendrites='random apical (' + str(who_random_variable*100) + '%) '
+        num=len(apical_terminal)*float(who_random_variable)
+        num=int(round_to(num, 1))
+        check_nseg=False
+        while check_nseg==False:
+                who=random.sample(apical_terminal, num)
+                for dend in who:
+                        check_nseg=True
+                        if len(dend_add3d[dend])<3:
+                                check_nseg=False
+                                break
+        which_dendrites='random apical (' + str(who_random_variable*100) + '%) '
     elif who=='who_random_basal':
-    	num=len(basal_terminal)*float(who_random_variable)
-    	num=int(round_to(num, 1))
-    	check_nseg=False
-    	while check_nseg==False:
-    		who=random.sample(basal_terminal, num)
-    		for dend in who:
-    			check_nseg=True
-    			if len(dend_add3d[dend])<3:
-    				check_nseg=False
-    				break
-    	which_dendrites='random basal (' + str(who_random_variable*100) + '%) '
+        num=len(basal_terminal)*float(who_random_variable)
+        num=int(round_to(num, 1))
+        check_nseg=False
+        while check_nseg==False:
+                who=random.sample(basal_terminal, num)
+                for dend in who:
+                        check_nseg=True
+                        if len(dend_add3d[dend])<3:
+                                check_nseg=False
+                                break
+        which_dendrites='random basal (' + str(who_random_variable*100) + '%) '
     elif who=='who_manual':
-    	if len(who)>1:
-    		who=[int(x) for x in who_manual_variable.split(',')]
-    	else:
-    		who=int(who)
-    	which_dendrites='manually selected '
+        if len(who)>1:
+                who=[int(x) for x in who_manual_variable.split(',')]
+        else:
+                who=int(who)
+        which_dendrites='manually selected '
     else:
-    	print('No dendrites are defined to be remodeled!')
-    	sys.exit(0)
+        print('No dendrites are defined to be remodeled!')
+        sys.exit(0)
     
     who.sort()
     
@@ -146,13 +146,13 @@ def main():
     (bo_freq, bo_max)=bo_frequency(dendrite_list, bo)
     
     if action == 'shrink':
-    	if hm_choice == 'micrometers':
-    		(status, not_applicable)=shrink_warning(who, dist, amount)
-    		if status:
-    			print('Consider these warnings before you proceed to shrink action!\n')
-    			for dend in not_applicable:
-    				print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')')
-    			#sys.exit(0)
+        if hm_choice == 'micrometers':
+                (status, not_applicable)=shrink_warning(who, dist, amount)
+                if status:
+                        print('Consider these warnings before you proceed to shrink action!\n')
+                        for dend in not_applicable:
+                                print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')')
+                        #sys.exit(0)
     
     now = datetime .datetime.now()
     
@@ -163,7 +163,7 @@ def main():
     (newfile, dendrite_list, segment_list)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
     
     if action in ['shrink', 'remove', 'scale']:
-    	newfile=index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
+        newfile=index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
     
     newfile=comment_lines + newfile
     check_indices(newfile) #check if indices are continuous from 0 and u
