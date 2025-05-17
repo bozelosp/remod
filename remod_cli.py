@@ -37,7 +37,6 @@ from core_utils import (
 from file_io import write_json, write_value, write_swc, write_dict, write_pickle
 from morphology_statistics import *
 from remodeling_actions import execute_action
-from overlay_graph import *
 
 def analyze_main(argv=None):
         """Compute morphometric statistics for one or more SWC files."""
@@ -902,7 +901,6 @@ def edit_main(argv=None):
         
         print('\nSWC parsing is completed!\n')
         
-        #from overlay_graph import *
         #local_plot(swc_lines)
         
         #regex_who=re.search('(.*)', choices[0])
@@ -1006,7 +1004,7 @@ def edit_main(argv=None):
         print()
     
     
-        #graph(swc_lines, new_lines, action, dendrite_samples, dendrite_roots, directory, file_name) #plots the original and modified tree (overlaying one another)
+        # graph(swc_lines, new_lines, action, dendrite_samples, dendrite_roots, directory, file_name)  # overlay plot via neuron_export.graph
     
     
 def main(argv=None):
