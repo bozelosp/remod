@@ -52,7 +52,7 @@ def print_branch_order(dlist, bo):
 	for i in dlist:
 		bo_dict[i]=bo[i]
 
-	return sorted(bo_dict.items(), key=lambda x: x[0])
+	return sorted(list(bo_dict.items()), key=lambda x: x[0])
 
 def bo_frequency(dlist, bo):
 

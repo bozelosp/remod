@@ -37,7 +37,7 @@ if (len(sys.argv)==11):
 	var_choice=str(sys.argv[9])
 	diam_change=sys.argv[10]
 else:
-	print "The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n11 arguments are needed."
+	print("The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n11 arguments are needed.")
 	sys.exit(0)
 
 exist_downloads=str(directory)+'/downloads'
@@ -49,13 +49,13 @@ if not os.path.exists(exist_downloads):
 if not os.path.exists(exist_downloads_files):
     os.makedirs(exist_downloads_files)
 
-print
-print 'Open file: ' + str(file_name)
-print
+print()
+print('Open file: ' + str(file_name))
+print()
 
 (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
 
-print '\nSWC parsing is completed!\n'
+print('\nSWC parsing is completed!\n')
 
 #from graph import *
 #local_plot(swc_lines)
@@ -121,13 +121,13 @@ elif who=='who_manual':
 		who=int(who)
 	which_dendrites='manually selected '
 else:
-	print 'No dendrites are defined to be remodeled!'
+	print('No dendrites are defined to be remodeled!')
 	sys.exit(0)
 
 who.sort()
 
-print 'The dendrites stemming from these segments will be edited: '
-print str(who)
+print('The dendrites stemming from these segments will be edited: ')
+print(str(who))
 
 (bo_freq, bo_max)=bo_frequency(dlist, bo)
 
@@ -135,14 +135,14 @@ if action == 'shrink':
 	if hm_choice == 'micrometers':
 		(status, not_applicable)=shrink_warning(who, dist, amount)
 		if status:
-			print 'Consider these warnings before you proceed to shrink action!\n'
+			print('Consider these warnings before you proceed to shrink action!\n')
 			for dend in not_applicable:
-				print 'Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')'
+				print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')')
 			#sys.exit(0)
 
 now = datetime .datetime.now()
 
-print '\nRemodeling the neuron begins!\n'
+print('\nRemodeling the neuron begins!\n')
 
 edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
@@ -159,12 +159,12 @@ fname=directory+'downloads/files/'+file_name.replace('.swc','') + '_new.swc'
 (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname)
 second_graph(directory, file_name, dlist, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
 
-print
-print 'File: ' + str(file_name) + ' was succesfully edited!'
+print()
+print('File: ' + str(file_name) + ' was succesfully edited!')
 
-print
-print '--------------------------------'
-print
+print()
+print('--------------------------------')
+print()
 
 
 #graph(swc_lines, newfile, action, dend_add3d, dlist, directory, file_name) #plots the original and modified tree (overlaying one another)

@@ -59,7 +59,7 @@ def first_graph(abs_path, file_name, dlist, dend_add3d, points, parental_points,
 	f = open(name, 'w')
 
 	for i in my_plot:
-		print >>f, str(i)[1:-1]
+		print(str(i)[1:-1], file=f)
 
 	f.close()
 
@@ -108,15 +108,15 @@ def second_graph(abs_path,file_name, dlist, dend_add3d, points, parental_points,
 
 			my_plot.append([x, y, z, xp, yp, zp, d, dend, '0x0000FF'])
 
-	print '>>' + str(len(my_plot))
+	print('>>' + str(len(my_plot)))
 
-	print file_name
+	print(file_name)
 	fname=file_name.replace('.swc','') + '_after.txt'
 	name=abs_path+fname
 
 	f = open(name, 'w')
 
 	for i in my_plot:
-		print >>f, str(i)[1:-1]
+		print(str(i)[1:-1], file=f)
 
 	f.close()
