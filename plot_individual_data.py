@@ -215,116 +215,100 @@ def _read_bulk(directory: str, files, reader):
     return [reader(join(directory, f)) for f in files]
 
 
-def plot_the_data(directory: str):
-    _set_figsize()
-
-    counts = _read_bulk(directory, COUNT_FILES, read_single)
-    terminals = _read_bulk(directory, TERMINAL_FILES, read_single)
+def _plot_counts(directory: str, with_error: bool) -> None:
+    reader = read_values if with_error else read_single
+    counts = _read_bulk(directory, COUNT_FILES, reader)
+    terminals = _read_bulk(directory, TERMINAL_FILES, reader)
+    if with_error:
+        values = [[c[0] for c in counts], [c[0] for c in terminals]]
+        errs = [[c[1] for c in counts], [c[1] for c in terminals]]
+    else:
+        values = [counts, terminals]
+        errs = None
     grouped(
         REGIONS,
-        [counts, terminals],
+        values,
         ["All", "Terminal"],
         os.path.join(directory, "total_number_of_dendrites.svg"),
         ylabel="Total Number of Dendrites",
         xlabel="Dendritic Region",
+        errs=errs,
     )
 
+
+def _plot_totals(directory: str, with_error: bool) -> None:
+    reader = read_values if with_error else read_single
     for out_name, ylabel, files in TOTAL_SPECS:
-        values = _read_bulk(directory, files, read_single)
+        vals = _read_bulk(directory, files, reader)
+        values = [v[0] for v in vals] if with_error else vals
+        errs = [v[1] for v in vals] if with_error else None
         bar(
             REGIONS,
             values,
             os.path.join(directory, out_name),
             ylabel=ylabel,
             xlabel="Dendritic Region",
+            err=errs,
             width=0.35,
         )
 
+
+def _plot_series(directory: str, with_error: bool) -> None:
     for fname, out_name, ylabel in SERIES_SPECS:
         path = os.path.join(directory, fname)
         if not os.path.isfile(path):
             continue
-        labels, values = read_table(path)
+        result = read_table(path, with_error=with_error)
+        labels = result[0]
+        means = result[1]
+        errs = result[2] if with_error and len(result) > 2 else None
         bar(
             labels,
-            values,
+            means,
             os.path.join(directory, out_name),
             ylabel=ylabel,
             xlabel="Branch Order",
+            err=errs,
         )
 
+
+def _plot_sholl(directory: str, with_error: bool) -> None:
     for fname, out_name, ylabel, alt in SHOLL_SPECS:
         path = os.path.join(directory, fname)
         if not os.path.isfile(path):
             continue
-        labels, values = read_table(path)
+        result = read_table(path, with_error=with_error)
+        labels = result[0]
+        means = result[1]
+        errs = result[2] if with_error and len(result) > 2 else None
         if alt:
             labels = _alt([str(l) for l in labels])
         bar(
             labels,
-            values,
+            means,
             os.path.join(directory, out_name),
             ylabel=ylabel,
             xlabel="Radial Distance from the Soma (um)",
+            err=errs,
         )
+
+
+def plot_the_data(directory: str):
+    _set_figsize()
+
+    _plot_counts(directory, False)
+    _plot_totals(directory, False)
+    _plot_series(directory, False)
+    _plot_sholl(directory, False)
 
 
 def plot_average_data(directory: str):
     _set_figsize()
 
-    counts = _read_bulk(directory, COUNT_FILES, read_values)
-    terminals = _read_bulk(directory, TERMINAL_FILES, read_values)
-    grouped(
-        REGIONS,
-        [[c[0] for c in counts], [c[0] for c in terminals]],
-        ["All", "Terminal"],
-        os.path.join(directory, "total_number_of_dendrites.svg"),
-        ylabel="Total Number of Dendrites",
-        xlabel="Dendritic Region",
-        errs=[[c[1] for c in counts], [c[1] for c in terminals]],
-    )
-
-    for out_name, ylabel, files in TOTAL_SPECS:
-        vals = _read_bulk(directory, files, read_values)
-        bar(
-            REGIONS,
-            [v[0] for v in vals],
-            os.path.join(directory, out_name),
-            ylabel=ylabel,
-            xlabel="Dendritic Region",
-            err=[v[1] for v in vals],
-            width=0.35,
-        )
-
-    for fname, out_name, ylabel in SERIES_SPECS:
-        path = os.path.join(directory, fname)
-        if not os.path.isfile(path):
-            continue
-        labels, means, errs = read_table(path, with_error=True)
-        bar(
-            labels,
-            means,
-            os.path.join(directory, out_name),
-            ylabel=ylabel,
-            xlabel="Branch Order",
-            err=errs,
-        )
-
-    for fname, out_name, ylabel, alt in SHOLL_SPECS:
-        path = os.path.join(directory, fname)
-        if not os.path.isfile(path):
-            continue
-        labels, means, errs = read_table(path, with_error=True)
-        if alt:
-            labels = _alt([str(l) for l in labels])
-        bar(
-            labels,
-            means,
-            os.path.join(directory, out_name),
-            ylabel=ylabel,
-            xlabel="Radial Distance from the Soma (um)",
-            err=errs,
-        )
+    _plot_counts(directory, True)
+    _plot_totals(directory, True)
+    _plot_series(directory, True)
+    _plot_sholl(directory, True)
 
 
 def plot_compare_data(directory: str):
