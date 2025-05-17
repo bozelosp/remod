@@ -48,25 +48,25 @@ def main():
         if len(lines_before) > len(lines_after):
             max_len = len(lines_before)
             min_len = len(lines_after)
-            k = 0
+            use_before_as_base = True
         else:
             max_len = len(lines_after)
             min_len = len(lines_before)
-            k = 1
+            use_before_as_base = False
 
         fw = os.path.join(directory, f)
 
         print(fw)
 
         with open(fw, "w+") as f_write:
-            if k == 0:
+            if use_before_as_base:
                 for i in range(max_len):
                     if i < min_len:
                         print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)
                     else:
                         print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)', r' 0', lines_before[i]), file=f_write)
 
-            if k == 1:
+            if not use_before_as_base:
                 for i in range(max_len):
                     if i < min_len:
                         print(lines_before[i].rstrip('\n'), lines_after[i].rstrip('\n'), file=f_write)

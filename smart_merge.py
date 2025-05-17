@@ -31,7 +31,7 @@ def main():
 
     before_dir = args.before_dir
     after_dir = args.after_dir
-    fwi = args.output_dir
+    output_dir = args.output_dir
 
     before_files = read_files(before_dir)
     before_files = [x for x in before_files if re.search('average', x)]
@@ -55,20 +55,20 @@ def main():
         if len(lines_before) > len(lines_after):
             max_len = len(lines_before)
             min_len = len(lines_after)
-            k = 0
+            use_before_as_base = True
         else:
             max_len = len(lines_after)
             min_len = len(lines_before)
-            k = 1
+            use_before_as_base = False
 
         f = f.replace('average', 'comparison/compare')
-        fw = fwi + f
+        fw = output_dir + f
 
         with open(fw, 'w+') as f_write:
 
             print(fw)
 
-            if k == 0:
+            if use_before_as_base:
 
                 for i in range(max_len):
                     if i < min_len:
@@ -76,7 +76,7 @@ def main():
                     else:
                         print(lines_before[i].rstrip('\n'), re.sub(r'\s(\S+)', r' 0', lines_before[i]), file=f_write)
 
-            if k == 1:
+            if not use_before_as_base:
 
                 for i in range(max_len):
                     if i < min_len:
@@ -85,10 +85,10 @@ def main():
                         print(re.sub(r'\s(\S+)', r' 0', lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
 
 
-    if not os.path.exists(fwi + 'comparison/'):
-        os.makedirs(fwi + 'comparison/')
+    if not os.path.exists(output_dir + 'comparison/'):
+        os.makedirs(output_dir + 'comparison/')
 
-    plot_compare_data(fwi + 'comparison/')
+    plot_compare_data(output_dir + 'comparison/')
 
 
 if __name__ == "__main__":
