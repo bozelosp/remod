@@ -16,3 +16,9 @@ def write_json(path, data):
     """Write *data* as JSON to *path* using UTF-8 encoding."""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+
+
+def write_value(path, value):
+    """Write ``value`` to ``path`` using ``w+`` mode."""
+    with open(path, "w+") as f:
+        f.write(f"{value}\n")
