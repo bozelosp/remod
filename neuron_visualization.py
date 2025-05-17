@@ -8,7 +8,7 @@ from random import uniform, randrange
 from math import cos, sin, pi, sqrt, radians, degrees
 
 
-def first_graph(abs_path, file_name, dlist, dend_add3d, points, parental_points, soma_index):
+def first_graph(abs_path, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index):
 
 	my_plot=[]
 
@@ -31,7 +31,7 @@ def first_graph(abs_path, file_name, dlist, dend_add3d, points, parental_points,
 
 				my_plot.append([x, y, z, xp, yp, zp, d, 1, '0x0000FF'])
 
-	for dend in dlist:
+	for dend in dendrite_list:
 
 		for point in dend_add3d[dend]: 
 
@@ -63,7 +63,7 @@ def first_graph(abs_path, file_name, dlist, dend_add3d, points, parental_points,
 
 	f.close()
 
-def second_graph(abs_path,file_name, dlist, dend_add3d, points, parental_points, soma_index):
+def second_graph(abs_path,file_name, dendrite_list, dend_add3d, points, parental_points, soma_index):
 
 	my_plot=[]
 
@@ -86,7 +86,7 @@ def second_graph(abs_path,file_name, dlist, dend_add3d, points, parental_points,
 
 				my_plot.append([x, y, z, xp, yp, zp, d, 0, '0x0000FF'])
 
-	for dend in dlist:
+	for dend in dendrite_list:
 
 		for point in dend_add3d[dend]: 
 

@@ -1,9 +1,9 @@
 from actions_swc import *
 from print_file import *
 
-def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dlist, soma_index, points, parental_points, descendants, all_terminal):
+def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal):
 	
-	mylist=[]
+	segment_list=[]
 
 	print(action)
 
@@ -19,13 +19,13 @@ def execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, 
 			newfile=extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, points, parental_points, descendants, all_terminal)
 
 		if action == 'branch':
-			(newfile,dlist,mylist)=branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dlist)
+			(newfile,dendrite_list,segment_list)=branch(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_index, dendrite_list)
 
 		if action == 'scale':
 			newfile=scale(who, soma_index, dend_add3d, amount)
 
 	if diam_change != 'none':
 
-		newfile=diameter_change(who, diam_change, dend_add3d, dlist, soma_index)
+		newfile=diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index)
 
-	return (newfile, dlist, mylist)
+	return (newfile, dendrite_list, segment_list)
