@@ -9,10 +9,10 @@ import numpy as np
 from utils import distance
 
 
-def _soma_coords(soma_index):
+def _soma_coords(soma_segments):
     """Return the xyz coordinates of the soma root as a numpy array."""
     # Helper for distance calculations relative to the soma
-    soma = next(i for i in soma_index if i[6] == -1)
+    soma = next(i for i in soma_segments if i[6] == -1)
     return np.array([soma[2], soma[3], soma[4]])
 
 
@@ -49,13 +49,13 @@ def path_length(dendrite_list, path, dist):
 
         return {d: sum(dist[i] for i in path[d]) for d in dendrite_list}
 
-def median_diameter(dendrite_list, dend_segments):
+def median_diameter(dendrite_list, dend_coords):
         """Return the median diameter for each dendrite in *dendrite_list*."""
         # Diameter at the midpoint acts as a robust representative
         med_diam = {}
         for dend in dendrite_list:
-                mid_idx = len(dend_segments[dend]) // 2
-                med_diam[dend] = float(dend_segments[dend][mid_idx][5]) * 2
+                mid_idx = len(dend_coords[dend]) // 2
+                med_diam[dend] = float(dend_coords[dend][mid_idx][5]) * 2
         return med_diam
 
 def print_branch_order(dendrite_list, branch_order):
@@ -85,11 +85,11 @@ def branch_order_plength(dendrite_list, branch_order, branch_order_max, path_len
         # Path lengths are summed for each order before averaging
         return _mean_by_branch_order(dendrite_list, branch_order, path_lengths)
 
-def sholl_intersections(points, parent_indices, soma_index, radius, parameter):
+def sholl_intersections(points, parent_indices, soma_segments, radius, parameter):
         """Compute Sholl intersection counts for the given radius."""
         # Measures crossings of concentric shells centred at the soma
 
-        soma_coords = _soma_coords(soma_index)
+        soma_coords = _soma_coords(soma_segments)
 
         values = np.arange(0, 10000, radius)
         ids = [i for i in points if points[i][1] in parameter]
@@ -106,11 +106,11 @@ def sholl_intersections(points, parent_indices, soma_index, radius, parameter):
 
         return sholl_list
 
-def sholl_bp(branch_points, points, soma_index, radius):
+def sholl_bp(branch_points, points, soma_segments, radius):
         """Compute number of branch points crossing each Sholl shell."""
         # Each branch point is assigned to a radial distance bin
 
-        soma_coords = _soma_coords(soma_index)
+        soma_coords = _soma_coords(soma_segments)
 
         values = np.arange(0, 10000, radius)
         pts = _coords(points, branch_points)
@@ -135,11 +135,11 @@ def remove_trailing_zeros(sholl_list, values, radius):
         return {values[i] + radius: sholl_list[values[i] + radius] for i in range(idx)}
 
 
-def sholl_length(points, parent_indices, soma_index, radius, parameter):
+def sholl_length(points, parent_indices, soma_segments, radius, parameter):
         """Compute total dendrite length inside successive Sholl shells."""
         # Sums segment lengths that fall within each radial bin
 
-        soma_coords = _soma_coords(soma_index)
+        soma_coords = _soma_coords(soma_segments)
 
         values = np.arange(0, 10000, radius)
         ids = [i for i in points if points[i][1] in parameter]
@@ -156,7 +156,7 @@ def sholl_length(points, parent_indices, soma_index, radius, parameter):
 
         return sholl_list
 
-def dist_angle_analysis(dendrite_list, dend_segments, soma_root, principal_axis):
+def dist_angle_analysis(dendrite_list, dend_coords, soma_root, principal_axis):
         """Return list of [distance, angle] pairs for dendrite points."""
         # Calculates angle relative to the main apical axis
 
@@ -166,7 +166,7 @@ def dist_angle_analysis(dendrite_list, dend_segments, soma_root, principal_axis)
 
         dist_angle = []
         for dend in dendrite_list:
-                coords = np.array(dend_segments[dend])[:, 2:5]
+                coords = np.array(dend_coords[dend])[:, 2:5]
                 bc = coords - soma_root
                 dist = LA.norm(bc, axis=1)
                 bc_unit = bc / dist[:, None]
@@ -197,17 +197,17 @@ def dist_angle_frequency(dist_angle, radius):
 
         return dist_freq, angle_f
 
-def axis(apical, dend_segments, soma_index):
+def axis(apical, dend_coords, soma_segments):
         # weighted linear regression
         """Return principal axis and soma location using weighted regression."""
         # Weighted by diameter so thicker dendrites influence the fit
 
-        x_soma, y_soma, z_soma = soma_index[0][2], soma_index[0][3], soma_index[0][4]
+        x_soma, y_soma, z_soma = soma_segments[0][2], soma_segments[0][3], soma_segments[0][4]
 
         coords = []
         diam = []
         for dend in apical:
-                arr = np.array(dend_segments[dend])
+                arr = np.array(dend_coords[dend])
                 coords.append(arr[:, 2:5] - [x_soma, y_soma, z_soma])
                 diam.append(arr[:, 5])
 
