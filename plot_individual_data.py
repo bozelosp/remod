@@ -4,21 +4,22 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 
+from utils import read_value, read_values
+
 
 # Helper functions for repeated patterns
 
 def read_single_value(path):
-    with open(path) as f:
-        return float(f.readline().strip())
+    return read_value(path)
 
 
 def read_series(path):
-    labels=[]
-    values=[]
+    labels = []
+    values = []
     with open(path) as f:
         for line in f:
-            parts=line.split()
-            if len(parts)>=2:
+            parts = line.split()
+            if len(parts) >= 2:
                 labels.append(int(parts[0]))
                 values.append(float(parts[1]))
     return labels, values
@@ -47,14 +48,16 @@ def plot_the_data(d):
     from pylab import rcParams
     rcParams['figure.figsize'] = 30, 15
 
+    join = os.path.join
+
     #plots the total number of all the dendrites vs the terminal ones for all the tree, as well as from the basal and apical region
 
-    nbd = read_single_value(d+"number_of_basal_dendrites.txt")
-    nbtd = read_single_value(d+"number_of_basal_terminal_dendrites.txt")
-    nad = read_single_value(d+"number_of_apical_dendrites.txt")
-    natd = read_single_value(d+"number_of_apical_terminal_dendrites.txt")
-    nald = read_single_value(d+"number_of_all_dendrites.txt")
-    naltd = read_single_value(d+"number_of_all_terminal_dendrites.txt")
+    nbd = read_single_value(join(d, "number_of_basal_dendrites.txt"))
+    nbtd = read_single_value(join(d, "number_of_basal_terminal_dendrites.txt"))
+    nad = read_single_value(join(d, "number_of_apical_dendrites.txt"))
+    natd = read_single_value(join(d, "number_of_apical_terminal_dendrites.txt"))
+    nald = read_single_value(join(d, "number_of_all_dendrites.txt"))
+    naltd = read_single_value(join(d, "number_of_all_terminal_dendrites.txt"))
 
     labels=['All', 'Basal', 'Apical']
 
@@ -79,21 +82,21 @@ def plot_the_data(d):
 
     ax.legend( (rects1[0], rects2[0]), ('All', 'Terminal') )
  
-    plt.savefig(d+'total_number_of_dendrites.svg', format='svg', dpi=1000)
+    plt.savefig(join(d, 'total_number_of_dendrites.svg'), format='svg', dpi=1000)
     plt.close()
 
     #plots the total number of branchpoints from all the tree, as well as from the basal and apical region
 
     bars = [
-        read_single_value(d+"number_of_all_branchpoints.txt"),
-        read_single_value(d+"number_of_basal_branchpoints.txt"),
-        read_single_value(d+"number_of_apical_branchpoints.txt")
+        read_single_value(join(d, "number_of_all_branchpoints.txt")),
+        read_single_value(join(d, "number_of_basal_branchpoints.txt")),
+        read_single_value(join(d, "number_of_apical_branchpoints.txt")),
     ]
 
     plot_bar_series(
         bars,
         ['All', 'Basal', 'Apical'],
-        d+'total_number_of_branchpoints.svg',
+        join(d, 'total_number_of_branchpoints.svg'),
         ylabel='Total Number of Branchpoints',
         xlabel='Dendritic Region',
         width=0.35
@@ -110,7 +113,7 @@ def plot_the_data(d):
     plot_bar_series(
         bars,
         ['All', 'Basal', 'Apical'],
-        d+'total_dendritic_length.svg',
+        join(d, 'total_dendritic_length.svg'),
         ylabel='Total Dendritic Length',
         xlabel='Dendritic Region',
         width=0.35
@@ -118,16 +121,16 @@ def plot_the_data(d):
 
     #plots the total dendritic area from all the tree, as well as the basal and the apical regions
 
-    alta = read_single_value(d+"all_total_area.txt")
-    bta = read_single_value(d+"basal_total_area.txt")
-    ata = read_single_value(d+"apical_total_area.txt")
+    alta = read_single_value(join(d, "all_total_area.txt"))
+    bta = read_single_value(join(d, "basal_total_area.txt"))
+    ata = read_single_value(join(d, "apical_total_area.txt"))
 
     bars = [alta, bta, ata]
 
     plot_bar_series(
         bars,
         ['All', 'Basal', 'Apical'],
-        d+'total_dendritic_area.svg',
+        join(d, 'total_dendritic_area.svg'),
         ylabel='Total Dendritic Area',
         xlabel='Dendritic Region',
         width=0.35
@@ -135,51 +138,51 @@ def plot_the_data(d):
 
     #plots the number of dendrites per branch order for all the dendritic tree
 
-    labels, means = read_series(d+"number_of_all_dendrites_per_branch_order.txt")
+    labels, means = read_series(join(d, "number_of_all_dendrites_per_branch_order.txt"))
 
     plot_bar_series(
         means,
         labels,
-        d+'number_of_all_dendrites_per_branch_order.svg',
+        join(d, 'number_of_all_dendrites_per_branch_order.svg'),
         ylabel='Number of All Dendrites',
         xlabel='Branch Order'
     )
 
     #plots the number of dendrites per branch order for the basal region of the tree
-    if os.path.isfile(d+"number_of_basal_dendrites_per_branch_order.txt"):
+    if os.path.isfile(join(d, "number_of_basal_dendrites_per_branch_order.txt")):
 
-        labels, means = read_series(d+"number_of_basal_dendrites_per_branch_order.txt")
+        labels, means = read_series(join(d, "number_of_basal_dendrites_per_branch_order.txt"))
 
         plot_bar_series(
             means,
             labels,
-            d+'number_of_basal_dendrites_per_branch_order.svg',
+            join(d, 'number_of_basal_dendrites_per_branch_order.svg'),
             ylabel='Number of Basal Dendrites',
             xlabel='Branch Order'
         )
 
     #plots the number of dendrites per branch order for the apical region of the tree
 
-    if os.path.isfile(d+"number_of_apical_dendrites_per_branch_order.txt"):
+    if os.path.isfile(join(d, "number_of_apical_dendrites_per_branch_order.txt")):
 
-        labels, means = read_series(d+"number_of_apical_dendrites_per_branch_order.txt")
+        labels, means = read_series(join(d, "number_of_apical_dendrites_per_branch_order.txt"))
 
         plot_bar_series(
             means,
             labels,
-            d+'number_of_apical_dendrites_per_branch_order.svg',
+            join(d, 'number_of_apical_dendrites_per_branch_order.svg'),
             ylabel='Number of Apical Dendrites',
             xlabel='Branch Order'
         )
 
     #plots the average dendritic length per branch order for all the dendritic tree
 
-    labels, means = read_series(d+"all_dendritic_length_per_branch_order.txt")
+    labels, means = read_series(join(d, "all_dendritic_length_per_branch_order.txt"))
 
     plot_bar_series(
         means,
         labels,
-        d+'all_dendritic_length_per_branch_order.svg',
+        join(d, 'all_dendritic_length_per_branch_order.svg'),
         ylabel='Average Dendritic Length (um)',
         xlabel='Branch Order'
     )
@@ -187,68 +190,68 @@ def plot_the_data(d):
     #plots the average dendritic length per branch order for the basal region of the tree
 
 
-    if os.path.isfile(d+"basal_dendritic_length_per_branch_order.txt"):
+    if os.path.isfile(join(d, "basal_dendritic_length_per_branch_order.txt")):
 
-        labels, means = read_series(d+"basal_dendritic_length_per_branch_order.txt")
+        labels, means = read_series(join(d, "basal_dendritic_length_per_branch_order.txt"))
 
         plot_bar_series(
             means,
             labels,
-            d+'basal_dendritic_length_per_branch_order.svg',
+            join(d, 'basal_dendritic_length_per_branch_order.svg'),
             ylabel='Average Basal Dendritic Length (um)',
             xlabel='Branch Order'
         )
 
     #plots the average dendritic length per branch order for the apical region of the tree
 
-    if os.path.isfile(d+"apical_dendritic_length_per_branch_order.txt"):
+    if os.path.isfile(join(d, "apical_dendritic_length_per_branch_order.txt")):
 
-        labels, means = read_series(d+"apical_dendritic_length_per_branch_order.txt")
+        labels, means = read_series(join(d, "apical_dendritic_length_per_branch_order.txt"))
 
         plot_bar_series(
             means,
             labels,
-            d+'apical_dendritic_length_per_branch_order.svg',
+            join(d, 'apical_dendritic_length_per_branch_order.svg'),
             ylabel='Average Apical Dendritic Length (um)',
             xlabel='Branch Order'
         )
 
     #plots the average path length per branch order for all the dendritic tree
 
-    labels, means = read_series(d+"all_path_length_per_branch_order.txt")
+    labels, means = read_series(join(d, "all_path_length_per_branch_order.txt"))
 
     plot_bar_series(
         means,
         labels,
-        d+'all_path_length_per_branch_order.svg',
+        join(d, 'all_path_length_per_branch_order.svg'),
         ylabel='Average Path Length (um)',
         xlabel='Branch Order'
     )
 
     #plots the average path length per branch order for the basal region of the tree
 
-    if os.path.isfile(d+"basal_path_length_per_branch_order.txt"):
+    if os.path.isfile(join(d, "basal_path_length_per_branch_order.txt")):
 
-        labels, means = read_series(d+"basal_path_length_per_branch_order.txt")
+        labels, means = read_series(join(d, "basal_path_length_per_branch_order.txt"))
 
         plot_bar_series(
             means,
             labels,
-            d+'basal_path_length_per_branch_order.svg',
+            join(d, 'basal_path_length_per_branch_order.svg'),
             ylabel='Average Basal Path Length (um)',
             xlabel='Branch Order'
         )
 
     #plots the average path length per branch order for the apical region of the tree
 
-    if os.path.isfile(d+"apical_path_length_per_branch_order.txt"):
+    if os.path.isfile(join(d, "apical_path_length_per_branch_order.txt")):
 
-        labels, means = read_series(d+"apical_path_length_per_branch_order.txt")
+        labels, means = read_series(join(d, "apical_path_length_per_branch_order.txt"))
 
         plot_bar_series(
             means,
             labels,
-            d+'apical_path_length_per_branch_order.svg',
+            join(d, 'apical_path_length_per_branch_order.svg'),
             ylabel='Average Apical Path Length (um)',
             xlabel='Branch Order'
         )
