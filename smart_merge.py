@@ -1,5 +1,6 @@
 from plot_individual_data import *
 import os
+from pathlib import Path
 import re
 import sys
 import argparse
@@ -29,9 +30,9 @@ def main():
     parser.add_argument("--output-dir", required=True, dest="output_dir", help="Output directory for comparison files")
     args = parser.parse_args()
 
-    before_dir = args.before_dir
-    after_dir = args.after_dir
-    output_dir = args.output_dir
+    before_dir = Path(args.before_dir)
+    after_dir = Path(args.after_dir)
+    output_dir = Path(args.output_dir)
 
     before_files = read_files(before_dir)
     before_files = [x for x in before_files if re.search('average', x)]
@@ -46,10 +47,10 @@ def main():
 
     for f in to_merge_files:
 
-        f_before = os.path.join(before_dir, f)
+        f_before = before_dir / f
         lines_before = append_lines(f_before)
 
-        f_after = os.path.join(after_dir, f)
+        f_after = after_dir / f
         lines_after = append_lines(f_after)
 
         if len(lines_before) > len(lines_after):
@@ -62,7 +63,7 @@ def main():
             use_before_as_base = False
 
         f = f.replace('average', 'comparison/compare')
-        fw = output_dir + f
+        fw = output_dir / f
 
         with open(fw, 'w+') as f_write:
 
@@ -85,10 +86,11 @@ def main():
                         print(re.sub(r'\s(\S+)', r' 0', lines_after[i]), lines_after[i].rstrip('\n'), file=f_write)
 
 
-    if not os.path.exists(output_dir + 'comparison/'):
-        os.makedirs(output_dir + 'comparison/')
+    comparison_dir = output_dir / 'comparison'
+    if not comparison_dir.exists():
+        comparison_dir.mkdir(parents=True)
 
-    plot_compare_data(output_dir + 'comparison/')
+    plot_compare_data(comparison_dir)
 
 
 if __name__ == "__main__":

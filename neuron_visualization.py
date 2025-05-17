@@ -2,6 +2,7 @@ import re
 from math import sqrt
 from random import randint
 import sys
+from pathlib import Path
 
 import numpy as np
 from random import uniform, randrange
@@ -53,8 +54,8 @@ def first_graph(abs_path, file_name, dendrite_list, dend_add3d, points, parental
 
                         my_plot.append([x, y, z, xp, yp, zp, d, dend, '0x0000FF'])
 
-        fname=file_name.replace('.swc','') + '_before.txt'
-        name=abs_path+fname
+        fname = file_name.replace('.swc','') + '_before.txt'
+        name = Path(abs_path) / fname
 
         with open(name, 'w') as f:
                 for i in my_plot:
@@ -108,8 +109,8 @@ def second_graph(abs_path,file_name, dendrite_list, dend_add3d, points, parental
         print('>>' + str(len(my_plot)))
 
         print(file_name)
-        fname=file_name.replace('.swc','') + '_after.txt'
-        name=abs_path+fname
+        fname = file_name.replace('.swc','') + '_after.txt'
+        name = Path(abs_path) / fname
 
         with open(name, 'w') as f:
                 for i in my_plot:

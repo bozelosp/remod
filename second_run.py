@@ -9,6 +9,7 @@ from utils import round_to
 import sys
 import datetime
 import os
+from pathlib import Path
 import argparse
 
 #python second_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc who_all_terminal 0 none none percent 50 percent 50
@@ -36,9 +37,9 @@ def main():
     parser.add_argument("--diam-change", default="none", help="Extent of diameter change")
     args = parser.parse_args()
 
-    directory = args.directory
+    directory = Path(args.directory)
     file_name = args.file_name
-    fname = directory + file_name
+    fname = directory / file_name
 
     who = args.who
     if who in ['who_random_all', 'who_random_apical', 'who_random_basal']:
@@ -54,14 +55,14 @@ def main():
     var_choice = args.var_choice
     diam_change = args.diam_change
 
-    exist_downloads=str(directory)+'/downloads'
-    exist_downloads_files=str(directory)+'/downloads/files'
+    exist_downloads = directory / 'downloads'
+    exist_downloads_files = directory / 'downloads' / 'files'
     
-    if not os.path.exists(exist_downloads):
-        os.makedirs(exist_downloads)
+    if not exist_downloads.exists():
+        exist_downloads.mkdir(parents=True)
     
-    if not os.path.exists(exist_downloads_files):
-        os.makedirs(exist_downloads_files)
+    if not exist_downloads_files.exists():
+        exist_downloads_files.mkdir(parents=True)
     
     print()
     print('Open file: ' + str(file_name))
@@ -169,7 +170,7 @@ def main():
     check_indices(newfile) #check if indices are continuous from 0 and u
     print_newfile(directory, file_name, newfile, edit)
     
-    fname=directory+'downloads/files/'+file_name.replace('.swc','') + '_new.swc'
+    fname = directory / 'downloads' / 'files' / (file_name.replace('.swc','') + '_new.swc')
     (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname)
     second_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
     
