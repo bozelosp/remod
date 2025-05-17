@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from utils import ensure_dir
+from core_utils import ensure_dir
 
 
 BAR_A = "#406cbe"

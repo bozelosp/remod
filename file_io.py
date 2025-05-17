@@ -5,7 +5,7 @@ import json
 import re
 from typing import Iterable, Sequence
 
-from utils import ensure_dir
+from core_utils import ensure_dir
 
 
 def write_json(path: Path | str, data) -> None:
