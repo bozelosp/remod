@@ -11,15 +11,8 @@ mpl.use('TKAgg')
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import animation
 import matplotlib.pyplot as plt
+from utils import distance, round_to
 
-def round_to(x, rounder): # return the nearest number multiplied by 'rounder'
-
-	return round(x/rounder)*rounder
-
-def distance(x1,x2,y1,y2,z1,z2): # return the Euclidean distance between two 3D points
-
-	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-	return dist
 
 def local_plot(my_file):
 

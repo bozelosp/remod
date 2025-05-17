@@ -1,13 +1,13 @@
 import re
-from math import sqrt
 from random import randint
 import copy
 import sys
-import os 
+import os
 
 import numpy as np
 from random import uniform, randrange
 from math import cos, sin, pi, sqrt, radians, degrees
+from utils import distance, round_to
 
 def length_distribution(): #parses the length distribution
 
@@ -40,14 +40,6 @@ def length_selection(l_length): #returns a randomly chosen length value based on
 			return length[i]
 			break
 
-def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
-
-	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-	return dist
-
-def round_to(x, rounder): # return the nearest number multiplied by 'rounder'
-
-	return round(x/rounder)*rounder
 
 def createP(length, angle, p1, p2, flag): # return new pt3dadd lines formatted in the standard NEURON style
 

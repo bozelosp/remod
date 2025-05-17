@@ -6,6 +6,7 @@ import numpy as np
 #import matplotlib.pyplot as plt
 
 from math import cos, sin, pi, sqrt, radians, degrees
+from utils import distance
 
 def swc_line(fname):
 
@@ -262,11 +263,6 @@ def descend(dendrite_list, all_terminal, path):
 								descendants[dend].append(k)
 			descendants[dend].remove(dend)
 	return descendants
-
-def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
-
-	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-	return dist
 
 def soma_center(soma_index):
 
