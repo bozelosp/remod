@@ -4,7 +4,7 @@
 
 ## Features
 
-- Parse SWC files and compute forkpoint counts, branch order distributions,
+- Parse SWC files and compute branchpoint counts, branch order distributions,
   path and total lengths, surface areas and Sholl measurements.
 - Automatically store aggregated statistics in `downloads/statistics/`.
 - Remodel morphologies via `remod_cli.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and radii can be adjusted.
@@ -33,7 +33,7 @@ Using a virtual environment is recommended but not mandatory.
    python remod_cli.py analyze /path/to/swc 0-2.swc
    ```
 
-   Results such as total dendritic length, forkpoint counts, branch order
+   Results such as total dendritic length, branchpoint counts, branch order
    frequency and Sholl intersections are saved in `downloads/statistics/`.
 
    To generate the statistics in a single JSON file without producing the
