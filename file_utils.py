@@ -159,3 +159,13 @@ def read_compare_values(path: Path) -> tuple[float, float, float, float]:
 def read_bulk_files(directory: Path, files: Sequence[str], reader):
     """Return ``reader`` applied to each file in ``directory``."""
     return [reader(directory / name) for name in files]
+
+
+def write_pickle(path: Path | str, data) -> None:
+    """Serialise ``data`` using :mod:`pickle` to ``path``."""
+    import pickle
+
+    ensure_dir(path)
+    with Path(path).open("wb") as f:
+        pickle.dump(data, f)
+

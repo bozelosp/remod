@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, Iterable, List, Tuple
 import numpy as np
 from math import cos, sin, radians
 from utils import distance, round_to
+from file_utils import read_lines
 
 def parse_length_distribution(
     path: Path = Path("length_distribution.txt"),
@@ -21,12 +22,11 @@ def parse_length_distribution(
     if not path.exists():
         raise FileNotFoundError(path)
 
-    with path.open() as distribution_file:
-        for line in distribution_file:
-            match = re.search(r"(\S+)\s-\s(\S+)", line.strip())
-            if match:
-                lengths.append(float(match.group(1)))
-                frequencies.append(float(match.group(2)))
+    for line in read_lines(path):
+        match = re.search(r"(\S+)\s-\s(\S+)", line.strip())
+        if match:
+            lengths.append(float(match.group(1)))
+            frequencies.append(float(match.group(2)))
 
     cumulative_indices: List[int] = [0]
     current_limit = 0
