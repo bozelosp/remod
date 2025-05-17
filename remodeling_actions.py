@@ -1029,11 +1029,10 @@ def execute_action(
 
         if action == "branch":
             new_lines, dendrite_roots, sample_list = branch_func()
+        elif action in actions:
+            new_lines = actions[action]()
         else:
-            try:
-                new_lines = actions[action]()
-            except KeyError as exc:
-                raise ValueError(f"Unknown action: {action}") from exc
+            raise ValueError(f"Unknown action: {action}")
 
     if change_percent != "none":
         new_lines = radius_change(
