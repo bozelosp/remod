@@ -39,6 +39,22 @@ from file_io import write_json, write_value, write_swc, write_dict, write_pickle
 from morphology_statistics import *
 from remodeling_actions import execute_action
 
+
+def _log_write_average(data, stats_dir, title, filename):
+    """Log the average of ``data`` and write it to ``filename``."""
+    avg = average_list(data)
+    log(f"{title}: {avg}")
+    write_value(Path(stats_dir) / filename, f"{avg[0]} {avg[1]}")
+    return avg
+
+
+def _log_write_dict(data, stats_dir, filename, title):
+    """Average ``data`` in-place, log ``title`` and write to ``filename``."""
+    print()
+    print(title)
+    average_dict(data)
+    write_dict(Path(stats_dir) / filename, data)
+
 def analyze_main(argv=None):
         """Compute morphometric statistics for one or more SWC files."""
         # Top-level routine for computing morphometric statistics
@@ -541,235 +557,133 @@ def analyze_main(argv=None):
         log("Average statistics:")
         log("")
 
-        log("")
-        avg_num_all_dendrites = average_list(average_number_of_all_dendrites)
-        log(f"Number of All Dendrites: {avg_num_all_dendrites}")
-        f_average_number_of_all_dendrites = stats_dir / 'average_number_of_all_dendrites.txt'
-        write_value(
-            f_average_number_of_all_dendrites,
-            f"{avg_num_all_dendrites[0]} {avg_num_all_dendrites[1]}"
+        avg_num_all_dendrites = _log_write_average(
+            average_number_of_all_dendrites,
+            stats_dir,
+            "Number of All Dendrites",
+            "average_number_of_all_dendrites.txt",
         )
-        
-        log("")
-        avg_all_terminal = average_list(average_number_of_all_terminal_dendrites)
-        log(f"Number of All Terminal Dendrites: {avg_all_terminal}")
-        f_average_number_of_all_terminal_dendrites = stats_dir / 'average_number_of_all_terminal_dendrites.txt'
-        write_value(
-            f_average_number_of_all_terminal_dendrites,
-            f"{avg_all_terminal[0]} {avg_all_terminal[1]}"
+
+        avg_all_terminal = _log_write_average(
+            average_number_of_all_terminal_dendrites,
+            stats_dir,
+            "Number of All Terminal Dendrites",
+            "average_number_of_all_terminal_dendrites.txt",
         )
-        
-        log("")
-        avg_basal_dendrites = average_list(average_number_of_basal_dendrites)
-        log(f"Number of Basal Dendrites: {avg_basal_dendrites}")
-        f_average_number_of_basal_dendrites = stats_dir / 'average_number_of_basal_dendrites.txt'
-        write_value(
-            f_average_number_of_basal_dendrites,
-            f"{avg_basal_dendrites[0]} {avg_basal_dendrites[1]}"
+
+        avg_basal_dendrites = _log_write_average(
+            average_number_of_basal_dendrites,
+            stats_dir,
+            "Number of Basal Dendrites",
+            "average_number_of_basal_dendrites.txt",
         )
-        
-        log("")
-        avg_basal_terminal = average_list(average_number_of_basal_terminal_dendrites)
-        log(f"Number of Basal Terminal Dendrites: {avg_basal_terminal}")
-        f_average_number_of_basal_terminal_dendrites = stats_dir / 'average_number_of_basal_terminal_dendrites.txt'
-        write_value(
-            f_average_number_of_basal_terminal_dendrites,
-            f"{avg_basal_terminal[0]} {avg_basal_terminal[1]}"
+
+        avg_basal_terminal = _log_write_average(
+            average_number_of_basal_terminal_dendrites,
+            stats_dir,
+            "Number of Basal Terminal Dendrites",
+            "average_number_of_basal_terminal_dendrites.txt",
         )
-        
-        log("")
-        avg_apical_dendrites = average_list(average_number_of_apical_dendrites)
-        log(f"Number of Apical Dendrites: {avg_apical_dendrites}")
-        f_average_number_of_apical_dendrites = stats_dir / 'average_number_of_apical_dendrites.txt'
-        write_value(
-            f_average_number_of_apical_dendrites,
-            f"{avg_apical_dendrites[0]} {avg_apical_dendrites[1]}"
+
+        avg_apical_dendrites = _log_write_average(
+            average_number_of_apical_dendrites,
+            stats_dir,
+            "Number of Apical Dendrites",
+            "average_number_of_apical_dendrites.txt",
         )
-        
+
         print()
-        avg_apical_terminal = average_list(average_number_of_apical_terminal_dendrites)
-        log(f"Number of Apical Terminal Dendrites: {avg_apical_terminal}")
-        f_average_number_of_apical_terminal_dendrites = stats_dir / 'average_number_of_apical_terminal_dendrites.txt'
-        write_value(
-            f_average_number_of_apical_terminal_dendrites,
-            f"{avg_apical_terminal[0]} {avg_apical_terminal[1]}"
+        avg_apical_terminal = _log_write_average(
+            average_number_of_apical_terminal_dendrites,
+            stats_dir,
+            "Number of Apical Terminal Dendrites",
+            "average_number_of_apical_terminal_dendrites.txt",
         )
-        
-        log("")
-        avg_total_length = average_list(average_t_length)
-        log(f"Total Length (all dendrites): {avg_total_length}")
-        f_average_total_length = stats_dir / 'average_all_total_length.txt'
-        write_value(f_average_total_length, f"{avg_total_length[0]} {avg_total_length[1]}")
-        
-        log("")
-        avg_total_basal_length = average_list(average_basal_t_length)
-        log(f"Total Length (basal dendrites): {avg_total_basal_length}")
-        f_average_total_basal_length = stats_dir / 'average_basal_total_length.txt'
-        write_value(f_average_total_basal_length, f"{avg_total_basal_length[0]} {avg_total_basal_length[1]}")
-        
-        log("")
-        avg_total_apical_length = average_list(average_apical_t_length)
-        log(f"Total Length (apical dendrites): {avg_total_apical_length}")
-        f_average_total_apical_length = stats_dir / 'average_apical_total_length.txt'
-        write_value(f_average_total_apical_length, f"{avg_total_apical_length[0]} {avg_total_apical_length[1]}")
-        
-        log("")
-        avg_total_area = average_list(average_t_area)
-        log(f"Total Area (all dendrites): {avg_total_area}")
-        f_average_total_area = stats_dir / 'average_all_total_area.txt'
-        write_value(f_average_total_area, f"{avg_total_area[0]} {avg_total_area[1]}")
-        
-        log("")
-        avg_total_basal_area = average_list(average_basal_t_area)
-        log(f"Total Area (basal dendrites): {avg_total_basal_area}")
-        f_average_total_basal_area = stats_dir / 'average_basal_total_area.txt'
-        write_value(f_average_total_basal_area, f"{avg_total_basal_area[0]} {avg_total_basal_area[1]}")
-        
-        log("")
-        avg_total_apical_area = average_list(average_apical_t_area)
-        log(f"Total Area (apical dendrites): {avg_total_apical_area}")
-        f_average_total_apical_area = stats_dir / 'average_apical_total_area.txt'
-        write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
-        
-        log("")
-        avg_all_branches = average_list(average_num_all_branches)
-        log(f"Number of all Branch Points: {avg_all_branches[0]} {avg_all_branches[1]}")
-        f_average_num_all_branches = stats_dir / 'average_number_of_all_branchpoints.txt'
-        write_value(
-            f_average_num_all_branches,
-            f"{avg_all_branches[0]} {avg_all_branches[1]}",
+
+        avg_total_length = _log_write_average(
+            average_t_length,
+            stats_dir,
+            "Total Length (all dendrites)",
+            "average_all_total_length.txt",
         )
-        
-        log("")
-        avg_basal_branches = average_list(average_num_basal_branches)
-        log(f"Number of all Basal Branch Points: {avg_basal_branches[0]} {avg_basal_branches[1]}")
-        f_average_num_basal_branches = stats_dir / 'average_number_of_basal_branchpoints.txt'
-        write_value(
-            f_average_num_basal_branches,
-            f"{avg_basal_branches[0]} {avg_basal_branches[1]}",
+
+        avg_total_basal_length = _log_write_average(
+            average_basal_t_length,
+            stats_dir,
+            "Total Length (basal dendrites)",
+            "average_basal_total_length.txt",
         )
-        
-        log("")
-        avg_apical_branches = average_list(average_num_apical_branches)
-        log(f"Number of all Apical Branch Points: {avg_apical_branches[0]} {avg_apical_branches[1]}")
-        f_average_num_apical_branches = stats_dir / 'average_number_of_apical_branchpoints.txt'
-        write_value(
-            f_average_num_apical_branches,
-            f"{avg_apical_branches[0]} {avg_apical_branches[1]}",
+
+        avg_total_apical_length = _log_write_average(
+            average_apical_t_length,
+            stats_dir,
+            "Total Length (apical dendrites)",
+            "average_apical_total_length.txt",
         )
-        
+
+        avg_total_area = _log_write_average(
+            average_t_area,
+            stats_dir,
+            "Total Area (all dendrites)",
+            "average_all_total_area.txt",
+        )
+
+        avg_total_basal_area = _log_write_average(
+            average_basal_t_area,
+            stats_dir,
+            "Total Area (basal dendrites)",
+            "average_basal_total_area.txt",
+        )
+
+        avg_total_apical_area = _log_write_average(
+            average_apical_t_area,
+            stats_dir,
+            "Total Area (apical dendrites)",
+            "average_apical_total_area.txt",
+        )
+
+        avg_all_branches = _log_write_average(
+            average_num_all_branches,
+            stats_dir,
+            "Number of all Branch Points",
+            "average_number_of_all_branchpoints.txt",
+        )
+
+        avg_basal_branches = _log_write_average(
+            average_num_basal_branches,
+            stats_dir,
+            "Number of all Basal Branch Points",
+            "average_number_of_basal_branchpoints.txt",
+        )
+
+        avg_apical_branches = _log_write_average(
+            average_num_apical_branches,
+            stats_dir,
+            "Number of all Apical Branch Points",
+            "average_number_of_apical_branchpoints.txt",
+        )
         print()
-        print("Average Number of All Dendrites per Branch Order: ") 
-        average_dict(average_all_branch_order_frequency)
-        f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_all_dendrites_per_branch_order.txt')
-        write_dict(f_average_branch_order_frequency, average_all_branch_order_frequency)
+        _log_write_dict(average_all_branch_order_frequency, stats_dir, "average_number_of_all_dendrites_per_branch_order.txt", "Average Number of All Dendrites per Branch Order: ")
         
-        print()
-        print("Average Number of Basal Dendrites per Branch Order: ")
-        average_dict(average_basal_branch_order_frequency)
-        f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_basal_dendrites_per_branch_order.txt')
-        write_dict(f_average_branch_order_frequency, average_basal_branch_order_frequency)
+        _log_write_dict(average_basal_branch_order_frequency, stats_dir, "average_number_of_basal_dendrites_per_branch_order.txt", "Average Number of Basal Dendrites per Branch Order: ")
+        _log_write_dict(average_apical_branch_order_frequency, stats_dir, "average_number_of_apical_dendrites_per_branch_order.txt", "Average Number of Apical Dendrites per Branch Order: ")
+        _log_write_dict(average_all_branch_order_dlength, stats_dir, "average_all_dendritic_length_per_branch_order.txt", "Average All Dendritic Length per Branch Order: ")
         
-        print()
-        print("Average Number of Apical Dendrites per Branch Order: ")
-        average_dict(average_apical_branch_order_frequency)
-        f_average_branch_order_frequency=os.path.join(stats_dir, 'average_number_of_apical_dendrites_per_branch_order.txt')
-        write_dict(f_average_branch_order_frequency, average_apical_branch_order_frequency)
+        _log_write_dict(average_basal_branch_order_dlength, stats_dir, "average_basal_dendritic_length_per_branch_order.txt", "Average Basal Dendritic Length per Branch Order: ")
+        _log_write_dict(average_apical_branch_order_dlength, stats_dir, "average_apical_dendritic_length_per_branch_order.txt", "Average Apical Dendritic Length per Branch Order: ")
         
-        print()
-        print("Average All Dendritic Length per Branch Order: ")
-        average_dict(average_all_branch_order_dlength)
-        f_average_branch_order_dlength=os.path.join(stats_dir, 'average_all_dendritic_length_per_branch_order.txt')
-        write_dict(f_average_branch_order_dlength, average_all_branch_order_dlength)
+        _log_write_dict(average_all_branch_order_path_length, stats_dir, "average_all_path_length_per_branch_order.txt", "Average All Path Length per Branch Order: ")
+        _log_write_dict(average_basal_branch_order_path_length, stats_dir, "average_basal_path_length_per_branch_order.txt", "Average Basal Path Length per Branch Order: ")
+        _log_write_dict(average_apical_branch_order_path_length, stats_dir, "average_apical_path_length_per_branch_order.txt", "Average Apical Path Length per Branch Order: ")
+        _log_write_dict(average_sholl_basal_fp, stats_dir, "average_sholl_basal_branchpoints.txt", "Sholl analysis (branch points) for basal dendrites")
+        _log_write_dict(average_sholl_apical_fp, stats_dir, "average_sholl_apical_branchpoints.txt", "Sholl analysis (branch points) for apical dendrites")
         
-        print()
-        print("Average Basal Dendritic Length per Branch Order: ")
-        average_dict(average_basal_branch_order_dlength)
-        f_average_branch_order_dlength=os.path.join(stats_dir, 'average_basal_dendritic_length_per_branch_order.txt')
-        write_dict(f_average_branch_order_dlength, average_basal_branch_order_dlength)
-        
-        print()
-        print("Average Apical Dendritic Length per Branch Order: ")
-        average_dict(average_apical_branch_order_dlength)
-        f_average_branch_order_dlength=os.path.join(stats_dir, 'average_apical_dendritic_length_per_branch_order.txt')
-        write_dict(f_average_branch_order_dlength, average_apical_branch_order_dlength)
-        
-        print()
-        print("Average All Path Length per Branch Order: ")
-        average_dict(average_all_branch_order_path_length)
-        f_average_branch_order_path_length=os.path.join(stats_dir, 'average_all_path_length_per_branch_order.txt')
-        write_dict(f_average_branch_order_path_length, average_all_branch_order_path_length)
-        
-        print()
-        print("Average Basal Path Length per Branch Order: ")
-        average_dict(average_basal_branch_order_path_length)
-        f_average_branch_order_path_length=os.path.join(stats_dir, 'average_basal_path_length_per_branch_order.txt')
-        write_dict(f_average_branch_order_path_length, average_basal_branch_order_path_length)
-        
-        print()
-        print("Average Apical Path Length per Branch Order: ")
-        average_dict(average_apical_branch_order_path_length)
-        f_average_branch_order_path_length=os.path.join(stats_dir, 'average_apical_path_length_per_branch_order.txt')
-        write_dict(f_average_branch_order_path_length, average_apical_branch_order_path_length)
-        
-        print()
-        print('Sholl analysis (branch points) for all dendrites')
-        average_dict(average_sholl_all_fp)
-        f_average_sholl_all_fp=os.path.join(stats_dir, 'average_sholl_all_branchpoints.txt')
-        write_dict(f_average_sholl_all_fp, average_sholl_all_fp)
-        
-        print()
-        print('Sholl analysis (branch points) for basal dendrites')
-        average_dict(average_sholl_basal_fp)
-        f_average_sholl_basal_fp=os.path.join(stats_dir, 'average_sholl_basal_branchpoints.txt')
-        write_dict(f_average_sholl_basal_fp, average_sholl_basal_fp)
-        
-        print()
-        print('Sholl analysis (branch points) for apical dendrites')
-        average_dict(average_sholl_apical_fp)
-        f_average_sholl_apical_fp=os.path.join(stats_dir, 'average_sholl_apical_branchpoints.txt')
-        write_dict(f_average_sholl_apical_fp, average_sholl_apical_fp)
-        
-        print()
-        print('Sholl analysis (dendritic length) for all dendrites')
-        average_dict(average_sholl_all_length)
-        f_average_sholl_all_length=os.path.join(stats_dir, 'average_sholl_all_length.txt')
-        write_dict(f_average_sholl_all_length, average_sholl_all_length)
-        
-        print()
-        print('Sholl analysis (dendritic length) for basal dendrites')
-        average_dict(average_sholl_basal_length)
-        f_average_sholl_basal_length=os.path.join(stats_dir, 'average_sholl_basal_length.txt')
-        write_dict(f_average_sholl_basal_length, average_sholl_basal_length)
-        
-        print()
-        print('Sholl analysis (dendritic length) for apical dendrites')
-        average_dict(average_sholl_apical_length)
-        f_average_sholl_apical_length=os.path.join(stats_dir, 'average_sholl_apical_length.txt')
-        write_dict(f_average_sholl_apical_length, average_sholl_apical_length)
-        
-        print()
-        print('Sholl analysis (number of intersections) for all dendrites')
-        average_dict(average_sholl_all_intersections)
-        f_average_sholl_all_intersections=os.path.join(stats_dir, 'average_sholl_all_intersections.txt')
-        write_dict(f_average_sholl_all_intersections, average_sholl_all_intersections)
-        
-        print()
-        print('Sholl analysis (number of intersections) for basal dendrites')
-        average_dict(average_sholl_basal_intersections)
-        f_average_sholl_basal_intersections=os.path.join(stats_dir, 'average_sholl_basal_intersections.txt')
-        write_dict(f_average_sholl_basal_intersections, average_sholl_basal_intersections)
-        
-        print()
-        print('Sholl analysis (number of intersections) for apical dendrites')
-        average_dict(average_sholl_apical_intersections)
-        f_average_sholl_apical_intersections=os.path.join(stats_dir, 'average_sholl_apical_intersections.txt')
-        write_dict(f_average_sholl_apical_intersections, average_sholl_apical_intersections)
-        
-        from plot_statistics import plot_average_data
-        prefix=os.path.join(stats_dir, 'average_')
-        plot_average_data(prefix)
-        
+        _log_write_dict(average_sholl_all_length, stats_dir, "average_sholl_all_length.txt", "Sholl analysis (dendritic length) for all dendrites")
+        _log_write_dict(average_sholl_basal_length, stats_dir, "average_sholl_basal_length.txt", "Sholl analysis (dendritic length) for basal dendrites")
+        _log_write_dict(average_sholl_apical_length, stats_dir, "average_sholl_apical_length.txt", "Sholl analysis (dendritic length) for apical dendrites")
+        _log_write_dict(average_sholl_all_intersections, stats_dir, "average_sholl_all_intersections.txt", "Sholl analysis (number of intersections) for all dendrites")
+        _log_write_dict(average_sholl_basal_intersections, stats_dir, "average_sholl_basal_intersections.txt", "Sholl analysis (number of intersections) for basal dendrites")
+        _log_write_dict(average_sholl_apical_intersections, stats_dir, "average_sholl_apical_intersections.txt", "Sholl analysis (number of intersections) for apical dendrites")
         summary = {
             'average_number_of_all_dendrites': avg_num_all_dendrites,
             'average_number_of_all_terminal_dendrites': avg_all_terminal,
