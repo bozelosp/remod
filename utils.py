@@ -1,5 +1,7 @@
 from math import sqrt
 import json
+from statistics import mean, pstdev
+
 
 
 def distance(x1, x2, y1, y2, z1, z2):
@@ -34,3 +36,22 @@ def read_value(path):
     """Return the first float found in ``path``."""
     values = read_values(path)
     return values[0] if values else 0.0
+
+
+def average_list(values):
+    """Return the mean and standard deviation of ``values``."""
+    if not values:
+        return 0.0, 0.0
+    return mean(values), pstdev(values)
+
+
+def average_dict(data):
+    """Replace lists in ``data`` with (mean, stdev) pairs and return it."""
+    for key, values in data.items():
+        data[key] = average_list(values)
+    return data
+
+
+def remove_empty_keys(data):
+    """Return ``data`` without keys that have empty lists."""
+    return {k: v for k, v in data.items() if v}
