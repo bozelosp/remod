@@ -17,13 +17,11 @@ import sys
 import numpy as np
 import os
 from pathlib import Path
+import argparse
 import time
 
-from random_sampling import *
-from actions_swc import *
-from statistics_swc import *
-import collections
 def remove_empty_keys(d):
+    """Remove dictionary keys whose values sum to zero."""
     for k in list(d.keys()):
         values = d[k]
         if list(values) == [0] * len(values):
@@ -31,70 +29,81 @@ def remove_empty_keys(d):
     return d
 
 def average_list(values):
+    """Return the mean and standard deviation of *values*."""
+    if not values:
+        return 0, 0
+
+    arr = np.asarray(values)
+    average = np.mean(arr)
+    st_error = np.std(arr)
+    return round_to(average, 0.01), round_to(st_error, 0.01)
+
+def average_dict(d):
+    """Update *d* with mean and standard deviation for each list."""
+    for i, values in d.items():
         if not values:
-                return 0, 0
+            d[i] = [0, 0]
+            continue
 
         arr = np.asarray(values)
         average = np.mean(arr)
         st_error = np.std(arr)
-        return round_to(average, 0.01), round_to(st_error, 0.01)
+        d[i] = [round_to(average, 0.01), round_to(st_error, 0.01)]
 
-def average_dict(d):
-        for i, values in d.items():
-                if not values:
-                        d[i] = [0, 0]
-                        continue
-
-                arr = np.asarray(values)
-                average = np.mean(arr)
-                st_error = np.std(arr)
-                d[i] = [round_to(average, 0.01), round_to(st_error, 0.01)]
-
-        return d
+    return d
 
 def median_dict(d):
-        for i, values in d.items():
-                if not values:
-                        d[i] = [0, 0, 0]
-                        continue
+    """Update *d* with median and quartiles for each list."""
+    for i, values in d.items():
+        if not values:
+            d[i] = [0, 0, 0]
+            continue
 
-                arr = np.asarray(values)
-                med = np.median(arr)
-                p25 = np.percentile(arr, 25)
-                p75 = np.percentile(arr, 75)
-                d[i] = [round_to(med, 0.01), round_to(p25, 0.01), round_to(p75, 0.01)]
+        arr = np.asarray(values)
+        med = np.median(arr)
+        p25 = np.percentile(arr, 25)
+        p75 = np.percentile(arr, 75)
+        d[i] = [round_to(med, 0.01), round_to(p25, 0.01), round_to(p75, 0.01)]
 
-        return d
+    return d
 
-# example usage: python first_run.py /path/to/swc/ 0-2.swc
+
+def write_average(stats_dir, filename, avg):
+    """Helper to write an average value pair to ``stats_dir``."""
+    write_value(os.path.join(stats_dir, filename), f"{avg[0]} {avg[1]}")
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Compute morphometric statistics"
+    )
+    parser.add_argument(
+        "directory", type=Path, help="Directory containing SWC files"
+    )
+    parser.add_argument(
+        "files", help="Comma-separated list of SWC filenames"
+    )
+    return parser.parse_args()
+
+
 def main():
 
+    args = parse_args()
     start_time = time.time()
-    if (len(sys.argv)==3):
-    
-            directory = Path(sys.argv[1])
-            file_names=str(sys.argv[2]).split(',')
-            file_names=[x for x in file_names if x != '']
-    
-            parsed_files=[]
-    
-            parsed_count=0
-            log_file = directory / 'log_parsed_files.txt'
-            if os.path.isfile(log_file):
-    
-                    with open(log_file) as f:
-                            for line in f:
-                                    parsed_files.append(line.rstrip('\n'))
-    
-                    parsed_files=list(set(parsed_files))
-    
-                    file_names=[ x for x in file_names if x not in parsed_files ]
-    
-                    parsed_count=len(parsed_files)
-    
-    else:
-            print("The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. ")
-            sys.exit(0)
+
+    directory = args.directory
+    file_names = [x for x in args.files.split(',') if x]
+
+    parsed_files = []
+    parsed_count = 0
+    log_file = directory / 'log_parsed_files.txt'
+    if log_file.is_file():
+        with open(log_file) as f:
+            for line in f:
+                parsed_files.append(line.rstrip('\n'))
+
+        parsed_files = list(set(parsed_files))
+        file_names = [x for x in file_names if x not in parsed_files]
+        parsed_count = len(parsed_files)
     
     exist_downloads = directory / 'downloads'
     exist_statistics = directory / 'downloads' / 'statistics'
@@ -299,11 +308,23 @@ def main():
             #print list(set([parental_points[x] for x in branch_points]))
             #print len(list(set([parental_points[x] for x in branch_points])))
     
-            fnum_all_bpoints=os.path.join(stats_dir, file_name + '_number_of_all_branchpoints.txt')
-            soma=[x[0] for x in soma_index]
+            fnum_all_bpoints = os.path.join(
+                stats_dir, file_name + '_number_of_all_branchpoints.txt'
+            )
+            soma = [x[0] for x in soma_index]
             write_value(
                 fnum_all_bpoints,
-                len(list(set([parental_points[x] for x in branch_points if parental_points[x] not in soma]))),
+                len(
+                    list(
+                        set(
+                            [
+                                parental_points[x]
+                                for x in branch_points
+                                if parental_points[x] not in soma
+                            ]
+                        )
+                    )
+                ),
             )
             average_num_all_bpoints.append(len(list(set([parental_points[x] for x in branch_points if parental_points[x] not in soma]))))
     
@@ -331,21 +352,9 @@ def main():
                 dend: dist[dend] for dend in basal
             }
     
-            results['list_of_apical_dendritic_lengths'] = {
+            results["list_of_apical_dendritic_lengths"] = {
                 dend: dist[dend] for dend in apical
             }
-    
-            '''if basal_t_length<150 or apical_t_length<150:
-    
-                    import os
-                    os.remove(stats_file_path)
-                    os.remove(fdendlength)
-                    os.remove(fnumdend)
-                    os.remove(ftotlength)
-                    os.remove(ftotblength)
-                    os.remove(ftotalength)
-                    continue'''
-    
             branch_order_values = branch_order_map
             branch_order_freq, branch_order_max = branch_order_frequency(dendrite_list, branch_order_values)
             results['number_of_all_dendrites_per_branch_order'] = branch_order_freq
@@ -424,13 +433,6 @@ def main():
             for length in sorted(sholl_apical_length):
                     average_sholl_apical_length[length].append(sholl_apical_length[length])
     
-            '''sholl_median_basal_length=sholl_length(points, parental_points, soma_index, radius, [3])
-            f_sholl=os.path.join(stats_dir, file_name + '_sholl_median_basal_length.txt')
-            f = open(f_sholl, 'w+')
-            for length in sorted(sholl_median_basal_length):
-                    average_sholl_median_basal_length[length].append(sholl_median_basal_length[length])
-                    print >>f, "%s %s" % (length, sholl_median_basal_length[length])
-            f.close'''
     
             sholl_all_bp=sholl_bp(branch_points, points, soma_index, radius)
             results['sholl_all_branchpoints'] = sholl_all_bp
@@ -447,10 +449,6 @@ def main():
             for length in sorted(sholl_apical_bp):
                     average_sholl_apical_bp[length].append(sholl_apical_bp[length])
     
-            '''f_vector=os.path.join(stats_dir, 'average/sholl_basal_vector.txt')
-            f = open(f_vector, 'a+')
-            print >>f, file_name, vector
-            f.close'''
     
             vector=[]
             sholl_all_intersections=sholl_intersections(points, parental_points, soma_index, radius, [3,4])
@@ -488,8 +486,6 @@ def main():
             #length_metrics.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
     
             all_results[file_name] = results
-            clearall()
-    
     with open(directory / "log_parsed_files.txt", "a+") as f:
             for file_name in file_names:
                     print(file_name, file=f)
@@ -536,16 +532,6 @@ def main():
             f,
         )
     
-    '''print length_metrics
-    
-    kmeans_path=os.path.join(stats_dir, 'kmeans.txt')
-    kmeans_file = open(kmeans_path, 'w+')
-    
-    for i in length_metrics:
-            print >>kmeans_file, i
-    
-    kmeans_file.close()'''
-    
     if len(file_names)==1:
             print("Average statistics are not available if only one file provided (obviously).")
             import sys
@@ -584,120 +570,57 @@ def main():
     print()
     avg_num_all_dendrites = average_list(average_number_of_all_dendrites)
     print("Number of All Dendrites: " + str(avg_num_all_dendrites))
-    f_average_number_of_all_dendrites=os.path.join(stats_dir, 'average_number_of_all_dendrites.txt')
-    write_value(
-        f_average_number_of_all_dendrites,
-        f"{avg_num_all_dendrites[0]} {avg_num_all_dendrites[1]}"
-    )
-    
+    write_average(stats_dir, "average_number_of_all_dendrites.txt", avg_num_all_dendrites)
     print()
     avg_all_terminal = average_list(average_number_of_all_terminal_dendrites)
     print("Number of All Terminal Dendrites: " + str(avg_all_terminal))
-    f_average_number_of_all_terminal_dendrites=os.path.join(stats_dir, 'average_number_of_all_terminal_dendrites.txt')
-    write_value(
-        f_average_number_of_all_terminal_dendrites,
-        f"{avg_all_terminal[0]} {avg_all_terminal[1]}"
-    )
-    
-    print()
-    avg_basal_dendrites = average_list(average_number_of_basal_dendrites)
-    print("Number of Basal Dendrites: " + str(avg_basal_dendrites))
-    f_average_number_of_basal_dendrites=os.path.join(stats_dir, 'average_number_of_basal_dendrites.txt')
-    write_value(
-        f_average_number_of_basal_dendrites,
-        f"{avg_basal_dendrites[0]} {avg_basal_dendrites[1]}"
-    )
-    
-    print()
-    avg_basal_terminal = average_list(average_number_of_basal_terminal_dendrites)
+    write_average(stats_dir, "average_number_of_all_terminal_dendrites.txt", avg_all_terminal)
+    write_average(stats_dir, "average_number_of_basal_dendrites.txt", avg_basal_dendrites)
     print("Number of Basal Terminal Dendrites: " + str(avg_basal_terminal))
-    f_average_number_of_basal_terminal_dendrites=os.path.join(stats_dir, 'average_number_of_basal_terminal_dendrites.txt')
-    write_value(
-        f_average_number_of_basal_terminal_dendrites,
-        f"{avg_basal_terminal[0]} {avg_basal_terminal[1]}"
-    )
+    write_average(stats_dir, "average_number_of_basal_terminal_dendrites.txt", avg_basal_terminal)
     
     print()
     avg_apical_dendrites = average_list(average_number_of_apical_dendrites)
     print("Number of Apical Dendrites: " + str(avg_apical_dendrites))
-    f_average_number_of_apical_dendrites=os.path.join(stats_dir, 'average_number_of_apical_dendrites.txt')
-    write_value(
-        f_average_number_of_apical_dendrites,
-        f"{avg_apical_dendrites[0]} {avg_apical_dendrites[1]}"
-    )
-    
+    write_average(stats_dir, "average_number_of_apical_dendrites.txt", avg_apical_dendrites)
     print()
     avg_apical_terminal = average_list(average_number_of_apical_terminal_dendrites)
     print("Number of Apical Terminal Dendrites: " + str(avg_apical_terminal))
-    f_average_number_of_apical_terminal_dendrites=os.path.join(stats_dir, 'average_number_of_apical_terminal_dendrites.txt')
-    write_value(
-        f_average_number_of_apical_terminal_dendrites,
-        f"{avg_apical_terminal[0]} {avg_apical_terminal[1]}"
-    )
-    
+    write_average(stats_dir, "average_number_of_apical_terminal_dendrites.txt", avg_apical_terminal)
     print()
     avg_total_length = average_list(average_t_length)
     print("Total Length (all dendrites): " + str(avg_total_length))
-    f_average_total_length=os.path.join(stats_dir, 'average_all_total_length.txt')
-    write_value(f_average_total_length, f"{avg_total_length[0]} {avg_total_length[1]}")
+    write_average(stats_dir, "average_all_total_length.txt", avg_total_length)
     
     print()
     avg_total_basal_length = average_list(average_basal_t_length)
     print("Total Length (basal dendrites): " + str(avg_total_basal_length))
-    f_average_total_basal_length=os.path.join(stats_dir, 'average_basal_total_length.txt')
-    write_value(f_average_total_basal_length, f"{avg_total_basal_length[0]} {avg_total_basal_length[1]}")
-    
+    write_average(stats_dir, "average_basal_total_length.txt", avg_total_basal_length)
     print()
     avg_total_apical_length = average_list(average_apical_t_length)
     print("Total Length (apical dendrites): " + str(avg_total_apical_length))
-    f_average_total_apical_length=os.path.join(stats_dir, 'average_apical_total_length.txt')
-    write_value(f_average_total_apical_length, f"{avg_total_apical_length[0]} {avg_total_apical_length[1]}")
-    
-    print()
+    write_average(stats_dir, "average_apical_total_length.txt", avg_total_apical_length)
     avg_total_area = average_list(average_t_area)
     print("Total Area (all dendrites): " + str(avg_total_area))
-    f_average_total_area=os.path.join(stats_dir, 'average_all_total_area.txt')
-    write_value(f_average_total_area, f"{avg_total_area[0]} {avg_total_area[1]}")
-    
+    write_average(stats_dir, "average_all_total_area.txt", avg_total_area)
     print()
     avg_total_basal_area = average_list(average_basal_t_area)
     print("Total Area (basal dendrites): " + str(avg_total_basal_area))
-    f_average_total_basal_area=os.path.join(stats_dir, 'average_basal_total_area.txt')
-    write_value(f_average_total_basal_area, f"{avg_total_basal_area[0]} {avg_total_basal_area[1]}")
-    
-    print()
+    write_average(stats_dir, "average_basal_total_area.txt", avg_total_basal_area)
     avg_total_apical_area = average_list(average_apical_t_area)
     print("Total Area (apical dendrites): " + str(avg_total_apical_area))
-    f_average_total_apical_area=os.path.join(stats_dir, 'average_apical_total_area.txt')
-    write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
-    
     print()
-    avg_all_bpoints = average_list(average_num_all_bpoints)
+    write_average(stats_dir, "average_apical_total_area.txt", avg_total_apical_area)
     print("Number of all Branch Points: " + str(avg_all_bpoints[0]), str(avg_all_bpoints[1]))
-    f_average_num_all_bpoints=os.path.join(stats_dir, 'average_number_of_all_branchpoints.txt')
-    write_value(
-        f_average_num_all_bpoints,
-        f"{avg_all_bpoints[0]} {avg_all_bpoints[1]}",
-    )
-    
+    write_average(stats_dir, "average_number_of_all_branchpoints.txt", avg_all_bpoints)
     print()
     avg_basal_bpoints = average_list(average_num_basal_bpoints)
     print("Number of all Basal Branch Points: " + str(avg_basal_bpoints[0]), str(avg_basal_bpoints[1]))
-    f_average_num_basal_bpoints=os.path.join(stats_dir, 'average_number_of_basal_branchpoints.txt')
-    write_value(
-        f_average_num_basal_bpoints,
-        f"{avg_basal_bpoints[0]} {avg_basal_bpoints[1]}",
-    )
-    
+    write_average(stats_dir, "average_number_of_basal_branchpoints.txt", avg_basal_bpoints)
     print()
     avg_apical_bpoints = average_list(average_num_apical_bpoints)
     print("Number of all Apical Branch Points: " + str(avg_apical_bpoints[0]), str(avg_apical_bpoints[1]))
-    f_average_num_apical_bpoints=os.path.join(stats_dir, 'average_number_of_apical_branchpoints.txt')
-    write_value(
-        f_average_num_apical_bpoints,
-        f"{avg_apical_bpoints[0]} {avg_apical_bpoints[1]}",
-    )
-    
+    write_average(stats_dir, "average_number_of_apical_branchpoints.txt", avg_apical_bpoints)
     print()
     print("Average Number of All Dendrites per Branch Order: ") 
     average_dict(average_all_branch_order_frequency)
@@ -906,15 +829,6 @@ def main():
     results_path = os.path.join(stats_dir, 'results.json')
     write_json(results_path, all_results)
     
-    '''print
-    print 'Sholl analysis (dendritic length) for apical' + str(median_dict(average_sholl_median_basal_length))
-    f_average_sholl_median_basal_length=os.path.join(stats_dir, 'average_sholl_median_basal_length.txt')
-    f = open(f_average_sholl_median_basal_length, 'w+')
-    segment_list=average_sholl_median_basal_length
-    for i in sorted(segment_list):
-            print i,  segment_list[i]
-            print >>f, i,  segment_list[i]
-    f.close()'''
     
     #average_sholl_median_basal_length=remove_empty_keys(average_sholl_median_basal_length)
     
@@ -926,69 +840,6 @@ def main():
     print()
     print(elapsed_time)
 
-'''basal_num=30
-apical_num=10
-
-principal_axis=[5.9126497308103749, 14.416496580927726, -3.0699999999999998]
-soma_root=[6.49, 13.6, -3.07]
-
-def da (dist_freq_list, angles_freq_list, list_num):
-
-        la=[]
-
-        dist_pop_list = dist_freq_list.keys()
-        dist_fr_list = dist_freq_list.values()
-
-        dist_fr_list = [x * 100 for x in dist_fr_list]
-
-        de_novo_dist=weighted_sample(dist_pop_list, dist_fr_list, list_num)
-
-        for i in de_novo_dist:
-                
-                angles_pop_list=angles_freq_list[i].keys()
-                angles_fr_list=angles_freq_list[i].values()
-
-                angles_fr_list = [x * 100 for x in angles_fr_list]
-
-                de_novo_angle=weighted_sample(angles_pop_list, angles_fr_list, 1)
-
-                la.append([i, de_novo_angle[0]])
-
-        return la
-
-(dist_freq_basal, angles_freq_basal)=dist_angle_frequency(dist_angle_basal, radius)
-(dist_freq_apical, angles_freq_apical)=dist_angle_frequency(dist_angle_apical, radius)
-
-la_basal=da(dist_freq_basal, angles_freq_basal, basal_num)
-la_apical=da(dist_freq_apical, angles_freq_apical, apical_num)
-
-print 'soma'
-
-print 'basal'
-
-print la_basal
-
-for i in la_basal:
-
-        point=createP(i[0], i[1], principal_axis, soma_root, 1)
-        print point[0][0], point[0][1], point[0][2]
-
-print 'apical'
-
-print la_apical
-
-for i in la_apical:
-
-        point=createP(i[0], i[1], principal_axis, soma_root, 1)
-        print point[0][0], point[0][1], point[0][2]'''
-
-#structured_tree(directory, file_name, soma_index, dendrite_list, dend_add3d)
-
-'''(principal_axis, soma_root)=axis(apical, dend_add3d, soma_index)
-dist_angle_basal=dist_angle_analysis(basal, dend_add3d, soma_root, principal_axis)
-dist_angle_apical=dist_angle_analysis(apical, dend_add3d, soma_root, principal_axis)
-(dist_freq_basal, angles_freq_basal)=dist_angle_frequency(dist_angle_basal, radius)
-(dist_freq_apical, angles_freq_apical)=dist_angle_frequency(dist_angle_apical, radius)'''
 
 if __name__ == "__main__":
     main()
