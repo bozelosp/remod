@@ -245,7 +245,7 @@ def shrink(
     dist,
     soma_index,
     points,
-    parental_points,
+    parent_indices,
     subtrees,
     all_terminal,
 ):
@@ -261,7 +261,7 @@ def shrink(
         for dend in target_dendrites:
         
                 current_point=dend_segments[dend][0]
-                next_point=points[parental_points[current_point[0]]]
+                next_point=points[parent_indices[current_point[0]]]
 
                 xp=current_point[2]
                 yp=current_point[3]
@@ -333,7 +333,7 @@ def shrink(
                 else:
 
                         current_point=dend_segments[dend][0]
-                        next_point=points[parental_points[current_point[0]]]
+                        next_point=points[parent_indices[current_point[0]]]
 
                         xp=current_point[2]
                         yp=current_point[3]
@@ -385,7 +385,7 @@ def shrink(
 
         return newfile
 
-'''def shrink(target_dendrites, action, amount, extent_unit, dend_segments, dist, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
+'''def shrink(target_dendrites, action, amount, extent_unit, dend_segments, dist, soma_index, points, parent_indices): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
         amount=int(amount)
 
@@ -421,7 +421,7 @@ def shrink(
                 cumulative_distance=0
 
                 current_point=dend_segments[dend][0]
-                next_point=points[parental_points[current_point[0]]]
+                next_point=points[parent_indices[current_point[0]]]
 
                 xp=current_point[2]
                 yp=current_point[3]
@@ -485,7 +485,7 @@ def shrink(
                 if len(dend_segments[dend])==1:
 
                         current_point=dend_segments[dend][0]
-                        next_point=points[parental_points[current_point[0]]]
+                        next_point=points[parent_indices[current_point[0]]]
 
                         xp=current_point[2]
                         yp=current_point[3]
@@ -564,7 +564,7 @@ def remove(
     dend_segments,
     soma_index,
     points,
-    parental_points,
+    parent_indices,
     subtrees,
     all_terminal,
 ):
@@ -612,7 +612,7 @@ def extend(
     max_index,
     soma_index,
     points,
-    parental_points,
+    parent_indices,
     subtrees,
     all_terminal,
 ):
@@ -634,8 +634,8 @@ def extend(
                         change_these=[]
                         initial_position=dend_segments[dend][-1]
                         will_not_be_bp_anymore=initial_position[0]
-                        for mine in parental_points:
-                                if parental_points[mine]==will_not_be_bp_anymore:
+                        for mine in parent_indices:
+                                if parent_indices[mine]==will_not_be_bp_anymore:
                                         change_these.append(mine)
 
 
@@ -668,7 +668,7 @@ def extend(
 
                 if len(dend_segments[dend])==1:
                         point1=dend_segments[dend][-1]
-                        point2=points[parental_points[point1[0]]]
+                        point2=points[parent_indices[point1[0]]]
 
                 else:
                         point1=dend_segments[dend][-1]
@@ -917,7 +917,7 @@ def _build_actions(
     max_index: int,
     soma_index: List[List[Any]],
     points: Dict[int, List[Any]],
-    parental_points: Dict[int, int],
+    parent_indices: Dict[int, int],
     subtrees: Dict[int, List[int]],
     all_terminal: List[int],
     dendrite_list: List[int],
@@ -936,7 +936,7 @@ def _build_actions(
                 dist,
                 soma_index,
                 points,
-                parental_points,
+                parent_indices,
                 subtrees,
                 all_terminal,
             ),
@@ -946,7 +946,7 @@ def _build_actions(
                 dend_segments,
                 soma_index,
                 points,
-                parental_points,
+                parent_indices,
                 subtrees,
                 all_terminal,
             ),
@@ -960,7 +960,7 @@ def _build_actions(
                 max_index,
                 soma_index,
                 points,
-                parental_points,
+                parent_indices,
                 subtrees,
                 all_terminal,
             ),
@@ -992,7 +992,7 @@ def execute_action(
     dendrite_list: List[int],
     soma_index: List[List[Any]],
     points: Dict[int, List[Any]],
-    parental_points: Dict[int, int],
+    parent_indices: Dict[int, int],
     subtrees: Dict[int, List[int]],
     all_terminal: List[int],
 ) -> Tuple[List[str], List[int], List[List[Any]]]:
@@ -1013,7 +1013,7 @@ def execute_action(
             max_index,
             soma_index,
             points,
-            parental_points,
+            parent_indices,
             subtrees,
             all_terminal,
             dendrite_list,

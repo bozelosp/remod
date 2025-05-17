@@ -10,7 +10,7 @@ from random import uniform, randrange
 from math import cos, sin, pi, sqrt, radians, degrees
 from utils import distance, round_to
 
-def plot_(my_file, my_plot, dlist):
+def plot_(my_file, my_plot, dendrite_list):
 
 	x_points=[]
 	y_points=[]
@@ -48,7 +48,7 @@ def plot_(my_file, my_plot, dlist):
 
 		if con!=-1:
 
-			if i in dlist:
+			if i in dendrite_list:
 				ds=[]
 
 			x=[ plist[i][2], plist[con][2] ]
@@ -67,7 +67,7 @@ def plot_(my_file, my_plot, dlist):
 
 	return my_plot
 
-def plot_1(my_plot, dend_add3d, all_terminal, dlist):
+def plot_1(my_plot, dendrite_additions_3d, all_terminal, dendrite_list):
 
 	x_points=[]
 	y_points=[]
@@ -77,9 +77,9 @@ def plot_1(my_plot, dend_add3d, all_terminal, dlist):
 	plist={}
 	mylist=[]
 
-	for dend in dlist:
+	for dend in dendrite_list:
 	
-		for p in dend_add3d[dend]:
+		for p in dendrite_additions_3d[dend]:
 
 			i=int(p[0])
 			l=int(p[1])
@@ -95,7 +95,7 @@ def plot_1(my_plot, dend_add3d, all_terminal, dlist):
 
 	for dend in all_terminal:
 
-		for k in dend_add3d[dend]:
+		for k in dendrite_additions_3d[dend]:
 
 			i=k[0]
 
@@ -119,7 +119,7 @@ def plot_1(my_plot, dend_add3d, all_terminal, dlist):
 	return my_plot
 
 
-def graph(initial_file, modified_file, action, dend_add3d, dlist, directory, file_name):
+def graph(initial_file, modified_file, action, dendrite_additions_3d, dendrite_list, directory, file_name):
 
 	#fig = plt.figure()
 	#ax = Axes3D(fig)
@@ -128,10 +128,10 @@ def graph(initial_file, modified_file, action, dend_add3d, dlist, directory, fil
 	plot_before=[]
 	plot_after=[]
 
-	plot_before=plot_(initial_file, plot_before, dlist)
-	plot_after=plot_(modified_file, plot_after, dlist)
+	plot_before=plot_(initial_file, plot_before, dendrite_list)
+	plot_after=plot_(modified_file, plot_after, dendrite_list)
 	
-	#plot_after=plot_1(plot_after, dend_add3d, all_terminal, dlist)
+	#plot_after=plot_1(plot_after, dendrite_additions_3d, all_terminal, dendrite_list)
 
 	if action=='shrink' or action=='remove':
 
