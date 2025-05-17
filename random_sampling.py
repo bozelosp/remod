@@ -1,6 +1,7 @@
 import bisect
 import random
-from collections import Counter, Sequence
+from collections import Counter
+from collections.abc import Sequence
 
 def weighted_sample(population, weights, k):
     return random.sample(WeightedPopulation(population, weights), k)
