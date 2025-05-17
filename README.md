@@ -72,8 +72,7 @@ The individual scripts are designed to be used as a pipeline:
    set of SWC files. It expects a directory and a comma-separated list of
    filenames. The resulting metrics are written to
    `downloads/statistics/`.
-2. **Modify** – apply structural changes with `second_run.py` (or the legacy
-   wrapper `take_action_swc.py`). This script can remove, extend or shrink
+2. **Modify** – apply structural changes with `second_run.py`. This script can remove, extend or shrink
    selected dendrites and stores edited files under `downloads/files/`.
 3. **Reassign indices** – `second_run.py` automatically renumbers nodes after
    modifications, so no extra command is needed.
