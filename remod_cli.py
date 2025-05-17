@@ -18,7 +18,7 @@ from morphology_statistics import (
     branch_order_path_length,
     path_length,
     sholl_length,
-    sholl_bp,
+    sholl_fork_points,
     sholl_intersections,
     branch_order,
 )
@@ -100,9 +100,9 @@ def analyze_main(argv=None):
         
         radius=20
         
-        average_sholl_all_bp={k: [] for k in np.arange(0, 10000, radius)}
-        average_sholl_basal_bp={k: [] for k in np.arange(0, 10000, radius)}
-        average_sholl_apical_bp={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_all_fp={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_basal_fp={k: [] for k in np.arange(0, 10000, radius)}
+        average_sholl_apical_fp={k: [] for k in np.arange(0, 10000, radius)}
         
         average_sholl_all_length={k: [] for k in np.arange(0, 10000, radius)}
         average_sholl_basal_length={k: [] for k in np.arange(0, 10000, radius)}
@@ -164,9 +164,9 @@ def analyze_main(argv=None):
                 average_sholl_all_length = stats.get('average_sholl_all_length', {k: [] for k in np.arange(0, 10000, radius)})
                 average_sholl_basal_length = stats.get('average_sholl_basal_length', {k: [] for k in np.arange(0, 10000, radius)})
                 average_sholl_apical_length = stats.get('average_sholl_apical_length', {k: [] for k in np.arange(0, 10000, radius)})
-                average_sholl_all_bp = stats.get('average_sholl_all_bp', {k: [] for k in np.arange(0, 10000, radius)})
-                average_sholl_basal_bp = stats.get('average_sholl_basal_bp', {k: [] for k in np.arange(0, 10000, radius)})
-                average_sholl_apical_bp = stats.get('average_sholl_apical_bp', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_all_fp = stats.get('average_sholl_all_fp', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_basal_fp = stats.get('average_sholl_basal_fp', {k: [] for k in np.arange(0, 10000, radius)})
+                average_sholl_apical_fp = stats.get('average_sholl_apical_fp', {k: [] for k in np.arange(0, 10000, radius)})
                 average_sholl_all_intersections = stats.get('average_sholl_all_intersections', {k: [] for k in np.arange(0, 10000, radius)})
                 average_sholl_basal_intersections = stats.get('average_sholl_basal_intersections', {k: [] for k in np.arange(0, 10000, radius)})
                 average_sholl_apical_intersections = stats.get('average_sholl_apical_intersections', {k: [] for k in np.arange(0, 10000, radius)})
@@ -262,10 +262,10 @@ def analyze_main(argv=None):
                 #print list(set([parent_indices[x] for x in branch_points]))
                 #print len(list(set([parent_indices[x] for x in branch_points])))
         
-                fnum_all_bpoints = stats_dir / f'{file_name}_number_of_all_forkpoints.txt'
+                fnum_all_fpoints = stats_dir / f'{file_name}_number_of_all_forkpoints.txt'
                 soma=[x[0] for x in soma_samples]
                 write_value(
-                    fnum_all_bpoints,
+                    fnum_all_fpoints,
                     len(list(set([parents[x] for x in fork_points if parents[x] not in soma]))),
                 )
                 average_num_all_forks.append(len(list(set([parents[x] for x in fork_points if parents[x] not in soma]))))
@@ -395,20 +395,20 @@ def analyze_main(argv=None):
                         print >>f, "%s %s" % (length, sholl_median_basal_length[length])
                 f.close'''
         
-                sholl_all_bp=sholl_bp(fork_points, samples, soma_samples, radius)
-                results['sholl_all_forkpoints'] = sholl_all_bp
-                for length in sorted(sholl_all_bp):
-                        average_sholl_all_bp[length].append(sholl_all_bp[length])
+                sholl_all_fp=sholl_fork_points(fork_points, samples, soma_samples, radius)
+                results['sholl_all_forkpoints'] = sholl_all_fp
+                for length in sorted(sholl_all_fp):
+                        average_sholl_all_fp[length].append(sholl_all_fp[length])
         
-                sholl_basal_bp=sholl_bp(basal_forks, samples, soma_samples, radius)
-                results['sholl_basal_forkpoints'] = sholl_basal_bp
-                for length in sorted(sholl_basal_bp):
-                        average_sholl_basal_bp[length].append(sholl_basal_bp[length])
+                sholl_basal_fp=sholl_fork_points(basal_forks, samples, soma_samples, radius)
+                results['sholl_basal_forkpoints'] = sholl_basal_fp
+                for length in sorted(sholl_basal_fp):
+                        average_sholl_basal_fp[length].append(sholl_basal_fp[length])
         
-                sholl_apical_bp=sholl_bp(apical_forks, samples, soma_samples, radius)
-                results['sholl_apical_forkpoints'] = sholl_apical_bp
-                for length in sorted(sholl_apical_bp):
-                        average_sholl_apical_bp[length].append(sholl_apical_bp[length])
+                sholl_apical_fp=sholl_fork_points(apical_forks, samples, soma_samples, radius)
+                results['sholl_apical_forkpoints'] = sholl_apical_fp
+                for length in sorted(sholl_apical_fp):
+                        average_sholl_apical_fp[length].append(sholl_apical_fp[length])
         
                 '''f_vector=os.path.join(stats_dir, 'average/sholl_basal_vector.txt')
                 f = open(f_vector, 'a+')
@@ -488,9 +488,9 @@ def analyze_main(argv=None):
                 'average_sholl_all_length': average_sholl_all_length,
                 'average_sholl_basal_length': average_sholl_basal_length,
                 'average_sholl_apical_length': average_sholl_apical_length,
-                'average_sholl_all_bp': average_sholl_all_bp,
-                'average_sholl_basal_bp': average_sholl_basal_bp,
-                'average_sholl_apical_bp': average_sholl_apical_bp,
+                'average_sholl_all_fp': average_sholl_all_fp,
+                'average_sholl_basal_fp': average_sholl_basal_fp,
+                'average_sholl_apical_fp': average_sholl_apical_fp,
                 'average_sholl_all_intersections': average_sholl_all_intersections,
                 'average_sholl_basal_intersections': average_sholl_basal_intersections,
                 'average_sholl_apical_intersections': average_sholl_apical_intersections,
@@ -524,9 +524,9 @@ def analyze_main(argv=None):
         average_basal_branch_order_path_length=remove_empty_keys(average_basal_branch_order_path_length)
         average_apical_branch_order_path_length=remove_empty_keys(average_apical_branch_order_path_length)
         
-        average_sholl_all_bp=remove_empty_keys(average_sholl_all_bp)
-        average_sholl_basal_bp=remove_empty_keys(average_sholl_basal_bp)
-        average_sholl_apical_bp=remove_empty_keys(average_sholl_apical_bp)
+        average_sholl_all_fp=remove_empty_keys(average_sholl_all_fp)
+        average_sholl_basal_fp=remove_empty_keys(average_sholl_basal_fp)
+        average_sholl_apical_fp=remove_empty_keys(average_sholl_apical_fp)
         
         average_sholl_all_length=remove_empty_keys(average_sholl_all_length)
         average_sholl_basal_length=remove_empty_keys(average_sholl_basal_length)
@@ -714,22 +714,22 @@ def analyze_main(argv=None):
         write_dict(f_average_branch_order_path_length, average_apical_branch_order_path_length)
         
         print()
-        print('Sholl analysis (branch samples) for all dendrites')
-        average_dict(average_sholl_all_bp)
-        f_average_sholl_all_bp=os.path.join(stats_dir, 'average_sholl_all_branchpoints.txt')
-        write_dict(f_average_sholl_all_bp, average_sholl_all_bp)
+        print('Sholl analysis (fork points) for all dendrites')
+        average_dict(average_sholl_all_fp)
+        f_average_sholl_all_fp=os.path.join(stats_dir, 'average_sholl_all_forkpoints.txt')
+        write_dict(f_average_sholl_all_fp, average_sholl_all_fp)
         
         print()
-        print('Sholl analysis (branch samples) for basal dendrites')
-        average_dict(average_sholl_basal_bp)
-        f_average_sholl_basal_bp=os.path.join(stats_dir, 'average_sholl_basal_branchpoints.txt')
-        write_dict(f_average_sholl_basal_bp, average_sholl_basal_bp)
+        print('Sholl analysis (fork points) for basal dendrites')
+        average_dict(average_sholl_basal_fp)
+        f_average_sholl_basal_fp=os.path.join(stats_dir, 'average_sholl_basal_forkpoints.txt')
+        write_dict(f_average_sholl_basal_fp, average_sholl_basal_fp)
         
         print()
-        print('Sholl analysis (branch samples) for apical dendrites')
-        average_dict(average_sholl_apical_bp)
-        f_average_sholl_apical_bp=os.path.join(stats_dir, 'average_sholl_apical_branchpoints.txt')
-        write_dict(f_average_sholl_apical_bp, average_sholl_apical_bp)
+        print('Sholl analysis (fork points) for apical dendrites')
+        average_dict(average_sholl_apical_fp)
+        f_average_sholl_apical_fp=os.path.join(stats_dir, 'average_sholl_apical_forkpoints.txt')
+        write_dict(f_average_sholl_apical_fp, average_sholl_apical_fp)
         
         print()
         print('Sholl analysis (dendritic length) for all dendrites')
@@ -796,9 +796,9 @@ def analyze_main(argv=None):
             'average_all_branch_order_path_length': average_all_branch_order_path_length,
             'average_basal_branch_order_path_length': average_basal_branch_order_path_length,
             'average_apical_branch_order_path_length': average_apical_branch_order_path_length,
-            'average_sholl_all_bp': average_sholl_all_bp,
-            'average_sholl_basal_bp': average_sholl_basal_bp,
-            'average_sholl_apical_bp': average_sholl_apical_bp,
+            'average_sholl_all_fp': average_sholl_all_fp,
+            'average_sholl_basal_fp': average_sholl_basal_fp,
+            'average_sholl_apical_fp': average_sholl_apical_fp,
             'average_sholl_all_length': average_sholl_all_length,
             'average_sholl_basal_length': average_sholl_basal_length,
             'average_sholl_apical_length': average_sholl_apical_length,
