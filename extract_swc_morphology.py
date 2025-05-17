@@ -76,14 +76,14 @@ def branching_points(points: Dict[int, List[float]]):
         if p[1] not in [10]:
             children[parent] = children.get(parent, 0) + 1
 
-    bpoints = [i for i, count in children.items() if count > 1]
+    branch_points = [i for i, count in children.items() if count > 1]
 
-    axon_bpoints = [i for i in bpoints if points[i][1] == 2]
-    basal_bpoints = [i for i in bpoints if points[i][1] == 3]
-    apical_bpoints = [i for i in bpoints if points[i][1] == 4]
-    soma_bpoints = [i for i in bpoints if points[i][1] == 1]
+    axon_bpoints = [i for i in branch_points if points[i][1] == 2]
+    basal_bpoints = [i for i in branch_points if points[i][1] == 3]
+    apical_bpoints = [i for i in branch_points if points[i][1] == 4]
+    soma_bpoints = [i for i in branch_points if points[i][1] == 1]
 
-    # only dendritic branch points are returned in ``bpoints``
+    # only dendritic branch points are returned in ``branch_points``
     dendritic_bpoints = sorted(set(basal_bpoints + apical_bpoints))
 
     return (
@@ -99,9 +99,9 @@ def parental(points: Dict[int, List[float]]) -> Dict[int, int]:
     """Return a mapping from segment index to its parent index."""
     return {int(i): int(val[6]) for i, val in points.items()}
 
-def d_list(bpoints: Iterable[int]) -> List[int]:
+def d_list(branch_points: Iterable[int]) -> List[int]:
     """Return a sorted list of dendrite indices."""
-    return sorted(bpoints)
+    return sorted(branch_points)
 
 def dend_point(dendrite_list: Iterable[int], points: Dict[int, List[float]]) -> Dict[int, List[int]]:
     """Return lists of point indices for each dendrite starting at ``dendrite_list``."""
@@ -311,7 +311,7 @@ def read_file(fname: str):
     swc_lines = swc_line(fname)
     comment_lines, points = comments_and_3dpoints(swc_lines)
     (
-        bpoints,
+        branch_points,
         axon_bpoints,
         basal_bpoints,
         apical_bpoints,
@@ -319,7 +319,7 @@ def read_file(fname: str):
         soma_index,
     ) = branching_points(points)
     parental_points = parental(points)
-    dendrite_list = d_list(bpoints)
+    dendrite_list = d_list(branch_points)
     dend_indices = dend_point(dendrite_list, points)
     dend_names, axon, basal, apical, elsep = dend_name(dendrite_list, points)
     dend_add3d = dend_add3d_points(dendrite_list, dend_indices, points)
@@ -330,19 +330,19 @@ def read_file(fname: str):
     dist = dend_length(dend_add3d, dendrite_list, parental_points, points)
     area = dend_area(dend_add3d, dendrite_list, parental_points, points)
     max_index = index(points)
-    bo = branch_order(dendrite_list, path)
+    branch_order = branch_order(dendrite_list, path)
     con = connected(dendrite_list, path)
     parents: List[int] = []
 
     dendrite_list = basal + apical
-    bpoints = basal_bpoints + apical_bpoints
+    branch_points = basal_bpoints + apical_bpoints
 
     return (
         swc_lines,
         points,
         comment_lines,
         parents,
-        bpoints,
+        branch_points,
         axon_bpoints,
         basal_bpoints,
         apical_bpoints,
@@ -364,7 +364,7 @@ def read_file(fname: str):
         apical_terminal,
         dist,
         area,
-        bo,
+        branch_order,
         con,
         parental_points,
     )

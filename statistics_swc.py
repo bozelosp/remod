@@ -46,20 +46,20 @@ def median_diameter(dendrite_list, dend_add3d):
                 med_diam[dend]=float(dend_add3d[dend][m][5])*2
         return med_diam
 
-def print_branch_order(dendrite_list, bo):
+def print_branch_order(dendrite_list, branch_order):
 
         bo_dict=dict()
 
         for i in dendrite_list:
-                bo_dict[i]=bo[i]
+                bo_dict[i]=branch_order[i]
 
         return sorted(list(bo_dict.items()), key=lambda x: x[0])
 
-def bo_frequency(dendrite_list, bo):
+def bo_frequency(dendrite_list, branch_order):
 
         orders=[]
         for dend in dendrite_list:
-                orders.append(bo[dend])
+                orders.append(branch_order[dend])
 
         bo_min=1 # min(orders)
         bo_max=max(orders)
@@ -75,7 +75,7 @@ def bo_frequency(dendrite_list, bo):
 
         return bo_freq, bo_max
 
-def bo_dlength(dendrite_list, bo, bo_max, dist):
+def bo_dlength(dendrite_list, branch_order, bo_max, dist):
 
         bo_dlen={}
         for i in range(1, bo_max+1):
@@ -83,7 +83,7 @@ def bo_dlength(dendrite_list, bo, bo_max, dist):
                 add_length=0
 
                 for dend in dendrite_list:
-                        if i==bo[dend]:
+                        if i==branch_order[dend]:
                                 k+=1
                                 add_length+=dist[dend]
         
@@ -92,7 +92,7 @@ def bo_dlength(dendrite_list, bo, bo_max, dist):
 
         return bo_dlen
 
-def bo_plength(dendrite_list, bo, bo_max, plength):
+def bo_plength(dendrite_list, branch_order, bo_max, plength):
 
         bo_plen={}
         for i in range(1, bo_max+1):
@@ -101,7 +101,7 @@ def bo_plength(dendrite_list, bo, bo_max, plength):
                 add_length=0
 
                 for dend in dendrite_list:
-                        if i==bo[dend]:
+                        if i==branch_order[dend]:
                                 k+=1
                                 add_length+=plength[dend]
         
@@ -157,7 +157,7 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 
         return sholl_list
 
-def sholl_bp(bpoints, points, soma_index, radius):
+def sholl_bp(branch_points, points, soma_index, radius):
 
         sholl_list=dict()
 
@@ -178,7 +178,7 @@ def sholl_bp(bpoints, points, soma_index, radius):
                 previous_dist=values[val]
                 next_dist=values[val+1]
 
-                for i in bpoints:
+                for i in branch_points:
 
                         x=points[i][2]
                         y=points[i][3]
