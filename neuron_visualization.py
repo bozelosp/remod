@@ -100,7 +100,7 @@ def _export_graph(
     verbose: bool = False,
 ) -> None:
     """Export coordinates for a morphology to ``*_suffix.txt``."""
-    # Handles creation of output files for visualization
+    # Build the list of line segments and write them to disk
 
     segments = _collect_segments(
         dendrite_list, dend_add3d, points, parental_points, soma_index
