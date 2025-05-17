@@ -60,10 +60,12 @@ def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List
 
 def max_index(points: Dict[int, List[float]]) -> int:
     """Return the highest segment index present in *points*."""
+    # Useful when generating new segment identifiers
     return max(points)
 
 def find_branch_points(points: Dict[int, List[float]]):
     """Return branch point information from ``points``."""
+    # Count how many children each node has to detect branches
 
     soma_index = [p for p in points.values() if p[1] == 1]
 
@@ -94,10 +96,12 @@ def find_branch_points(points: Dict[int, List[float]]):
 
 def parent_map(points: Dict[int, List[float]]) -> Dict[int, int]:
     """Return a mapping from segment index to its parent index."""
+    # Enables quick lookup of each segment's parent
     return {int(i): int(val[6]) for i, val in points.items()}
 
 def sort_dendrites(branch_points: Iterable[int]) -> List[int]:
     """Return a sorted list of dendrite starting indices."""
+    # Sorting ensures deterministic traversal order
     return sorted(branch_points)
 
 def dendrite_segments(dendrite_list: Iterable[int], points: Dict[int, List[float]]) -> Dict[int, List[int]]:
@@ -248,6 +252,7 @@ def descendants_map(
 
 def soma_centroid(soma_index: Iterable[List[float]]) -> List[float]:
     """Return the centroid of the soma segments."""
+    # Calculates the average position of all soma points
 
     x = [p[2] for p in soma_index]
     y = [p[3] for p in soma_index]
@@ -261,6 +266,7 @@ def dendrite_lengths(
     points: Dict[int, List[float]],
 ) -> Dict[int, float]:
     """Compute the length of each dendrite."""
+    # Distances are measured between consecutive segments
 
     dist: Dict[int, float] = {}
     for idx in dendrite_list:
@@ -281,6 +287,7 @@ def dendrite_areas(
     points: Dict[int, List[float]],
 ) -> Dict[int, float]:
     """Approximate surface area for each dendrite."""
+    # Uses a cylinder approximation for every segment
 
     area: Dict[int, float] = {}
     for idx in dendrite_list:
@@ -297,10 +304,12 @@ def dendrite_areas(
 
 def compute_branch_order(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
     """Return the branch order (path length) for each dendrite."""
+    # Branch order corresponds to the hop count to the soma
     return {d: len(path[d]) for d in dendrite_list}
 
 def connection_to_parent(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
     """Return connectivity mapping for each dendrite."""
+    # Records the first child along the path for each dendrite
     first_child: Dict[int, int] = {}
     for dend in dendrite_list:
         first_child[dend] = path[dend][1] if len(path[dend]) > 1 else 1
