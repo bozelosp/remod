@@ -28,6 +28,7 @@ def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List
         list ``[i, t, x, y, z, d, parent]``.
     """
 
+    # Maintain original comments separately from numeric data
     comment_lines: List[str] = []
     points: Dict[int, List[float]] = {}
 
@@ -100,6 +101,7 @@ def sort_dendrites(branch_points: Iterable[int]) -> List[int]:
 
 def dendrite_segments(dendrite_list: Iterable[int], points: Dict[int, List[float]]) -> Dict[int, List[int]]:
     """Return lists of point indices for each dendrite starting at ``dendrite_list``."""
+    # Walk down from each starting segment until a branch is encountered
 
     # build parent -> children mapping once
     children: Dict[int, List[int]] = {}
@@ -165,6 +167,7 @@ def dendrite_coordinates(
     points: Dict[int, List[float]],
 ) -> Dict[int, List[List[float]]]:
     """Collect 3‑D coordinates for every dendrite."""
+    # Points are returned in traversal order for later analysis
 
     coords: Dict[int, List[List[float]]] = {}
     for idx in dendrite_list:
@@ -205,6 +208,7 @@ def terminal_dendrites(
     apical: Iterable[int],
 ) -> Tuple[List[int], List[int], List[int]]:
     """Return the terminal dendrites grouped by type."""
+    # A dendrite is terminal if it appears only once in any soma path
 
     appearances = {d: 0 for d in dendrite_list}
     for chain in path.values():
@@ -302,6 +306,7 @@ def connection_to_parent(dendrite_list: Iterable[int], path: Dict[int, List[int]
 
 def parse_swc_file(file_path: str):
     """Parse ``file_path`` and return all extracted morphology information."""
+    # Combines all helper functions into a convenient one-call parser
 
     swc_lines = read_swc_lines(file_path)
     comment_lines, points = parse_swc_lines(swc_lines)

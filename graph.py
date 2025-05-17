@@ -20,6 +20,7 @@ PlotEntry = list[Sequence[float]]
 
 def _parse_swc_lines(lines: Iterable[str]) -> tuple[PointMap, list[int]]:
     """Return a mapping of node indices to coordinates and a list of segments."""
+    # Convert each valid SWC line into a structured entry
 
     point_map: PointMap = {}
     segments: list[int] = []
@@ -50,6 +51,7 @@ def _parse_swc_lines(lines: Iterable[str]) -> tuple[PointMap, list[int]]:
 
 def _build_plot(point_map: PointMap, segments: Iterable[int]) -> list[PlotEntry]:
     """Return plot data for ``segments`` using ``point_map``."""
+    # Each entry is [x coordinates, y coordinates, z coordinates, radius]
 
     plot: list[PlotEntry] = []
     for idx in segments:
@@ -67,6 +69,7 @@ def _build_plot(point_map: PointMap, segments: Iterable[int]) -> list[PlotEntry]
 
 def _write_plot(path: Path | str, before: list[PlotEntry], after: list[PlotEntry], skip: int = 2) -> None:
     """Write combined plot data to ``path``."""
+    # The output format is compatible with NEURON's CellBuilder
 
     out_path = Path(path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -85,6 +88,7 @@ def graph(
     file_name: str,
 ) -> None:
     """Create an overlay plot describing the changes between two SWC files."""
+    # Blue lines depict the original morphology, red lines show edits
 
     before_map, before_segments = _parse_swc_lines(initial_file)
     after_map, after_segments = _parse_swc_lines(modified_file)

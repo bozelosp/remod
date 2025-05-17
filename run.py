@@ -39,6 +39,7 @@ from graph import *
 from index_reassignment import *
 
 def analyze_main(argv=None):
+    # Top-level routine for computing morphometric statistics
     
         start_time = time.time()
         if argv is None:
@@ -897,6 +898,7 @@ def analyze_main(argv=None):
     
 
 def edit_main(argv=None):
+    # Entry point for remodeling actions on a single SWC file
         parser = argparse.ArgumentParser(description="Apply remodeling actions to SWC data")
         parser.add_argument("--directory", required=True, help="Base directory for the SWC file")
         parser.add_argument("--file-name", required=True, help="SWC filename")
@@ -930,6 +932,7 @@ def edit_main(argv=None):
         diam_change = args.diam_change
     
         def sample_random_dendrites(options, label):
+            # Pick random dendrites while ensuring a minimum length
             """Return a valid random dendrite selection."""
             valid = [d for d in options if len(dend_add3d[d]) >= 3]
             num = int(round_to(len(valid) * who_random_variable, 1))
@@ -1034,6 +1037,7 @@ def edit_main(argv=None):
     
     
 def main(argv=None):
+    # Command line interface dispatching to analyze/edit modes
     parser = argparse.ArgumentParser(
         description='Compute statistics or remodel SWC files',
     )
