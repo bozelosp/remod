@@ -49,13 +49,13 @@ def path_length(dendrite_list, path, dist):
 
         return {d: sum(dist[i] for i in path[d]) for d in dendrite_list}
 
-def median_diameter(dendrite_list, dend_add3d):
+def median_diameter(dendrite_list, dend_segments):
         """Return the median diameter for each dendrite in *dendrite_list*."""
         # Diameter at the midpoint acts as a robust representative
         med_diam = {}
         for dend in dendrite_list:
-                mid_idx = len(dend_add3d[dend]) // 2
-                med_diam[dend] = float(dend_add3d[dend][mid_idx][5]) * 2
+                mid_idx = len(dend_segments[dend]) // 2
+                med_diam[dend] = float(dend_segments[dend][mid_idx][5]) * 2
         return med_diam
 
 def print_branch_order(dendrite_list, branch_order):
@@ -156,7 +156,7 @@ def sholl_length(points, parental_points, soma_index, radius, parameter):
 
         return sholl_list
 
-def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
+def dist_angle_analysis(dendrite_list, dend_segments, soma_root, principal_axis):
         """Return list of [distance, angle] pairs for dendrite points."""
         # Calculates angle relative to the main apical axis
 
@@ -166,7 +166,7 @@ def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
 
         dist_angle = []
         for dend in dendrite_list:
-                coords = np.array(dend_add3d[dend])[:, 2:5]
+                coords = np.array(dend_segments[dend])[:, 2:5]
                 bc = coords - soma_root
                 dist = LA.norm(bc, axis=1)
                 bc_unit = bc / dist[:, None]
@@ -197,7 +197,7 @@ def dist_angle_frequency(dist_angle, radius):
 
         return dist_freq, angle_f
 
-def axis(apical, dend_add3d, soma_index):
+def axis(apical, dend_segments, soma_index):
         # weighted linear regression
         """Return principal axis and soma location using weighted regression."""
         # Weighted by diameter so thicker dendrites influence the fit
@@ -207,7 +207,7 @@ def axis(apical, dend_add3d, soma_index):
         coords = []
         diam = []
         for dend in apical:
-                arr = np.array(dend_add3d[dend])
+                arr = np.array(dend_segments[dend])
                 coords.append(arr[:, 2:5] - [x_soma, y_soma, z_soma])
                 diam.append(arr[:, 5])
 

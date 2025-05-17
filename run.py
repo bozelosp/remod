@@ -139,8 +139,8 @@ def analyze_main(argv=None):
                 print('Retrieving previously calculated morphometric statistics')
                 print()
         
-                fpickle = directory / 'current_average_statistics.p'
-                with open(fpickle, "rb") as f:
+                stats_pickle_path = directory / 'current_average_statistics.p'
+                with open(stats_pickle_path, "rb") as f:
                     stats = pickle.load(f)
     
                 average_number_of_all_terminal_dendrites = stats.get('average_number_of_all_terminal_dendrites', [])
@@ -210,8 +210,8 @@ def analyze_main(argv=None):
                     axon,
                     basal,
                     apical,
-                    elsep,
-                    dend_add3d,
+                    undefined_dendrites,
+                    dend_segments,
                     path,
                     all_terminal,
                     basal_terminal,
@@ -219,10 +219,10 @@ def analyze_main(argv=None):
                     dist,
                     area,
                     branch_order_map,
-                    con,
+                    connectivity_map,
                     parental_points,
                 ) = read_file(fname)  # extracts important connectivity and morphological data
-                first_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
+                first_graph(directory, file_name, dendrite_list, dend_segments, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
         
                 results['number_of_all_dendrites'] = len(dendrite_list)
                 average_number_of_all_dendrites.append(len(dendrite_list))
@@ -465,8 +465,8 @@ def analyze_main(argv=None):
                 print(file_name, file=f)
         
         import pickle, os
-        fpickle = directory / 'current_average_statistics.p'
-        with open(fpickle, "wb") as f:
+        stats_pickle_path = directory / 'current_average_statistics.p'
+        with open(stats_pickle_path, "wb") as f:
             pickle.dump(
                 {
                     'average_number_of_all_terminal_dendrites': average_number_of_all_terminal_dendrites,
@@ -921,11 +921,11 @@ def edit_main(argv=None):
         file_name = args.file_name
         fname = directory / file_name
     
-        who = args.who
-        if who in ['who_random_all', 'who_random_apical', 'who_random_basal']:
-            who_random_variable = args.random_ratio / 100.0
+        target_dendrites = args.who
+        if target_dendrites in ['who_random_all', 'who_random_apical', 'who_random_basal']:
+            target_random_ratio = args.random_ratio / 100.0
         else:
-            who_random_variable = None
+            target_random_ratio = None
         who_manual_variable = args.who_manual_variable
         action = args.action
         hm_choice = args.hm_choice
@@ -936,11 +936,11 @@ def edit_main(argv=None):
         def sample_random_dendrites(options, label):
             # Pick random dendrites while ensuring a minimum length
             """Return a valid random dendrite selection."""
-            valid = [d for d in options if len(dend_add3d[d]) >= 3]
-            num = int(round_to(len(valid) * who_random_variable, 1))
+            valid = [d for d in options if len(dend_segments[d]) >= 3]
+            num = int(round_to(len(valid) * target_random_ratio, 1))
             num = max(0, min(num, len(valid)))
             selection = random.sample(valid, num)
-            which = f"random {label} ({who_random_variable * 100}% ) "
+            which = f"random {label} ({target_random_ratio * 100}% ) "
             return selection, which
     
         exist_downloads = directory / 'downloads'
@@ -956,7 +956,37 @@ def edit_main(argv=None):
         print('Open file: ' + str(file_name))
         print()
         
-        (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+        (
+            swc_lines,
+            points,
+            comment_lines,
+            parents,
+            branch_points,
+            axon_bpoints,
+            basal_bpoints,
+            apical_bpoints,
+            else_bpoints,
+            soma_index,
+            max_index,
+            dendrite_list,
+            descendants,
+            dend_indices,
+            dend_names,
+            axon,
+            basal,
+            apical,
+            undefined_dendrites,
+            dend_segments,
+            path,
+            all_terminal,
+            basal_terminal,
+            apical_terminal,
+            dist,
+            area,
+            branch_order_map,
+            connectivity_map,
+            parental_points,
+        ) = read_file(fname)  # extracts important connectivity and morphological data
         
         print('\nSWC parsing is completed!\n')
         
@@ -980,28 +1010,28 @@ def edit_main(argv=None):
             'who_random_basal': (basal_terminal, 'basal'),
         }
 
-        if who in selection_map:
-            who, which_dendrites = selection_map[who]
-        elif who in random_map:
-            who, which_dendrites = sample_random_dendrites(*random_map[who])
-        elif who == 'who_manual':
+        if target_dendrites in selection_map:
+            target_dendrites, which_dendrites = selection_map[target_dendrites]
+        elif target_dendrites in random_map:
+            target_dendrites, which_dendrites = sample_random_dendrites(*random_map[target_dendrites])
+        elif target_dendrites == 'who_manual':
             dendrites = [d for d in who_manual_variable.split(',') if d]
-            who = [int(x) for x in dendrites]
+            target_dendrites = [int(x) for x in dendrites]
             which_dendrites = 'manually selected '
         else:
             print('No dendrites are defined to be remodeled!')
             sys.exit(0)
-        
-        who.sort()
+
+        target_dendrites.sort()
         
         print('The dendrites stemming from these segments will be edited: ')
-        print(str(who))
+        print(str(target_dendrites))
         
-        (branch_order_freq, branch_order_max)=branch_order_frequency(dendrite_list, branch_order)
+        (branch_order_freq, branch_order_max)=branch_order_frequency(dendrite_list, branch_order_map)
         
         if action == 'shrink':
             if hm_choice == 'micrometers':
-                    (status, not_applicable)=shrink_warning(who, dist, amount)
+                    (status, not_applicable)=shrink_warning(target_dendrites, dist, amount)
                     if status:
                             print('Consider these warnings before you proceed to shrink action!\n')
                             for dend in not_applicable:
@@ -1012,20 +1042,50 @@ def edit_main(argv=None):
         
         print('\nRemodeling the neuron begins!\n')
         
-        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(who) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
+        edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(hm_choice) + ', amount: ' + str(amount) + ', diameter percent/um: ' + str(var_choice) + ', diameter change: ' + str(diam_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
         
-        (newfile, dendrite_list, segment_list)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
-        
+        (newfile, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, hm_choice, dend_segments, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+
         if action in ['shrink', 'remove', 'scale']:
-            newfile=index_reassign(dendrite_list, dend_add3d, branch_order, con, axon, basal, apical, elsep, soma_index, branch_order_max, action)
+            newfile=index_reassign(dendrite_list, dend_segments, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_index, branch_order_max, action)
         
         newfile=comment_lines + newfile
         check_indices(newfile) #check if indices are continuous from 0 and u
         write_swc(directory, file_name, newfile, comment=edit)
         
         fname = directory / 'downloads' / 'files' / (file_name.replace('.swc','') + '_new.swc')
-        (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname)
-        second_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
+        (
+            swc_lines,
+            points,
+            comment_lines,
+            parents,
+            branch_points,
+            axon_bpoints,
+            basal_bpoints,
+            apical_bpoints,
+            else_bpoints,
+            soma_index,
+            max_index,
+            dendrite_list,
+            descendants,
+            dend_indices,
+            dend_names,
+            axon,
+            basal,
+            apical,
+            undefined_dendrites,
+            dend_segments,
+            path,
+            all_terminal,
+            basal_terminal,
+            apical_terminal,
+            dist,
+            area,
+            branch_order_map,
+            connectivity_map,
+            parental_points,
+        ) = read_file(fname)
+        second_graph(directory, file_name, dendrite_list, dend_segments, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
         
         print()
         print('File: ' + str(file_name) + ' was succesfully edited!')
@@ -1035,7 +1095,7 @@ def edit_main(argv=None):
         print()
     
     
-        #graph(swc_lines, newfile, action, dend_add3d, dendrite_list, directory, file_name) #plots the original and modified tree (overlaying one another)
+        #graph(swc_lines, newfile, action, dend_segments, dendrite_list, directory, file_name) #plots the original and modified tree (overlaying one another)
     
     
 def main(argv=None):
