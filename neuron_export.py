@@ -6,7 +6,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Sequence
 
-from file_io import write_lines
+from file_io import write_lines, write_plot
 
 
 Color = str
@@ -154,4 +154,47 @@ def second_graph(
         verbose=True,
     )
 
-__all__ = ["first_graph", "second_graph"]
+
+
+# Overlay plot utilities originally kept in overlay_graph.py
+PlotEntry = list[Sequence[float]]
+
+def build_plot_from_lines(lines: Iterable[str]) -> list[PlotEntry]:
+    """Return plot segments for ``lines`` of an SWC file."""
+    from swc_parser import parse_swc_lines
+    from core_utils import round_to
+
+    _, samples = parse_swc_lines(lines)
+    plot: list[PlotEntry] = []
+    for idx, vals in samples.items():
+        parent = int(vals[6])
+        if parent == -1 or parent not in samples:
+            continue
+        x = [round_to(float(vals[2]), 0.01), round_to(float(samples[parent][2]), 0.01)]
+        y = [round_to(float(vals[3]), 0.01), round_to(float(samples[parent][3]), 0.01)]
+        z = [round_to(float(vals[4]), 0.01), round_to(float(samples[parent][4]), 0.01)]
+        plot.append([x, y, z, float(vals[5])])
+    return plot
+
+
+def graph(
+    initial_file: Iterable[str],
+    modified_file: Iterable[str],
+    action: str,
+    directory: str | Path,
+    file_name: str,
+) -> None:
+    """Create an overlay plot describing the changes between two SWC files."""
+
+    before_plot: list[PlotEntry] = build_plot_from_lines(initial_file)
+    after_plot: list[PlotEntry] = build_plot_from_lines(modified_file)
+
+    if action in {"shrink", "remove"}:
+        after_plot = [p for p in before_plot if p not in after_plot]
+    elif action in {"extend", "branch"}:
+        after_plot = [p for p in after_plot if p not in before_plot]
+
+    fname = Path(directory) / f"{file_name.replace('.swc', '')}_neuron.txt"
+    write_plot(fname, before_plot, after_plot)
+
+__all__ = ["first_graph", "second_graph", "build_plot_from_lines", "graph"]
