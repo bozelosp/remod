@@ -111,3 +111,100 @@ def parse_plot_args(args: list[str] | None = None):
     if not ns.directory.is_dir():
         parser.error(f"{ns.directory} is not a valid directory")
     return ns
+
+
+def parse_analyze_args(args: list[str] | None = None):
+    """Return parsed CLI options for :mod:`run` analyze commands."""
+    parser = argparse.ArgumentParser(
+        description="Compute morphometric statistics for SWC files.",
+    )
+    parser.add_argument(
+        "directory",
+        type=Path,
+        help="Directory containing SWC files.",
+    )
+    parser.add_argument(
+        "files",
+        help="Comma separated list of SWC file names.",
+    )
+    ns = parser.parse_args(args)
+    if not ns.directory.is_dir():
+        parser.error(f"{ns.directory} is not a valid directory")
+    return ns
+
+
+def parse_edit_args(args: list[str] | None = None):
+    """Return parsed CLI options for :mod:`run` edit commands."""
+    parser = argparse.ArgumentParser(
+        description="Apply remodeling actions to a SWC file.",
+    )
+    parser.add_argument("--directory", required=True, type=Path,
+                        help="Base directory for the SWC file")
+    parser.add_argument("--file-name", required=True, help="SWC filename")
+    parser.add_argument("--who", required=True, help="Target dendrite selection")
+    parser.add_argument("--random-ratio", type=float, default=0.0,
+                        help="Ratio for random selection (percent)")
+    parser.add_argument(
+        "--who-manual-variable",
+        default="none",
+        help="Comma separated manual dendrite ids",
+    )
+    parser.add_argument("--action", required=True, help="Remodeling action")
+    parser.add_argument(
+        "--hm-choice",
+        required=True,
+        help="percent or micrometers for extent",
+    )
+    parser.add_argument(
+        "--amount",
+        type=float,
+        default=None,
+        help="Extent of the action",
+    )
+    parser.add_argument(
+        "--var-choice",
+        required=True,
+        help="percent or micrometers for diameter change",
+    )
+    parser.add_argument(
+        "--diam-change",
+        type=float,
+        default=None,
+        help="Extent of diameter change",
+    )
+    ns = parser.parse_args(args)
+    if not ns.directory.is_dir():
+        parser.error(f"{ns.directory} is not a valid directory")
+    return ns
+
+
+def parse_merge_args(args: list[str] | None = None):
+    """Return parsed CLI options for :mod:`merge_stats` commands."""
+    parser = argparse.ArgumentParser(
+        description="Merge statistic files from different runs",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_simple = sub.add_parser(
+        "simple",
+        help="Combine raw statistics using before/ and after/ subdirectories",
+    )
+    p_simple.add_argument(
+        "--directory",
+        required=True,
+        type=Path,
+        help="Base directory containing before/ and after/ folders",
+    )
+
+    p_smart = sub.add_parser(
+        "smart",
+        help="Merge average statistics and generate plots",
+    )
+    p_smart.add_argument("--before-dir", required=True, type=Path,
+                         help="Directory with files before editing")
+    p_smart.add_argument("--after-dir", required=True, type=Path,
+                         help="Directory with files after editing")
+    p_smart.add_argument("--output-dir", required=True, type=Path,
+                         help="Destination directory for merged files")
+
+    return parser.parse_args(args)
