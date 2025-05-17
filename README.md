@@ -45,7 +45,7 @@ Using a virtual environment is recommended but not mandatory.
       --diam-change 10
    ```
 
-   Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--who-manual-variable`.
+   Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--manual-dendrites`.
 4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D plots comparing the original and edited morphologies. Use `plot_data.py` on `downloads/statistics/` to create summary graphs; add `--average` or `--compare` for group averages or comparative views.  Figures are stored in the `downloads/` directory.
 
 ## Workflow
