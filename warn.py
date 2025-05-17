@@ -2,6 +2,7 @@ import re
 import sys
 
 def shrink_warning(who, dist, amount):
+        """Return dendrites shorter than ``amount`` and a status flag."""
         # Identify dendrites too short for shrinking
         not_applicable=[]
         status=False
@@ -12,6 +13,8 @@ def shrink_warning(who, dist, amount):
         return status, not_applicable
 
 def check_terminal(who, all_terminal):
+
+        """Exit if ``who`` contains dendrites that are not terminal."""
 
         # Collect non-terminal dendrites selected for editing
         not_terminal=[]
@@ -28,6 +31,8 @@ def check_terminal(who, all_terminal):
                 exit(1)
 
 def check_indices(newfile):
+
+        """Print a warning if segment indices are not continuous."""
 
         # Gather segment indices to test for continuity
         ilist=[]

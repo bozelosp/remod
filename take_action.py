@@ -249,7 +249,7 @@ def shrink(
     descendants,
     all_terminal,
 ):
-        # return the updated .hoc lines with the selected dendrites shortened
+        """Return SWC lines with the selected dendrites shortened."""
         # Shorten dendrites by a fixed percent or absolute length
 
         amount=int(amount)
@@ -568,7 +568,7 @@ def remove(
     descendants,
     all_terminal,
 ):
-        # return the updated .hoc lines with the selected dendrites removed
+        """Return SWC lines with the selected dendrites removed."""
         # Completely delete chosen dendrites from the morphology
 
         new_lines=[]
@@ -616,7 +616,7 @@ def extend(
     descendants,
     all_terminal,
 ):
-        # return the updated .hoc lines with the selected dendrites extended
+        """Return SWC lines with the selected dendrites extended."""
 
         amount=int(amount)
 
@@ -746,7 +746,7 @@ def branch(
     soma_index,
     dendrite_list,
 ):
-        # return the updated .hoc lines with the newly branched dendrites
+        """Return SWC lines for newly created branch dendrites."""
 
         amount=int(amount)
 
@@ -840,6 +840,8 @@ def branch(
 
 def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
 
+        """Scale dendrite diameters by ``diam_change`` percent."""
+
         diam_change=int(diam_change)
         for dend in who:
 
@@ -867,7 +869,7 @@ def diameter_change(who, diam_change, dend_add3d, dendrite_list, soma_index):
         return newfile
 
 def scale(who, soma_index, dend_add3d, amount):
-        # return the updated .hoc lines with the selected dendrites scaled
+        """Scale coordinates and diameter of dendrites by ``amount`` percent."""
 
         amount=float(amount)/100
 
