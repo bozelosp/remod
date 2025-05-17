@@ -8,6 +8,7 @@ import collections
 from pathlib import Path
 
 from extract_swc_morphology import *
+read_file = parse_swc_file
 from neuron_visualization import *
 from statistics_swc import (
     total_length,
@@ -193,11 +194,11 @@ def analyze_main(argv=None):
                     basal_bpoints,
                     apical_bpoints,
                     soma_bpoints,
-                    soma_segments,
-                    max_index,
+                    soma_samples,
+                    max_sample_number,
                     dendrite_list,
                     descendants,
-                    segment_indices,
+                    dendrite_samples_map,
                     dend_names,
                     axon,
                     basal,
@@ -212,9 +213,9 @@ def analyze_main(argv=None):
                     area,
                     branch_order_map,
                     connectivity_map,
-                    parent_indices,
+                    parent_samples,
                 ) = read_file(fname)  # extracts important connectivity and morphological data
-                first_graph(directory, file_name, dendrite_list, dend_coords, points, parent_indices,soma_segments) #plots the original and modified tree (overlaying one another)
+                first_graph(directory, file_name, dendrite_list, dend_coords, points, parent_samples, soma_samples) #plots the original and modified tree (overlaying one another)
         
                 results['number_of_all_dendrites'] = len(dendrite_list)
                 average_number_of_all_dendrites.append(len(dendrite_list))
@@ -262,22 +263,22 @@ def analyze_main(argv=None):
                 #print len(list(set([parent_indices[x] for x in branch_points])))
         
                 fnum_all_bpoints = stats_dir / f'{file_name}_number_of_all_branchpoints.txt'
-                soma=[x[0] for x in soma_segments]
+                soma=[x[0] for x in soma_samples]
                 write_value(
                     fnum_all_bpoints,
-                    len(list(set([parent_indices[x] for x in branch_points if parent_indices[x] not in soma]))),
+                    len(list(set([parent_samples[x] for x in branch_points if parent_samples[x] not in soma]))),
                 )
-                average_num_all_bpoints.append(len(list(set([parent_indices[x] for x in branch_points if parent_indices[x] not in soma]))))
+                average_num_all_bpoints.append(len(list(set([parent_samples[x] for x in branch_points if parent_samples[x] not in soma]))))
         
                 results['number_of_basal_branchpoints'] = len(
-                    list(set([parent_indices[x] for x in basal_bpoints if parent_indices[x] not in soma]))
+                    list(set([parent_samples[x] for x in basal_bpoints if parent_samples[x] not in soma]))
                 )
-                average_num_basal_bpoints.append(len(list(set([parent_indices[x] for x in basal_bpoints if parent_indices[x] not in soma]))))
+                average_num_basal_bpoints.append(len(list(set([parent_samples[x] for x in basal_bpoints if parent_samples[x] not in soma]))))
         
                 results['number_of_apical_branchpoints'] = len(
-                    list(set([parent_indices[x] for x in apical_bpoints if parent_indices[x] not in soma]))
+                    list(set([parent_samples[x] for x in apical_bpoints if parent_samples[x] not in soma]))
                 )
-                average_num_apical_bpoints.append(len(list(set([parent_indices[x] for x in apical_bpoints if parent_indices[x] not in soma]))))
+                average_num_apical_bpoints.append(len(list(set([parent_samples[x] for x in apical_bpoints if parent_samples[x] not in soma]))))
         
                 results['list_of_all_dendrites'] = dendrite_list
         
@@ -371,22 +372,22 @@ def analyze_main(argv=None):
                         for order in branch_order_path_lengths:
                                 average_apical_branch_order_path_length[order].append(branch_order_path_lengths[order])
         
-                sholl_all_length=sholl_length(points, parent_indices, soma_segments, radius, [3,4])
+                sholl_all_length=sholl_length(points, parent_samples, soma_samples, radius, [3,4])
                 results['sholl_all_length'] = sholl_all_length
                 for length in sorted(sholl_all_length):
                         average_sholl_all_length[length].append(sholl_all_length[length])
         
-                sholl_basal_length=sholl_length(points, parent_indices, soma_segments, radius, [3])
+                sholl_basal_length=sholl_length(points, parent_samples, soma_samples, radius, [3])
                 results['sholl_basal_length'] = sholl_basal_length
                 for length in sorted(sholl_basal_length):
                         average_sholl_basal_length[length].append(sholl_basal_length[length])
         
-                sholl_apical_length=sholl_length(points, parent_indices, soma_segments, radius, [4])
+                sholl_apical_length=sholl_length(points, parent_samples, soma_samples, radius, [4])
                 results['sholl_apical_length'] = sholl_apical_length
                 for length in sorted(sholl_apical_length):
                         average_sholl_apical_length[length].append(sholl_apical_length[length])
         
-                '''sholl_median_basal_length=sholl_length(points, parent_indices, soma_segments, radius, [3])
+                '''sholl_median_basal_length=sholl_length(points, parent_samples, soma_samples, radius, [3])
                 f_sholl=os.path.join(stats_dir, file_name + '_sholl_median_basal_length.txt')
                 f = open(f_sholl, 'w+')
                 for length in sorted(sholl_median_basal_length):
@@ -394,17 +395,17 @@ def analyze_main(argv=None):
                         print >>f, "%s %s" % (length, sholl_median_basal_length[length])
                 f.close'''
         
-                sholl_all_bp=sholl_bp(branch_points, points, soma_segments, radius)
+                sholl_all_bp=sholl_bp(branch_points, points, soma_samples, radius)
                 results['sholl_all_branchpoints'] = sholl_all_bp
                 for length in sorted(sholl_all_bp):
                         average_sholl_all_bp[length].append(sholl_all_bp[length])
         
-                sholl_basal_bp=sholl_bp(basal_bpoints, points, soma_segments, radius)
+                sholl_basal_bp=sholl_bp(basal_bpoints, points, soma_samples, radius)
                 results['sholl_basal_branchpoints'] = sholl_basal_bp
                 for length in sorted(sholl_basal_bp):
                         average_sholl_basal_bp[length].append(sholl_basal_bp[length])
         
-                sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_segments, radius)
+                sholl_apical_bp=sholl_bp(apical_bpoints, points, soma_samples, radius)
                 results['sholl_apical_branchpoints'] = sholl_apical_bp
                 for length in sorted(sholl_apical_bp):
                         average_sholl_apical_bp[length].append(sholl_apical_bp[length])
@@ -415,7 +416,7 @@ def analyze_main(argv=None):
                 f.close'''
         
                 vector=[]
-                sholl_all_intersections=sholl_intersections(points, parent_indices, soma_segments, radius, [3,4])
+                sholl_all_intersections=sholl_intersections(points, parent_samples, soma_samples, radius, [3,4])
                 results['sholl_all_intersections'] = sholl_all_intersections
                 for length in sorted(sholl_all_intersections):
                         average_sholl_all_intersections[length].append(sholl_all_intersections[length])
@@ -424,7 +425,7 @@ def analyze_main(argv=None):
                         vector.append(sholl_all_intersections[length])
         
                 vector=[]
-                sholl_basal_intersections=sholl_intersections(points, parent_indices, soma_segments, radius, [3])
+                sholl_basal_intersections=sholl_intersections(points, parent_samples, soma_samples, radius, [3])
                 results['sholl_basal_intersections'] = sholl_basal_intersections
                 for length in sorted(sholl_basal_intersections):
                         average_sholl_basal_intersections[length].append(sholl_basal_intersections[length])
@@ -433,7 +434,7 @@ def analyze_main(argv=None):
                         vector.append(sholl_basal_intersections[length])
         
                 vector=[]
-                sholl_apical_intersections=sholl_intersections(points, parent_indices, soma_segments, radius, [4])
+                sholl_apical_intersections=sholl_intersections(points, parent_samples, soma_samples, radius, [4])
                 results['sholl_apical_intersections'] = sholl_apical_intersections
                 for length in sorted(sholl_apical_intersections):
                         average_sholl_apical_intersections[length].append(sholl_apical_intersections[length])
@@ -878,11 +879,11 @@ def edit_main(argv=None):
             basal_bpoints,
             apical_bpoints,
             soma_bpoints,
-            soma_segments,
-            max_index,
+            soma_samples,
+            max_sample_number,
             dendrite_list,
             descendants,
-            segment_indices,
+            dendrite_samples_map,
             dend_names,
             axon,
             basal,
@@ -897,7 +898,7 @@ def edit_main(argv=None):
             area,
             branch_order_map,
             connectivity_map,
-            parent_indices,
+            parent_samples,
         ) = read_file(fname)  # extracts important connectivity and morphological data
         
         print('\nSWC parsing is completed!\n')
@@ -956,10 +957,10 @@ def edit_main(argv=None):
         
         edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(extent_unit) + ', amount: ' + str(amount) + ', radius percent/um: ' + str(radius_unit) + ', radius change: ' + str(radius_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
-        (new_lines, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, extent_unit, dend_coords, dist, max_index, radius_change, dendrite_list, soma_segments, points, parent_indices, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+        (new_lines, dendrite_list, segment_list)=execute_action(target_dendrites, action, amount, extent_unit, dend_coords, dist, max_sample_number, radius_change, dendrite_list, soma_samples, points, parent_samples, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
         if action in ['shrink', 'remove', 'scale']:
-            new_lines=index_reassign(dendrite_list, dend_coords, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_segments, branch_order_max, action)
+            new_lines=index_reassign(dendrite_list, dend_coords, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_samples, branch_order_max, action)
         
         new_lines=comment_lines + new_lines
         check_indices(new_lines) #check if indices are continuous from 0 and u
@@ -975,11 +976,11 @@ def edit_main(argv=None):
             basal_bpoints,
             apical_bpoints,
             soma_bpoints,
-            soma_segments,
-            max_index,
+            soma_samples,
+            max_sample_number,
             dendrite_list,
             descendants,
-            segment_indices,
+            dendrite_samples_map,
             dend_names,
             axon,
             basal,
@@ -994,9 +995,9 @@ def edit_main(argv=None):
             area,
             branch_order_map,
             connectivity_map,
-            parent_indices,
+            parent_samples,
         ) = read_file(fname)
-        second_graph(directory, file_name, dendrite_list, dend_coords, points, parent_indices, soma_segments) #plots the original and modified tree (overlaying one another)
+        second_graph(directory, file_name, dendrite_list, dend_coords, points, parent_samples, soma_samples) #plots the original and modified tree (overlaying one another)
         
         print()
         print('File: ' + str(file_name) + ' was succesfully edited!')
