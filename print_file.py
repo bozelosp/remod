@@ -4,11 +4,10 @@ def print_newfile_tmp(directory, file_name, newfile, edit):
 
 	new_name=directory+file_name.replace('.swc','') + '_new_tmp.swc'
 
-	f = open(new_name, 'w')
-	print(('\n').join(newfile), file=f)
-	print('Hi')
-	return new_name
-	f.close()
+        with open(new_name, 'w') as f:
+                print(('\n').join(newfile), file=f)
+                print('Hi')
+        return new_name
 
 def print_newfile(directory, file_name, newfile, edit):
 
@@ -21,7 +20,6 @@ def print_newfile(directory, file_name, newfile, edit):
 	new_name=directory+file_name#.replace('.swc','') + '_new.swc'
 	new_name=directory+file_name.replace('.swc','') + '_new.swc'
 
-	f = open(new_name, 'w')
-	print(edit, file=f)
-	print(('\n').join(newfile), file=f)
-	f.close()
+        with open(new_name, 'w') as f:
+                print(edit, file=f)
+                print(('\n').join(newfile), file=f)
