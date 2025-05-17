@@ -68,5 +68,7 @@ The typical pipeline is:
 - `swc_parser.py` also provides `index_reassign` to renumber nodes after editing.
 - `core_utils.py` provides weighted dendrite sampling utilities and warning helpers once kept in `warn.py`.
 - `remodeling_actions.py` implements the individual remodeling operations.
+- `merge_statistics.py` combines results from separate runs and can plot comparisons.
+- `plot_statistics.py` now includes the plotting helpers previously found in `plotting_helpers.py`.
 
 Run any script with the `--help` flag for a description of its command line options.
