@@ -79,12 +79,12 @@ The individual scripts are designed to be used as a pipeline:
 4. **Visualise and plot** – generate 3‑D views using `neuron_visualization.py`
    or `graph.py` and create summary plots with `plot_data.py` or
    `plot_individual_data.py`.
-5. **Combine statistics** – use `merge.py` or `smart_merge.py` to merge multiple
-   statistics files produced from different runs.
+5. **Combine statistics** – use `merge_stats.py` to merge statistics from
+   different runs.
 
 ## More tools
 
-- `merge.py` and `smart_merge.py` combine SWC segments.
+- `merge_stats.py` combines SWC segments from multiple runs.
 - `plot_data.py` and `plot_individual_data.py` visualise computed statistics.
 - `index_reassignment.py` contains the renumbering logic used internally.
 - `random_sampling.py` demonstrates how to draw random dendrites.
