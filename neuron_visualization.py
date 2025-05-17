@@ -38,14 +38,14 @@ def _dendrite_connections(
     dendrite_list: Iterable[int],
     dend_coords: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
-    parent_indices: Dict[int, int],
+    parent_samples: Dict[int, int],
 ) -> List[List]:
     """Return line segments between dendrite points and their parents."""
     # Skips axon points which are marked with type 2
 
     for dend in dendrite_list:
         for point in dend_coords[dend]:
-            parent_idx = parent_indices.get(point[6], -1)
+            parent_idx = parent_samples.get(point[6], -1)
             if parent_idx == -1 or point[1] == 2:
                 continue
             parent = points[parent_idx]
@@ -65,17 +65,17 @@ def _collect_segments(
     dendrite_list: Iterable[int],
     dend_coords: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
-    parent_indices: Dict[int, int],
-    soma_segments: Sequence[Sequence],
+    parent_samples: Dict[int, int],
+    soma_samples: Sequence[Sequence],
 ) -> List[List]:
     """Gather all line segments for soma and dendrites."""
     # Internally chains helpers for cleaner export functions
 
     return list(
         chain(
-            _soma_connections(soma_segments),
+            _soma_connections(soma_samples),
             _dendrite_connections(
-                dendrite_list, dend_coords, points, parent_indices
+                dendrite_list, dend_coords, points, parent_samples
             ),
         )
     )
@@ -87,8 +87,8 @@ def _export_graph(
     dendrite_list: Iterable[int],
     dend_coords: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
-    parent_indices: Dict[int, int],
-    soma_segments: Sequence[Sequence],
+    parent_samples: Dict[int, int],
+    soma_samples: Sequence[Sequence],
     suffix: str,
     verbose: bool = False,
 ) -> None:
@@ -96,7 +96,7 @@ def _export_graph(
     # Build the list of line segments and write them to disk
 
     segments = _collect_segments(
-        dendrite_list, dend_coords, points, parent_indices, soma_segments
+        dendrite_list, dend_coords, points, parent_samples, soma_samples
     )
 
     if verbose:
@@ -113,8 +113,8 @@ def first_graph(
     dendrite_list: Iterable[int],
     dend_coords: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
-    parent_indices: Dict[int, int],
-    soma_segments: Sequence[Sequence],
+    parent_samples: Dict[int, int],
+    soma_samples: Sequence[Sequence],
 ) -> None:
     """Write coordinates of the original morphology to ``*_before.txt``."""
     # Called before any edits are applied
@@ -125,8 +125,8 @@ def first_graph(
         dendrite_list,
         dend_coords,
         points,
-        parent_indices,
-        soma_segments,
+        parent_samples,
+        soma_samples,
         "before",
     )
 
@@ -136,8 +136,8 @@ def second_graph(
     dendrite_list: Iterable[int],
     dend_coords: Dict[int, Sequence[Sequence]],
     points: Dict[int, Sequence],
-    parent_indices: Dict[int, int],
-    soma_segments: Sequence[Sequence],
+    parent_samples: Dict[int, int],
+    soma_samples: Sequence[Sequence],
 ) -> None:
     """Write coordinates of the edited morphology to ``*_after.txt``."""
     # Generates output after remodeling for comparison
@@ -148,8 +148,8 @@ def second_graph(
         dendrite_list,
         dend_coords,
         points,
-        parent_indices,
-        soma_segments,
+        parent_samples,
+        soma_samples,
         "after",
         verbose=True,
     )

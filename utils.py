@@ -226,7 +226,7 @@ def shrink_warning(who, dist, amount):
 
 
 def check_indices(new_lines):
-    """Print a warning if segment indices are not continuous."""
+    """Print a warning if sample numbers are not continuous."""
     ilist = []
     for line in new_lines:
         if line.startswith("#"):
@@ -240,7 +240,7 @@ def check_indices(new_lines):
     for i in range(len(ilist) - 1):
         if ilist[i + 1][0] - ilist[i][0] != 1:
             print(
-                "Error! Non-continuity of segment indices found at:",
+                "Error! Non-continuity of sample numbers found at:",
                 ilist[i][0],
                 ilist[i][1],
             )
