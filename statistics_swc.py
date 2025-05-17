@@ -28,8 +28,8 @@ def median_diameter(dendrite_list, dend_add3d):
 
         med_diam = {}
         for dend in dendrite_list:
-                m = len(dend_add3d[dend]) // 2
-                med_diam[dend] = float(dend_add3d[dend][m][5]) * 2
+                mid_idx = len(dend_add3d[dend]) // 2
+                med_diam[dend] = float(dend_add3d[dend][mid_idx][5]) * 2
         return med_diam
 
 def print_branch_order(dendrite_list, branch_order):
@@ -200,9 +200,9 @@ def axis(apical, dend_add3d, soma_index): #weighted linear regression
         weighted = coords * weights[:, None]
         centered = weighted - weighted.mean(axis=0)
 
-        _, _, v = np.linalg.svd(centered)
+        _, _, singular_vecs = np.linalg.svd(centered)
 
-        principal_axis = (v[0] + np.array([x_soma, y_soma, z_soma])).tolist()
+        principal_axis = (singular_vecs[0] + np.array([x_soma, y_soma, z_soma])).tolist()
         soma_root = [x_soma, y_soma, z_soma]
 
         return principal_axis, soma_root
