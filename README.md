@@ -61,8 +61,10 @@ Using a virtual environment is recommended but not mandatory.
    ```
 
 4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D
-   plots comparing the original and edited morphologies. Figures are stored in
-   the `downloads/` directory.
+   plots comparing the original and edited morphologies. Use `plot_data.py` with
+   the path to `downloads/statistics/` to create summary graphs; add
+   `--average` or `--compare` for group averages or comparative views.
+   Figures are stored in the `downloads/` directory.
 
 ## Workflow
 
@@ -85,7 +87,9 @@ The individual scripts are designed to be used as a pipeline:
 ## More tools
 
 - `merge_stats.py` combines SWC segments from multiple runs.
-- `plot_data.py` and `plot_individual_data.py` visualise computed statistics.
+- `plot_data.py` generates summary graphs from a statistics directory with
+  optional `--average` and `--compare` flags; `plot_individual_data.py` holds
+  the plotting helpers.
 - `index_reassignment.py` contains the renumbering logic used internally.
 - `random_sampling.py` demonstrates how to draw random dendrites.
 
