@@ -1,117 +1,107 @@
-import re
-from math import sqrt
-from random import randint
-import sys
+"""Utility functions to export neuron morphology for visualisation."""
+
 from pathlib import Path
-
-import numpy as np
-from random import uniform, randrange
-from math import cos, sin, pi, sqrt, radians, degrees
+from typing import Dict, Iterable, List, Sequence
 
 
-def first_graph(abs_path, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index):
+Color = str
+DEFAULT_COLOR: Color = "0x0000FF"
 
-        my_plot=[]
 
-        for point in soma_index:
+def _write_lines(path: Path, lines: Iterable[Sequence]) -> None:
+    """Write formatted ``lines`` to ``path`` as space separated values."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for line in lines:
+            f.write(" ".join(str(x) for x in line) + "\n")
 
-                for k in soma_index:
 
-                        i=point[0]
-                        x=point[2]
-                        y=point[3]
-                        z=point[4]
-                        d=point[5]
-                        parent_id=point[6]
-        
-                        if parent_id==k[0]:
+def _soma_connections(soma_points: Sequence[Sequence]) -> List[List]:
+    """Return line segments connecting soma points to their parent."""
 
-                                xp=k[2]
-                                yp=k[3]
-                                zp=k[4]
+    lookup = {p[0]: p for p in soma_points}
+    segments: List[List] = []
+    for p in soma_points:
+        parent = lookup.get(p[6])
+        if parent:
+            segments.append(
+                [p[2], p[3], p[4], parent[2], parent[3], parent[4], p[5], DEFAULT_COLOR]
+            )
+    return segments
 
-                                my_plot.append([x, y, z, xp, yp, zp, d, 1, '0x0000FF'])
 
-        for dend in dendrite_list:
+def _dendrite_connections(
+    dendrite_list: Iterable[int],
+    dend_add3d: Dict[int, Sequence[Sequence]],
+    points: Dict[int, Sequence],
+    parental_points: Dict[int, int],
+) -> List[List]:
+    """Return line segments between dendrite points and their parents."""
 
-                for point in dend_add3d[dend]: 
+    segments: List[List] = []
+    for dend in dendrite_list:
+        for point in dend_add3d[dend]:
+            parent_idx = parental_points.get(point[6])
+            if parent_idx == -1 or point[1] == 2:
+                continue
+            parent = points[parent_idx]
+            segments.append(
+                [point[2], point[3], point[4], parent[2], parent[3], parent[4], point[5], DEFAULT_COLOR]
+            )
+    return segments
 
-                        i=point[0]
-                        x=point[2]
-                        y=point[3]
-                        z=point[4]
-                        d=point[5]
-                        parent_id=point[6]
 
-                        to_whom_is_connected=parental_points[parent_id]
-        
-                        if to_whom_is_connected==-1 or point[1]==2:
-                                continue
+def _collect_segments(
+    dendrite_list: Iterable[int],
+    dend_add3d: Dict[int, Sequence[Sequence]],
+    points: Dict[int, Sequence],
+    parental_points: Dict[int, int],
+    soma_index: Sequence[Sequence],
+) -> List[List]:
+    """Gather all line segments for soma and dendrites."""
 
-                        xp=points[to_whom_is_connected][2]
-                        yp=points[to_whom_is_connected][3]
-                        zp=points[to_whom_is_connected][4]
+    segments = _soma_connections(soma_index)
+    segments.extend(
+        _dendrite_connections(dendrite_list, dend_add3d, points, parental_points)
+    )
+    return segments
 
-                        my_plot.append([x, y, z, xp, yp, zp, d, dend, '0x0000FF'])
 
-        fname = file_name.replace('.swc','') + '_before.txt'
-        name = Path(abs_path) / fname
+def first_graph(
+    abs_path: Path | str,
+    file_name: str,
+    dendrite_list: Iterable[int],
+    dend_add3d: Dict[int, Sequence[Sequence]],
+    points: Dict[int, Sequence],
+    parental_points: Dict[int, int],
+    soma_index: Sequence[Sequence],
+) -> None:
+    """Write coordinates of the original morphology to ``*_before.txt``."""
 
-        with open(name, 'w') as f:
-                for i in my_plot:
-                        print(str(i)[1:-1], file=f)
+    segments = _collect_segments(
+        dendrite_list, dend_add3d, points, parental_points, soma_index
+    )
 
-def second_graph(abs_path,file_name, dendrite_list, dend_add3d, points, parental_points, soma_index):
+    out_path = Path(abs_path) / f"{file_name.replace('.swc', '')}_before.txt"
+    _write_lines(out_path, segments)
 
-        my_plot=[]
+def second_graph(
+    abs_path: Path | str,
+    file_name: str,
+    dendrite_list: Iterable[int],
+    dend_add3d: Dict[int, Sequence[Sequence]],
+    points: Dict[int, Sequence],
+    parental_points: Dict[int, int],
+    soma_index: Sequence[Sequence],
+) -> None:
+    """Write coordinates of the edited morphology to ``*_after.txt``."""
 
-        for point in soma_index:
+    segments = _collect_segments(
+        dendrite_list, dend_add3d, points, parental_points, soma_index
+    )
 
-                for k in soma_index:
+    print(f">>{len(segments)}")
+    print(file_name)
 
-                        i=point[0]
-                        x=point[2]
-                        y=point[3]
-                        z=point[4]
-                        d=point[5]
-                        parent_id=point[6]
-
-                        if parent_id==k[0]:
-
-                                xp=k[2]
-                                yp=k[3]
-                                zp=k[4]
-
-                                my_plot.append([x, y, z, xp, yp, zp, d, 0, '0x0000FF'])
-
-        for dend in dendrite_list:
-
-                for point in dend_add3d[dend]: 
-
-                        i=point[0]
-                        x=point[2]
-                        y=point[3]
-                        z=point[4]
-                        d=point[5]
-                        parent_id=point[6]
-
-                        to_whom_is_connected=parental_points[parent_id]
-        
-                        if to_whom_is_connected==-1 or point[1]==2:
-                                continue
-
-                        xp=points[to_whom_is_connected][2]
-                        yp=points[to_whom_is_connected][3]
-                        zp=points[to_whom_is_connected][4]
-
-                        my_plot.append([x, y, z, xp, yp, zp, d, dend, '0x0000FF'])
-
-        print('>>' + str(len(my_plot)))
-
-        print(file_name)
-        fname = file_name.replace('.swc','') + '_after.txt'
-        name = Path(abs_path) / fname
-
-        with open(name, 'w') as f:
-                for i in my_plot:
-                        print(str(i)[1:-1], file=f)
+    out_path = Path(abs_path) / f"{file_name.replace('.swc', '')}_after.txt"
+    _write_lines(out_path, segments)
