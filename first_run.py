@@ -16,6 +16,7 @@ from utils import round_to, write_json
 import sys
 import numpy as np
 import os
+from pathlib import Path
 import time
 
 start_time = time.time()
@@ -75,14 +76,14 @@ def median_dict(d):
 
 if (len(sys.argv)==3):
 
-        directory=str(sys.argv[1])
+        directory = Path(sys.argv[1])
         file_names=str(sys.argv[2]).split(',')
         file_names=[x for x in file_names if x != '']
 
         parsed_files=[]
 
         parsed_count=0
-        log_file = os.path.join(directory, 'log_parsed_files.txt')
+        log_file = directory / 'log_parsed_files.txt'
         if os.path.isfile(log_file):
 
                 with open(log_file) as f:
@@ -99,15 +100,15 @@ else:
         print("The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. ")
         sys.exit(0)
 
-exist_downloads=os.path.join(directory, 'downloads')
-exist_statistics=os.path.join(directory, 'downloads', 'statistics')
+exist_downloads = directory / 'downloads'
+exist_statistics = directory / 'downloads' / 'statistics'
 stats_dir = exist_statistics
 
-if not os.path.exists(exist_downloads):
-    os.makedirs(exist_downloads)
+if not exist_downloads.exists():
+    exist_downloads.mkdir(parents=True)
 
-if not os.path.exists(exist_statistics):
-    os.makedirs(exist_statistics)
+if not exist_statistics.exists():
+    exist_statistics.mkdir(parents=True)
 
 average_number_of_all_dendrites=[]
 average_number_of_all_terminal_dendrites=[]
@@ -171,14 +172,14 @@ if parsed_count>0:
         print('Retrieving previously calculated morphometric statistics')
         print()
 
-        fpickle=os.path.join(directory, 'current_average_statistics.p')
+        fpickle = directory / 'current_average_statistics.p'
         with open(fpickle, "rb") as f:
                 (average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections) = pickle.load(f)
 
 
 for file_name in file_names:
 
-        fname=os.path.join(directory, file_name)
+        fname = directory / file_name
 
         file_name=file_name.replace('.swc','')
 
@@ -510,12 +511,12 @@ for file_name in file_names:
 
         clearall()
 
-with open(os.path.join(directory, "log_parsed_files.txt"), "a+") as f:
+with open(directory / "log_parsed_files.txt", "a+") as f:
         for file_name in file_names:
                 print(file_name, file=f)
 
 import pickle, os
-fpickle=os.path.join(directory, 'current_average_statistics.p')
+fpickle = directory / 'current_average_statistics.p'
 with open(fpickle, "wb") as f:
         pickle.dump([average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections], f)
 
