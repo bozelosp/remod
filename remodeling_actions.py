@@ -636,9 +636,9 @@ def extend(
 
                         parent_updates=[]
                         initial_position=dendrite_samples[dend][-1]
-                        obsolete_bp_idx=initial_position[0]
+                        obsolete_fp_idx=initial_position[0]
                         for seg_id in parents:
-                                if parents[seg_id]==obsolete_bp_idx:
+                                if parents[seg_id]==obsolete_fp_idx:
                                         parent_updates.append(seg_id)
 
 
