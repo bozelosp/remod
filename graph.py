@@ -263,9 +263,9 @@ def graph(initial_file, modified_file, action, dend_add3d, dendrite_list, direct
 
 #               plot_after = [x for x in plot_after if x not in plot_before]
 
-        l=[0,1]
+        header_lines=[0,1]
 
-        k=0
+        line_idx=0
 
         
         fname=directory+file_name.replace('.swc','') + '_neuron.txt'
@@ -273,20 +273,20 @@ def graph(initial_file, modified_file, action, dend_add3d, dendrite_list, direct
         with open(fname, 'w') as f:
 
             for i in plot_before:
-                if k in l:
+                if line_idx in header_lines:
                         pass
                 else:
                         #ax.plot(i[0], i[1], i[2], linewidth=i[3], c='b', alpha=1)
                         print(i[0][0], i[1][0], i[2][0], i[0][1], i[1][1], i[2][1], i[3], '0x0000FF', file=f)
-                k+=1
-            k=0
+                line_idx+=1
+            line_idx=0
             for i in plot_after:
-                if k in l:
+                if line_idx in header_lines:
                         pass
                 else:
                         #ax.plot(i[0], i[1], i[2], linewidth=i[3], c='r', alpha=1)
                         print(i[0][0], i[1][0], i[2][0], i[0][1], i[1][1], i[2][1], i[3], '0xFF0000', file=f)
-                k+=1
+                line_idx+=1
 
         #ax.tick_params(labelsize=8)
         #plt.show()
