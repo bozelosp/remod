@@ -28,13 +28,16 @@ def main():
     parser.add_argument("--directory", required=True, help="Base directory for the SWC file")
     parser.add_argument("--file-name", required=True, help="SWC filename")
     parser.add_argument("--who", required=True, help="Target dendrite selection")
-    parser.add_argument("--random-ratio", default="0", help="Ratio for random selection (percent)")
+    parser.add_argument("--random-ratio", type=float, default=0.0,
+                        help="Ratio for random selection (percent)")
     parser.add_argument("--who-manual-variable", default="none", help="Comma separated manual dendrite ids")
     parser.add_argument("--action", required=True, help="Remodeling action")
     parser.add_argument("--hm-choice", required=True, help="percent or micrometers for extent")
-    parser.add_argument("--amount", default="none", help="Extent of the action")
+    parser.add_argument("--amount", type=float, default=None,
+                        help="Extent of the action")
     parser.add_argument("--var-choice", required=True, help="percent or micrometers for diameter change")
-    parser.add_argument("--diam-change", default="none", help="Extent of diameter change")
+    parser.add_argument("--diam-change", type=float, default=None,
+                        help="Extent of diameter change")
     args = parser.parse_args()
 
     directory = Path(args.directory)
@@ -43,26 +46,23 @@ def main():
 
     who = args.who
     if who in ['who_random_all', 'who_random_apical', 'who_random_basal']:
-        who_random_variable = float(args.random_ratio) / 100.0
+        who_random_variable = args.random_ratio / 100.0
     else:
         who_random_variable = None
     who_manual_variable = args.who_manual_variable
     action = args.action
     hm_choice = args.hm_choice
     amount = args.amount
-    if amount != 'none':
-        amount = float(amount)
     var_choice = args.var_choice
     diam_change = args.diam_change
 
     def sample_random_dendrites(options, label):
         """Return a valid random dendrite selection."""
-        num = int(round_to(len(options) * float(who_random_variable), 1))
-        while True:
-            selection = random.sample(options, num)
-            if all(len(dend_add3d[d]) >= 3 for d in selection):
-                break
-        which = f"random {label} ({float(who_random_variable) * 100}% ) "
+        valid = [d for d in options if len(dend_add3d[d]) >= 3]
+        num = int(round_to(len(valid) * who_random_variable, 1))
+        num = max(0, min(num, len(valid)))
+        selection = random.sample(valid, num)
+        which = f"random {label} ({who_random_variable * 100}% ) "
         return selection, which
 
     exist_downloads = directory / 'downloads'
