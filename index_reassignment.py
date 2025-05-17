@@ -1,6 +1,6 @@
 from statistics_swc import *
 
-def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action):
+def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal, apical, elsep, soma_index, bo_max, action):
 
 
         if action == 'branch':
@@ -9,25 +9,25 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
         bo_sorted_axon_dends=[]
         for i in range(1,bo_max+1):
                 for dend in axon:
-                        if bo[dend]==i:
+                        if branch_order_map[dend]==i:
                                 bo_sorted_axon_dends.append(dend)
 
         bo_sorted_basal_dends=[]
         for i in range(1,bo_max+1):
                 for dend in basal:
-                        if bo[dend]==i:
+                        if branch_order_map[dend]==i:
                                 bo_sorted_basal_dends.append(dend)
 
         bo_sorted_apical_dends=[]
         for i in range(1,bo_max+1):
                 for dend in apical:
-                        if bo[dend]==i:
+                        if branch_order_map[dend]==i:
                                 bo_sorted_apical_dends.append(dend)
 
         bo_sorted_elsep_dends=[]
         for i in range(1,bo_max+1):
                 for dend in elsep:
-                        if bo[dend]==i:
+                        if branch_order_map[dend]==i:
                                 bo_sorted_elsep_dends.append(dend)
 
         segment_list=[]
@@ -62,7 +62,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
 
                 for i in range(len(dend_add3d[dend])):
 
-                        if bo[dend]==1:
+                        if branch_order_map[dend]==1:
 
                                 if i==0:
 
@@ -80,7 +80,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-                        if bo[dend]>1:
+                        if branch_order_map[dend]>1:
 
                                 if i==0:
 
@@ -104,7 +104,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
 
                 for i in range(len(dend_add3d[dend])):
 
-                        if bo[dend]==1:
+                        if branch_order_map[dend]==1:
 
                                 if i==0:
 
@@ -122,7 +122,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-                        if bo[dend]>1:
+                        if branch_order_map[dend]>1:
 
                                 if i==0:
 
@@ -146,7 +146,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
 
                 for i in range(len(dend_add3d[dend])):
 
-                        if bo[dend]==1:
+                        if branch_order_map[dend]==1:
 
                                 if i==0:
 
@@ -164,7 +164,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-                        if bo[dend]>1:
+                        if branch_order_map[dend]>1:
 
                                 if i==0:
 
@@ -188,7 +188,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
 
                 for i in range(len(dend_add3d[dend])):
 
-                        if bo[dend]==1:
+                        if branch_order_map[dend]==1:
 
                                 if i==0:
 
@@ -206,7 +206,7 @@ def index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, else
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-                        if bo[dend]>1:
+                        if branch_order_map[dend]>1:
 
                                 if i==0:
 
