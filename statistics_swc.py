@@ -1,392 +1,208 @@
-import re
-from math import sqrt
-from random import randint
-import sys
-from collections import OrderedDict
+"""Utility functions for computing statistics on dendritic morphologies."""
 
-from numpy import linalg as LA, array, dot
-from math import acos
+import re
+from collections import OrderedDict, Counter, defaultdict
+
+from numpy import linalg as LA
 
 import numpy as np
-from random import uniform, randrange
-from math import cos, sin, pi, sqrt, radians, degrees
-
-import collections
 from utils import distance
 
-def total_length(dendrite_list, dist): #soma_included
+def total_length(dendrite_list, dist):  # soma_included
+        """Return the total length of *dendrite_list* using ``dist`` mapping."""
 
-        t_length=0
-        for dend in dendrite_list:
-                t_length+=dist[dend]
-        return t_length
+        return sum(dist[d] for d in dendrite_list)
 
-def total_area(dendrite_list, area): #soma_included
+def total_area(dendrite_list, area):  # soma_included
+        """Return the total surface area of *dendrite_list* using ``area`` mapping."""
 
-        t_area=0
-        for dend in dendrite_list:
-                t_area+=area[dend]
-
-        return t_area
+        return sum(area[d] for d in dendrite_list)
 
 def path_length(dendrite_list, path, dist):
-        plength=dict()
-        for dend in dendrite_list:
-                d=0
-                for i in path[dend]:
-                        d+=dist[i]
-                plength[dend]=d
-        return plength
+        """Return a mapping of dendrite IDs to path length."""
+
+        return {d: sum(dist[i] for i in path[d]) for d in dendrite_list}
 
 def median_diameter(dendrite_list, dend_add3d):
+        """Return the median diameter for each dendrite in *dendrite_list*."""
 
-        med_diam=dict()
+        med_diam = {}
         for dend in dendrite_list:
-                m=len(dend_add3d[dend])/2
-                med_diam[dend]=float(dend_add3d[dend][m][5])*2
+                m = len(dend_add3d[dend]) // 2
+                med_diam[dend] = float(dend_add3d[dend][m][5]) * 2
         return med_diam
 
 def print_branch_order(dendrite_list, branch_order):
+        """Return a sorted list of (dendrite, branch_order) tuples."""
 
-        bo_dict=dict()
-
-        for i in dendrite_list:
-                bo_dict[i]=branch_order[i]
-
-        return sorted(list(bo_dict.items()), key=lambda x: x[0])
+        bo_dict = {d: branch_order[d] for d in dendrite_list}
+        return sorted(bo_dict.items(), key=lambda x: x[0])
 
 def bo_frequency(dendrite_list, branch_order):
+        """Return the frequency of each branch order."""
 
-        orders=[]
-        for dend in dendrite_list:
-                orders.append(branch_order[dend])
-
-        bo_min=1 # min(orders)
-        bo_max=max(orders)
-
-        bo_freq={}
-
-        for i in range(bo_min, bo_max+1):
-                k=0
-                for order in orders:
-                        if order==i:
-                                k+=1
-                bo_freq[i]=k
+        orders = [branch_order[d] for d in dendrite_list]
+        counter = Counter(orders)
+        bo_max = max(counter) if counter else 0
+        bo_freq = {i: counter.get(i, 0) for i in range(1, bo_max + 1)}
 
         return bo_freq, bo_max
 
 def bo_dlength(dendrite_list, branch_order, bo_max, dist):
+        """Return average dendrite length per branch order."""
 
-        bo_dlen={}
-        for i in range(1, bo_max+1):
-                k=0
-                add_length=0
+        acc = defaultdict(list)
+        for dend in dendrite_list:
+                acc[branch_order[dend]].append(dist[dend])
 
-                for dend in dendrite_list:
-                        if i==branch_order[dend]:
-                                k+=1
-                                add_length+=dist[dend]
-        
-                if k!=0:
-                        bo_dlen[i]=add_length/k
-
-        return bo_dlen
+        return {k: sum(v)/len(v) for k, v in acc.items() if v}
 
 def bo_plength(dendrite_list, branch_order, bo_max, plength):
+        """Return average path length per branch order."""
 
-        bo_plen={}
-        for i in range(1, bo_max+1):
+        acc = defaultdict(list)
+        for dend in dendrite_list:
+                acc[branch_order[dend]].append(plength[dend])
 
-                k=0
-                add_length=0
-
-                for dend in dendrite_list:
-                        if i==branch_order[dend]:
-                                k+=1
-                                add_length+=plength[dend]
-        
-                if k!=0:
-                        bo_plen[i]=add_length/k
-
-        return bo_plen
+        return {k: sum(v)/len(v) for k, v in acc.items() if v}
 
 def sholl_intersections(points, parental_points, soma_index, radius, parameter):
+        """Compute Sholl intersection counts for the given radius."""
 
-        sholl_list=dict()
+        soma = next(i for i in soma_index if i[6] == -1)
+        soma_coords = np.array([soma[2], soma[3], soma[4]])
 
-        for i in soma_index:
-                if i[6]==-1:
-                        xr=i[2]
-                        yr=i[3]
-                        zr=i[4]
-        
-        values=[]
-        for val in np.arange(0, 10000, radius):
-                values.append(val)
+        values = np.arange(0, 10000, radius)
+        ids = [i for i in points if points[i][1] in parameter]
+        pts = np.array([[points[i][2], points[i][3], points[i][4]] for i in ids])
+        parents = np.array(
+            [[points[parental_points[i]][2], points[parental_points[i]][3], points[parental_points[i]][4]]
+             for i in ids]
+        )
 
-        for u in range(len(values)-1):
+        dist1 = np.linalg.norm(pts - soma_coords, axis=1)
+        dist2 = np.linalg.norm(parents - soma_coords, axis=1)
 
-                previous_dist=values[u]
-                next_dist=values[u+1]
-
-                n_intersections=0
-
-                for i in points:
-
-                        if points[i][1] in parameter:
-
-                                x1=points[i][2]
-                                y1=points[i][3]
-                                z1=points[i][4]
-
-                                mydist1=distance(xr,x1,yr,y1,zr,z1)
-
-                                p=parental_points[i]
-                                
-                                x2=points[p][2]
-                                y2=points[p][3]
-                                z2=points[p][4]
-
-                                mydist2=distance(xr,x2,yr,y2,zr,z2)
-
-                                if mydist1>next_dist and mydist2<next_dist:
-
-                                        n_intersections+=1
-
-                sholl_list[next_dist]=n_intersections
+        sholl_list = {}
+        for prev, nxt in zip(values[:-1], values[1:]):
+                mask = (dist1 > nxt) & (dist2 < nxt)
+                sholl_list[nxt] = int(mask.sum())
 
         return sholl_list
 
 def sholl_bp(branch_points, points, soma_index, radius):
+        """Compute number of branch points crossing each Sholl shell."""
 
-        sholl_list=dict()
+        soma = next(i for i in soma_index if i[6] == -1)
+        soma_coords = np.array([soma[2], soma[3], soma[4]])
 
-        for i in soma_index:
-                if i[6]==-1:
-                        xr=i[2]
-                        yr=i[3]
-                        zr=i[4]
+        values = np.arange(0, 10000, radius)
+        pts = np.array([[points[i][2], points[i][3], points[i][4]] for i in branch_points])
+        dist = np.linalg.norm(pts - soma_coords, axis=1)
 
-        values=[]
-        for val in np.arange(0, 10000, radius):
-                values.append(val)
-
-        for val in range(len(values)-1):
-
-                oc=0
-
-                previous_dist=values[val]
-                next_dist=values[val+1]
-
-                for i in branch_points:
-
-                        x=points[i][2]
-                        y=points[i][3]
-                        z=points[i][4]
-
-                        mydist=distance(xr,x,yr,y,zr,z)
-
-                        if mydist>previous_dist and mydist<next_dist:
-
-                                oc+=1
-
-                sholl_list[next_dist]=oc
-
-        #sholl_list=remove_trailing_zeros(sholl_list, values, radius)
+        sholl_list = {}
+        for prev, nxt in zip(values[:-1], values[1:]):
+                mask = (dist > prev) & (dist < nxt)
+                sholl_list[nxt] = int(mask.sum())
 
         return sholl_list
 
 def remove_trailing_zeros(sholl_list, values, radius):
+        """Trim trailing zeros from ``sholl_list``."""
 
-        k=len(sholl_list)
-        x=0
+        idx = 0
+        for i, v in enumerate(values[:-1]):
+                if sholl_list.get(v + radius, 0) != 0:
+                        idx = i + 1
 
-        for i in values[:-1]:
-                if sholl_list[i+radius]==0:
-                        x+=1
-                else:
-                        x=0
-
-        new_sholl_dict=dict()
-
-        for i in range(k-x):
-                new_sholl_dict[values[i]+radius]=sholl_list[values[i]+radius]
-                
-        return new_sholl_dict
+        return {values[i] + radius: sholl_list[values[i] + radius] for i in range(idx)}
 
 
 def sholl_length(points, parental_points, soma_index, radius, parameter):
-        
-        sholl_list=dict()
+        """Compute total dendrite length inside successive Sholl shells."""
 
-        for i in soma_index:
-                if i[6]==-1:
-                        xr=i[2]
-                        yr=i[3]
-                        zr=i[4]
-        
-        values=[]
-        for val in np.arange(0, 10000, radius):
-                values.append(val)
+        soma = next(i for i in soma_index if i[6] == -1)
+        soma_coords = np.array([soma[2], soma[3], soma[4]])
 
-        for u in range(len(values)-1):
+        values = np.arange(0, 10000, radius)
+        ids = [i for i in points if points[i][1] in parameter]
+        pts = np.array([[points[i][2], points[i][3], points[i][4]] for i in ids])
+        parents = np.array(
+            [[points[parental_points[i]][2], points[parental_points[i]][3], points[parental_points[i]][4]]
+             for i in ids]
+        )
 
-                previous_dist=values[u]
-                next_dist=values[u+1]
+        lengths = np.linalg.norm(pts - parents, axis=1)
+        dist1 = np.linalg.norm(pts - soma_coords, axis=1)
 
-                sum_length=0
-
-                for i in points:
-
-                        if points[i][1] in parameter:
-
-                                x=points[i][2]
-                                y=points[i][3]
-                                z=points[i][4]
-
-                                mydist=distance(xr,x,yr,y,zr,z)
-
-                                if mydist>previous_dist and mydist<next_dist:
-
-                                        p=parental_points[i]
-                                        
-                                        xp=points[p][2]
-                                        yp=points[p][3]
-                                        zp=points[p][4]
-
-                                        sum_length+=distance(x,xp,y,yp,z,zp)
-
-                sholl_list[next_dist]=sum_length
-
-        #sholl_list=remove_trailing_zeros(sholl_list, values, radius)
+        sholl_list = {}
+        for prev, nxt in zip(values[:-1], values[1:]):
+                mask = (dist1 > prev) & (dist1 < nxt)
+                sholl_list[nxt] = float(lengths[mask].sum())
 
         return sholl_list
 
 def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
+        """Return list of [distance, angle] pairs for dendrite points."""
 
-        dist_angle=[]
+        soma_root = np.array(soma_root)
+        axis_vec = np.array(principal_axis) - soma_root
+        axis_unit = axis_vec / LA.norm(axis_vec)
 
+        dist_angle = []
         for dend in dendrite_list:
-
-                point_list=[]
-
-                for i in range(len(dend_add3d[dend])):
-
-                        x=dend_add3d[dend][i][2]
-                        y=dend_add3d[dend][i][3]
-                        z=dend_add3d[dend][i][4]
-
-                        point=[x, y, z]
-
-                        point_list.append([principal_axis, soma_root, point])
-
-                for i in point_list:
-
-                        a=array(i[0], float)
-                        b=array(i[1], float)
-                        c=array(i[2], float)
-
-                        ba = a-b
-                        bc = c-b
-
-                        quot_a = ba/LA.norm(ba)
-                        quot_b = bc/LA.norm(bc)
-
-                        dotp = dot(quot_a.T,quot_b)
-                        degree = 180 - acos(dotp)*57.295779513082
-                        dist = sqrt((x-soma_root[0])**2 + (y-soma_root[1])**2 + (z-soma_root[2])**2)
-
-                        dist_angle.append([dist, degree])
+                coords = np.array(dend_add3d[dend])[:, 2:5]
+                bc = coords - soma_root
+                dist = LA.norm(bc, axis=1)
+                bc_unit = bc / dist[:, None]
+                dotp = bc_unit.dot(axis_unit)
+                degree = 180 - np.degrees(np.arccos(dotp))
+                dist_angle.extend(np.column_stack((dist, degree)).tolist())
 
         return dist_angle
 
 def dist_angle_frequency(dist_angle, radius):
+        """Bin distances and angles to compute frequency tables."""
 
-        dist_freq={}
-        angle_f={}
+        dist_arr = np.array([d[0] for d in dist_angle])
+        angle_arr = np.array([d[1] for d in dist_angle])
 
-        previous_val=0
-        for val in np.arange(0, 1000, radius):
+        dist_freq = {}
+        angle_f = {}
+        values = np.arange(0, 1000, radius)
+        angle_bins = np.arange(5, 185, 5)
 
-                angles_freq={}
+        for prev, nxt in zip(values[:-1], values[1:]):
+                mask = (dist_arr > prev) & (dist_arr < nxt)
+                dist_freq[nxt] = int(mask.sum())
 
-                angles=[]
-                
-                count_dist=0
-                for i in range(len(dist_angle)):
-
-                        if dist_angle[i][0]>previous_val and dist_angle[i][0]<val:
-                                count_dist+=1
-                                angles.append(dist_angle[i][1])
-
-                previous_a=0
-
-                for a in np.arange(5, 185, 5):
-
-                        count_angle=0
-                        for i in range(len(angles)):
-
-                                if angles[i]>previous_a and angles[i]<a:
-                                        count_angle+=1
-
-                        angles_freq[a]=count_angle
-        
-                        previous_a=a
-
-
-                dist_freq[val]=count_dist
-                angle_f[val]=angles_freq
-
-                previous_val=val
+                hist, edges = np.histogram(angle_arr[mask], bins=angle_bins)
+                angle_f[nxt] = {edge: int(count) for edge, count in zip(angle_bins[1:], hist)}
 
         return dist_freq, angle_f
 
 def axis(apical, dend_add3d, soma_index): #weighted linear regression
+        """Return principal axis and soma location using weighted regression."""
 
-        def calc_mean(l,d,sum_d):
-                ld=[]
-                for i in range(len(l)):
-                        ld.append(l[i]*(d[i]/sum_d))
-                l_mean=np.mean(ld)
+        x_soma, y_soma, z_soma = soma_index[0][2], soma_index[0][3], soma_index[0][4]
 
-                ld_weighted=[]
-
-                for i in ld:
-                        ld_weighted.append(i-l_mean)
-
-                return ld_weighted
-
-        x=y=z=d=[]
-
-        x_soma=soma_index[0][2]
-        y_soma=soma_index[0][3]
-        z_soma=soma_index[0][4]
-
+        coords = []
+        diam = []
         for dend in apical:
+                arr = np.array(dend_add3d[dend])
+                coords.append(arr[:, 2:5] - [x_soma, y_soma, z_soma])
+                diam.append(arr[:, 5])
 
-                for i in dend_add3d[dend]:
+        coords = np.vstack(coords)
+        diam = np.hstack(diam)
+        weights = diam / diam.sum()
 
-                        x.append(i[2]-x_soma)
-                        y.append(i[3]-y_soma)
-                        z.append(i[4]-z_soma)
-                        d.append(i[5])
+        weighted = coords * weights[:, None]
+        centered = weighted - weighted.mean(axis=0)
 
-        sum_d=np.sum(d)
-        
-        x_weighted=calc_mean(x,d,sum_d)
-        y_weighted=calc_mean(y,d,sum_d)
-        z_weighted=calc_mean(z,d,sum_d)
+        _, _, v = np.linalg.svd(centered)
 
+        principal_axis = (v[0] + np.array([x_soma, y_soma, z_soma])).tolist()
+        soma_root = [x_soma, y_soma, z_soma]
 
-        xyz_matrix=[]
-
-        for i in range(len(x_weighted)):
-
-                xyz_matrix.append([x_weighted[i], y_weighted[i], z_weighted[i]])
-
-        (u,s,v)=np.linalg.svd(xyz_matrix)
-
-        principal_axis=[v[0,0]+x_soma, v[1,0]+y_soma, v[2,0]+z_soma]
-        soma_root=[x_soma, y_soma, z_soma]
-        
         return principal_axis, soma_root
