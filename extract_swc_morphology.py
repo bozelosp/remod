@@ -1,11 +1,5 @@
-"""Utilities for parsing SWC morphology files.
+"""Helpers for parsing and analysing SWC morphology files."""
 
-The original implementation contained a large amount of repetitive and
-hard–to–follow code.  The helpers below keep the same output format but use
-more idiomatic Python constructs to make the logic easier to follow.
-"""
-
-import csv
 from math import pi
 from typing import Dict, Iterable, List, Tuple, Set
 
@@ -13,12 +7,13 @@ import numpy as np
 
 from utils import distance
 
-def swc_line(fname: str) -> List[str]:
-    """Return a list of lines from an SWC file without trailing newlines."""
-    with open(fname) as f:
+
+def read_swc_lines(file_path: str) -> List[str]:
+    """Return all lines from *file_path* without trailing newlines."""
+    with open(file_path) as f:
         return [line.rstrip("\n") for line in f]
 
-def comments_and_3dpoints(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List[float]]]:
+def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List[float]]]:
     """Split comment lines from SWC point data.
 
     Parameters
@@ -61,11 +56,11 @@ def comments_and_3dpoints(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int
 
     return comment_lines, points
 
-def index(points: Dict[int, List[float]]) -> int:
-    """Return the maximum segment index present in ``points``."""
+def max_index(points: Dict[int, List[float]]) -> int:
+    """Return the highest segment index present in *points*."""
     return max(points)
 
-def branching_points(points: Dict[int, List[float]]):
+def find_branch_points(points: Dict[int, List[float]]):
     """Return branch point information from ``points``."""
 
     soma_index = [p for p in points.values() if p[1] == 1]
@@ -95,15 +90,15 @@ def branching_points(points: Dict[int, List[float]]):
         soma_index,
     )
 
-def parental(points: Dict[int, List[float]]) -> Dict[int, int]:
+def parent_map(points: Dict[int, List[float]]) -> Dict[int, int]:
     """Return a mapping from segment index to its parent index."""
     return {int(i): int(val[6]) for i, val in points.items()}
 
-def d_list(branch_points: Iterable[int]) -> List[int]:
-    """Return a sorted list of dendrite indices."""
+def sort_dendrites(branch_points: Iterable[int]) -> List[int]:
+    """Return a sorted list of dendrite starting indices."""
     return sorted(branch_points)
 
-def dend_point(dendrite_list: Iterable[int], points: Dict[int, List[float]]) -> Dict[int, List[int]]:
+def dendrite_segments(dendrite_list: Iterable[int], points: Dict[int, List[float]]) -> Dict[int, List[int]]:
     """Return lists of point indices for each dendrite starting at ``dendrite_list``."""
 
     # build parent -> children mapping once
@@ -132,7 +127,7 @@ def dend_point(dendrite_list: Iterable[int], points: Dict[int, List[float]]) -> 
 
     return dend_indices
 
-def dend_name(dendrite_list: Iterable[int], points: Dict[int, List[float]]):
+def classify_dendrites(dendrite_list: Iterable[int], points: Dict[int, List[float]]):
     """Classify dendrites by type and assign readable names."""
 
     dend_names: Dict[int, str] = {}
@@ -164,20 +159,20 @@ def dend_name(dendrite_list: Iterable[int], points: Dict[int, List[float]]):
 
     return dend_names, axon, basal, apical, elsep
 
-def dend_add3d_points(
+def dendrite_coordinates(
     dendrite_list: Iterable[int],
     dend_indices: Dict[int, List[int]],
     points: Dict[int, List[float]],
 ) -> Dict[int, List[List[float]]]:
-    """Collect 3D coordinates for every dendrite."""
+    """Collect 3‑D coordinates for every dendrite."""
 
-    dend_add3d: Dict[int, List[List[float]]] = {}
+    coords: Dict[int, List[List[float]]] = {}
     for idx in dendrite_list:
         pts = [points[k][:7] for k in dend_indices[idx]]
-        dend_add3d[idx] = pts
-    return dend_add3d
+        coords[idx] = pts
+    return coords
 
-def pathways(
+def paths_to_soma(
     dendrite_list: Iterable[int],
     points: Dict[int, List[float]],
     dend_indices: Dict[int, List[int]],
@@ -203,7 +198,7 @@ def pathways(
 
     return path
 
-def terminal(
+def terminal_dendrites(
     dendrite_list: Iterable[int],
     path: Dict[int, List[int]],
     basal: Iterable[int],
@@ -223,7 +218,7 @@ def terminal(
 
     return all_terminal, basal_terminal, apical_terminal
 
-def descend(
+def descendants_map(
     dendrite_list: Iterable[int],
     all_terminal: Iterable[int],
     path: Dict[int, List[int]],
@@ -245,7 +240,7 @@ def descend(
 
     return descendants
 
-def soma_center(soma_index: Iterable[List[float]]) -> List[float]:
+def soma_centroid(soma_index: Iterable[List[float]]) -> List[float]:
     """Return the centroid of the soma segments."""
 
     x = [p[2] for p in soma_index]
@@ -253,8 +248,8 @@ def soma_center(soma_index: Iterable[List[float]]) -> List[float]:
     z = [p[4] for p in soma_index]
     return [float(np.mean(x)), float(np.mean(y)), float(np.mean(z))]
 
-def dend_length(
-    dend_add3d: Dict[int, List[List[float]]],
+def dendrite_lengths(
+    coords_map: Dict[int, List[List[float]]],
     dendrite_list: Iterable[int],
     parental_points: Dict[int, int],
     points: Dict[int, List[float]],
@@ -263,7 +258,7 @@ def dend_length(
 
     dist: Dict[int, float] = {}
     for idx in dendrite_list:
-        dend = dend_add3d[idx]
+        dend = coords_map[idx]
         segs = [points[parental_points[dend[0][0]]]] + dend
         lengths = [
             distance(a[2], b[2], a[3], b[3], a[4], b[4])
@@ -273,8 +268,8 @@ def dend_length(
 
     return dist
 
-def dend_area(
-    dend_add3d: Dict[int, List[List[float]]],
+def dendrite_areas(
+    coords_map: Dict[int, List[List[float]]],
     dendrite_list: Iterable[int],
     parental_points: Dict[int, int],
     points: Dict[int, List[float]],
@@ -283,7 +278,7 @@ def dend_area(
 
     area: Dict[int, float] = {}
     for idx in dendrite_list:
-        dend = dend_add3d[idx]
+        dend = coords_map[idx]
         segs = [points[parental_points[dend[0][0]]]] + dend
         contributions = []
         for a, b in zip(segs[:-1], segs[1:]):
@@ -294,22 +289,22 @@ def dend_area(
 
     return area
 
-def branch_order(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
+def compute_branch_order(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
     """Return the branch order (path length) for each dendrite."""
     return {d: len(path[d]) for d in dendrite_list}
 
-def connected(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
+def connection_to_parent(dendrite_list: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
     """Return connectivity mapping for each dendrite."""
-    con: Dict[int, int] = {}
+    first_child: Dict[int, int] = {}
     for dend in dendrite_list:
-        con[dend] = path[dend][1] if len(path[dend]) > 1 else 1
-    return con
+        first_child[dend] = path[dend][1] if len(path[dend]) > 1 else 1
+    return first_child
 
-def read_file(fname: str):
-    """Parse ``fname`` and return all extracted morphology information."""
+def parse_swc_file(file_path: str):
+    """Parse ``file_path`` and return all extracted morphology information."""
 
-    swc_lines = swc_line(fname)
-    comment_lines, points = comments_and_3dpoints(swc_lines)
+    swc_lines = read_swc_lines(file_path)
+    comment_lines, points = parse_swc_lines(swc_lines)
     (
         branch_points,
         axon_bpoints,
@@ -317,21 +312,20 @@ def read_file(fname: str):
         apical_bpoints,
         else_bpoints,
         soma_index,
-    ) = branching_points(points)
-    parental_points = parental(points)
-    dendrite_list = d_list(branch_points)
-    dend_indices = dend_point(dendrite_list, points)
-    dend_names, axon, basal, apical, elsep = dend_name(dendrite_list, points)
-    dend_add3d = dend_add3d_points(dendrite_list, dend_indices, points)
-    path = pathways(dendrite_list, points, dend_indices, soma_index)
-    all_terminal, basal_terminal, apical_terminal = terminal(dendrite_list, path, basal, apical)
-    descendants = descend(dendrite_list, all_terminal, path)
-    soma_centroid = soma_center(soma_index)
-    dist = dend_length(dend_add3d, dendrite_list, parental_points, points)
-    area = dend_area(dend_add3d, dendrite_list, parental_points, points)
-    max_index = index(points)
-    branch_order = branch_order(dendrite_list, path)
-    con = connected(dendrite_list, path)
+    ) = find_branch_points(points)
+    parental_points = parent_map(points)
+    dendrite_list = sort_dendrites(branch_points)
+    dend_indices = dendrite_segments(dendrite_list, points)
+    dend_names, axon, basal, apical, elsep = classify_dendrites(dendrite_list, points)
+    dend_coords = dendrite_coordinates(dendrite_list, dend_indices, points)
+    path = paths_to_soma(dendrite_list, points, dend_indices, soma_index)
+    all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_list, path, basal, apical)
+    descendants = descendants_map(dendrite_list, all_terminal, path)
+    dist = dendrite_lengths(dend_coords, dendrite_list, parental_points, points)
+    area = dendrite_areas(dend_coords, dendrite_list, parental_points, points)
+    max_index_value = max_index(points)
+    branch_order_map = compute_branch_order(dendrite_list, path)
+    con = connection_to_parent(dendrite_list, path)
     parents: List[int] = []
 
     dendrite_list = basal + apical
@@ -348,7 +342,7 @@ def read_file(fname: str):
         apical_bpoints,
         else_bpoints,
         soma_index,
-        max_index,
+        max_index_value,
         dendrite_list,
         descendants,
         dend_indices,
@@ -357,14 +351,14 @@ def read_file(fname: str):
         basal,
         apical,
         elsep,
-        dend_add3d,
+        dend_coords,
         path,
         all_terminal,
         basal_terminal,
         apical_terminal,
         dist,
         area,
-        branch_order,
+        branch_order_map,
         con,
         parental_points,
     )
