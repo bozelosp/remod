@@ -22,6 +22,7 @@ def _coords(points, indices):
 
 def _mean_by_branch_order(dendrite_list, branch_order, values):
     """Return the mean of ``values`` grouped by branch order."""
+    # Data for the same branch order are accumulated then averaged
     acc = defaultdict(list)
     for dend in dendrite_list:
         acc[branch_order[dend]].append(values[dend])
@@ -40,6 +41,7 @@ def total_area(dendrite_list, area):  # soma_included
 
 def path_length(dendrite_list, path, dist):
         """Return a mapping of dendrite IDs to path length."""
+        # Path length sums distances along the path to the soma
 
         return {d: sum(dist[i] for i in path[d]) for d in dendrite_list}
 

@@ -13,6 +13,7 @@ from plot_data import plot_compare_data
 
 def list_text_files(directory: Path) -> list[Path]:
     """Return ``.txt`` files within ``directory`` sorted alphabetically."""
+    # Only plain text files are considered for merging
     if not directory.is_dir():
         raise NotADirectoryError(directory)
     return sorted(p for p in directory.iterdir() if p.suffix == ".txt")
@@ -20,6 +21,7 @@ def list_text_files(directory: Path) -> list[Path]:
 
 def read_lines(path: Path) -> list[str]:
     """Return lines from ``path`` stripped of trailing newlines."""
+    # Utility used by both merging strategies
     with path.open(encoding="utf-8") as fh:
         return [line.rstrip("\n") for line in fh]
 
@@ -29,11 +31,13 @@ _REPLACE_VALUE_RE = re.compile(r"\s(\S+)")
 
 def _zero_line(reference: str) -> str:
     """Return ``reference`` with the value column replaced by ``0``."""
+    # Keeps table structure when one file has fewer lines
     return _REPLACE_VALUE_RE.sub(" 0", reference, count=1)
 
 
 def merge_simple(base_directory: Path) -> None:
     """Replicate :mod:`merge.py` using ``before`` and ``after`` directories."""
+    # Writes pairs of values from matching files side by side
     before_dir = base_directory / "before"
     after_dir = base_directory / "after"
     before_files = {p.name: p for p in list_text_files(before_dir)}
@@ -54,6 +58,7 @@ def merge_simple(base_directory: Path) -> None:
 
 def read_sanitised_lines(path: Path) -> list[str]:
     """Return lines from ``path`` without ``[]`` or commas."""
+    # Prepares data files produced by averaging scripts
     remove_chars = str.maketrans("", "", "[],")
     with path.open(encoding="utf-8") as f:
         return [line.translate(remove_chars).rstrip("\n") for line in f]
@@ -61,11 +66,13 @@ def read_sanitised_lines(path: Path) -> list[str]:
 
 def zero_pad(line: str) -> str:
     """Return ``line`` with the second column replaced by ``0``."""
+    # Used to fill missing rows when merging lists of unequal length
     return _REPLACE_VALUE_RE.sub(" 0", line)
 
 
 def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
     """Replicate :mod:`smart_merge.py` and plot comparison results."""
+    # Merges averaged statistics and produces comparison plots
     before_files = [p for p in list_text_files(before_dir) if "average" in p.name]
     after_files = [p for p in list_text_files(after_dir) if "average" in p.name]
     common = {p.name for p in before_files} & {p.name for p in after_files}
@@ -88,6 +95,7 @@ def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
 
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description="Merge statistic files from different runs")
+    # Provides ``simple`` and ``smart`` subcommands
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_simple = sub.add_parser("simple", help="Combine raw statistics using before/ and after/ subdirectories")

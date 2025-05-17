@@ -2,6 +2,7 @@ import re
 import sys
 
 def shrink_warning(who, dist, amount):
+        # Identify dendrites too short for shrinking
         not_applicable=[]
         status=False
         for dend in who:
@@ -12,6 +13,7 @@ def shrink_warning(who, dist, amount):
 
 def check_terminal(who, all_terminal):
 
+        # Collect non-terminal dendrites selected for editing
         not_terminal=[]
 
         for dend in who:
@@ -27,6 +29,7 @@ def check_terminal(who, all_terminal):
 
 def check_indices(newfile):
 
+        # Gather segment indices to test for continuity
         ilist=[]
         for line in newfile:
                 if re.search(r'#', line):
