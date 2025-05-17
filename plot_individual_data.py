@@ -18,28 +18,28 @@ def plot_the_data(d):
 
     #plots the total number of all the dendrites vs the terminal ones for all the tree, as well as from the basal and apical region
 
-    f=open(d+"number_of_basal_dendrites.txt")
-    nbd=f.readline()
+    with open(d+"number_of_basal_dendrites.txt") as f:
+        nbd=f.readline()
     nbd=nbd.rstrip('\n')
 
-    f=open(d+"number_of_basal_terminal_dendrites.txt")
-    nbtd=f.readline()
+    with open(d+"number_of_basal_terminal_dendrites.txt") as f:
+        nbtd=f.readline()
     nbtd=nbtd.rstrip('\n')
 
-    f=open(d+"number_of_apical_dendrites.txt")
-    nad=f.readline()
+    with open(d+"number_of_apical_dendrites.txt") as f:
+        nad=f.readline()
     nad=nad.rstrip('\n')
 
-    f=open(d+"number_of_apical_terminal_dendrites.txt")
-    natd=f.readline()
+    with open(d+"number_of_apical_terminal_dendrites.txt") as f:
+        natd=f.readline()
     natd=natd.rstrip('\n')
 
-    f=open(d+"number_of_all_dendrites.txt")
-    nald=f.readline()
+    with open(d+"number_of_all_dendrites.txt") as f:
+        nald=f.readline()
     nald=nald.rstrip('\n')
 
-    f=open(d+"number_of_all_terminal_dendrites.txt")
-    naltd=f.readline()
+    with open(d+"number_of_all_terminal_dendrites.txt") as f:
+        naltd=f.readline()
     naltd=naltd.rstrip('\n')
 
     labels=['All', 'Basal', 'Apical']
@@ -70,16 +70,16 @@ def plot_the_data(d):
 
     #plots the total number of branchpoints from all the tree, as well as from the basal and apical region
 
-    f=open(d+"number_of_all_branchpoints.txt")
-    nalb=f.readline()
+    with open(d+"number_of_all_branchpoints.txt") as f:
+        nalb=f.readline()
     nalb=nalb.rstrip('\n')
 
-    f=open(d+"number_of_basal_branchpoints.txt")
-    nbb=f.readline()
+    with open(d+"number_of_basal_branchpoints.txt") as f:
+        nbb=f.readline()
     nbb=nbb.rstrip('\n')
 
-    f=open(d+"number_of_apical_branchpoints.txt")
-    nab=f.readline()
+    with open(d+"number_of_apical_branchpoints.txt") as f:
+        nab=f.readline()
     nab=nab.rstrip('\n')
 
     bars=[float(nalb), float(nbb), float(nab)]
@@ -101,16 +101,16 @@ def plot_the_data(d):
 
     #plots the total dendritic length from all the tree, as well as the basal and the apical regions
 
-    f=open(d+"all_total_length.txt")
-    altl=f.readline()
+    with open(d+"all_total_length.txt") as f:
+        altl=f.readline()
     altl=altl.rstrip('\n')
 
-    f=open(d+"basal_total_length.txt")
-    btl=f.readline()
+    with open(d+"basal_total_length.txt") as f:
+        btl=f.readline()
     btl=btl.rstrip('\n')
 
-    f=open(d+"apical_total_length.txt")
-    atl=f.readline()
+    with open(d+"apical_total_length.txt") as f:
+        atl=f.readline()
     atl=atl.rstrip('\n')
 
     bars=[float(altl), float(btl), float(atl)]
@@ -132,16 +132,16 @@ def plot_the_data(d):
 
     #plots the total dendritic area from all the tree, as well as the basal and the apical regions
 
-    f=open(d+"all_total_area.txt")
-    alta=f.readline()
+    with open(d+"all_total_area.txt") as f:
+        alta=f.readline()
     alta=alta.rstrip('\n')
 
-    f=open(d+"basal_total_area.txt")
-    bta=f.readline()
+    with open(d+"basal_total_area.txt") as f:
+        bta=f.readline()
     bta=bta.rstrip('\n')
 
-    f=open(d+"apical_total_area.txt")
-    ata=f.readline()
+    with open(d+"apical_total_area.txt") as f:
+        ata=f.readline()
     ata=ata.rstrip('\n')
 
     bars=[float(alta), float(bta), float(ata)]
@@ -810,10 +810,11 @@ def plot_average_data(d):
     err=[]
 
     
-    for line in open(d+"number_of_all_dendrites_per_branch_order.txt"):
-        data=line.split()
-        labels.append(int(data[0]))
-        means.append(float(data[1]))
+    with open(d+"number_of_all_dendrites_per_branch_order.txt") as f:
+        for line in f:
+            data=line.split()
+            labels.append(int(data[0]))
+            means.append(float(data[1]))
         err.append(float(data[2]))
         
 
@@ -1987,17 +1988,14 @@ def plot_compare_data(d):
     mean_l=[]
     err_l=[]
 
-    for line in open(d+"compare_sholl_all_branchpoints.txt"):
-
-        data=line.split()
-
-        labels.append(int(data[0]))
-
-        mean_f.append(float(data[1]))
-        err_f.append(float(data[2]))
-
-        mean_l.append(float(data[4]))
-        err_l.append(float(data[5]))
+    with open(d+"compare_sholl_all_branchpoints.txt") as f:
+        for line in f:
+            data=line.split()
+            labels.append(int(data[0]))
+            mean_f.append(float(data[1]))
+            err_f.append(float(data[2]))
+            mean_l.append(float(data[4]))
+            err_l.append(float(data[5]))
 
     for i in range(1,len(labels),2):
         labels[i]=''
@@ -2027,17 +2025,14 @@ def plot_compare_data(d):
     mean_l=[]
     err_l=[]
 
-    for line in open(d+"compare_sholl_basal_branchpoints.txt"):
-
-        data=line.split()
-
-        labels.append(int(data[0]))
-
-        mean_f.append(float(data[1]))
-        err_f.append(float(data[2]))
-
-        mean_l.append(float(data[4]))
-        err_l.append(float(data[5]))
+    with open(d+"compare_sholl_basal_branchpoints.txt") as f:
+        for line in f:
+            data=line.split()
+            labels.append(int(data[0]))
+            mean_f.append(float(data[1]))
+            err_f.append(float(data[2]))
+            mean_l.append(float(data[4]))
+            err_l.append(float(data[5]))
 
     for i in range(1,len(labels),2):
         labels[i]=''
@@ -2067,17 +2062,14 @@ def plot_compare_data(d):
     mean_l=[]
     err_l=[]
 
-    for line in open(d+"compare_sholl_apical_branchpoints.txt"):
-
-        data=line.split()
-
-        labels.append(int(data[0]))
-
-        mean_f.append(float(data[1]))
-        err_f.append(float(data[2]))
-
-        mean_l.append(float(data[4]))
-        err_l.append(float(data[5]))
+    with open(d+"compare_sholl_apical_branchpoints.txt") as f:
+        for line in f:
+            data=line.split()
+            labels.append(int(data[0]))
+            mean_f.append(float(data[1]))
+            err_f.append(float(data[2]))
+            mean_l.append(float(data[4]))
+            err_l.append(float(data[5]))
 
     for i in range(1,len(labels),2):
         labels[i]=''
