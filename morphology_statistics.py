@@ -31,23 +31,23 @@ def _mean_by_branch_order(dendrite_roots, branch_order, values):
 
     return {k: sum(v) / len(v) for k, v in acc.items() if v}
 
-def total_length(dendrite_roots, dist):
+def total_length(dendrite_roots, lengths):
         # soma_included
-        """Return the total length of *dendrite_roots* using ``dist`` mapping."""
+        """Return the total length of *dendrite_roots* using ``lengths`` mapping."""
         # Each dendrite's precomputed length is summed
-        return sum(dist[d] for d in dendrite_roots)
+        return sum(lengths[d] for d in dendrite_roots)
 
-def total_area(dendrite_roots, area):
+def total_area(dendrite_roots, surface_areas):
         # soma_included
-        """Return the total surface area of *dendrite_roots* using ``area`` mapping."""
+        """Return the total surface area of *dendrite_roots* using ``surface_areas`` mapping."""
         # Aggregates surface areas returned by ``dendrite_areas``
-        return sum(area[d] for d in dendrite_roots)
+        return sum(surface_areas[d] for d in dendrite_roots)
 
-def path_length(dendrite_roots, path, dist):
+def path_length(dendrite_roots, soma_paths, lengths):
         """Return a mapping of dendrite IDs to path length."""
         # Path length sums distances along the path to the soma
 
-        return {d: sum(dist[i] for i in path[d]) for d in dendrite_roots}
+        return {d: sum(lengths[i] for i in soma_paths[d]) for d in dendrite_roots}
 
 def median_radius(dendrite_roots, dendrite_samples):
         """Return the median radius for each dendrite in *dendrite_roots*."""
@@ -75,10 +75,10 @@ def branch_order_frequency(dendrite_roots, branch_order):
 
         return branch_order_freq, branch_order_max
 
-def branch_order_dlength(dendrite_roots, branch_order, branch_order_max, dist):
+def branch_order_dlength(dendrite_roots, branch_order, branch_order_max, lengths):
         """Return average dendrite length per branch order."""
         # Groups lengths by branch order then averages them
-        return _mean_by_branch_order(dendrite_roots, branch_order, dist)
+        return _mean_by_branch_order(dendrite_roots, branch_order, lengths)
 
 def branch_order_path_length(dendrite_roots, branch_order, branch_order_max, path_lengths):
         """Return average path length per branch order."""

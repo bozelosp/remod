@@ -64,8 +64,8 @@ def max_sample_id(samples: Dict[int, List[float]]) -> int:
     # Useful when generating new identifiers
     return max(samples)
 
-def find_branch_points(samples: Dict[int, List[float]]):
-    """Return branch point information from ``samples``."""
+def find_fork_points(samples: Dict[int, List[float]]):
+    """Return fork point information from ``samples``."""
     # Count how many children each node has to detect branches
 
     soma_samples = [p for p in samples.values() if p[1] == 1]
@@ -76,22 +76,22 @@ def find_branch_points(samples: Dict[int, List[float]]):
         if p[1] not in [10]:
             child_count[parent] = child_count.get(parent, 0) + 1
 
-    branch_points = [i for i, count in child_count.items() if count > 1]
+    fork_points = [i for i, count in child_count.items() if count > 1]
 
-    axon_bpoints = [i for i in branch_points if samples[i][1] == 2]
-    basal_bpoints = [i for i in branch_points if samples[i][1] == 3]
-    apical_bpoints = [i for i in branch_points if samples[i][1] == 4]
-    soma_bpoints = [i for i in branch_points if samples[i][1] == 1]
+    axon_forks = [i for i in fork_points if samples[i][1] == 2]
+    basal_forks = [i for i in fork_points if samples[i][1] == 3]
+    apical_forks = [i for i in fork_points if samples[i][1] == 4]
+    soma_forks = [i for i in fork_points if samples[i][1] == 1]
 
-    # only dendritic branch points are returned in ``branch_points``
-    dendritic_bpoints = sorted(set(basal_bpoints + apical_bpoints))
+    # only dendritic fork points are returned in ``fork_points``
+    dendritic_forks = sorted(set(basal_forks + apical_forks))
 
     return (
-        dendritic_bpoints,
-        axon_bpoints,
-        basal_bpoints,
-        apical_bpoints,
-        soma_bpoints,
+        dendritic_forks,
+        axon_forks,
+        basal_forks,
+        apical_forks,
+        soma_forks,
         soma_samples,
     )
 
@@ -100,12 +100,15 @@ def parent_map(samples: Dict[int, List[float]]) -> Dict[int, int]:
     # Enables quick lookup of each segment's parent
     return {int(i): int(val[6]) for i, val in samples.items()}
 
-def sort_dendrites(branch_points: Iterable[int]) -> List[int]:
+def sort_dendrites(fork_points: Iterable[int]) -> List[int]:
     """Return a sorted list of dendrite starting indices."""
     # Sorting ensures deterministic traversal order
-    return sorted(branch_points)
+    return sorted(fork_points)
 
-def dendrite_sample_ids(dendrite_roots: Iterable[int], samples: Dict[int, List[float]]) -> Dict[int, List[int]]:
+def collect_dendrite_sample_ids(
+    dendrite_roots: Iterable[int],
+    samples: Dict[int, List[float]],
+) -> Dict[int, List[int]]:
     """Return lists of sample numbers for each dendrite starting at ``dendrite_roots``."""
     # Walk down from each starting segment until a branch is encountered
 
@@ -115,7 +118,7 @@ def dendrite_sample_ids(dendrite_roots: Iterable[int], samples: Dict[int, List[f
         parent = int(vals[6])
         child_map.setdefault(parent, []).append(idx)
 
-    dendrite_sample_ids: Dict[int, List[int]] = {}
+    sample_id_map: Dict[int, List[int]] = {}
     for start in dendrite_roots:
         dendrite = [start]
         current = start
@@ -131,9 +134,9 @@ def dendrite_sample_ids(dendrite_roots: Iterable[int], samples: Dict[int, List[f
             dendrite.append(nxt)
             current = nxt
 
-        dendrite_sample_ids[start] = dendrite
+        sample_id_map[start] = dendrite
 
-    return dendrite_sample_ids
+    return sample_id_map
 
 def classify_dendrites(dendrite_roots: Iterable[int], samples: Dict[int, List[float]]):
     """Classify dendrites by type and assign readable names."""
@@ -167,9 +170,9 @@ def classify_dendrites(dendrite_roots: Iterable[int], samples: Dict[int, List[fl
 
     return dend_names, axon, basal, apical, undefined_dendrites
 
-def dendrite_samples(
+def collect_dendrite_samples(
     dendrite_roots: Iterable[int],
-    dendrite_sample_ids: Dict[int, List[int]],
+    sample_id_map: Dict[int, List[int]],
     samples: Dict[int, List[float]],
 ) -> Dict[int, List[List[float]]]:
     """Collect full sample records for every dendrite."""
@@ -177,21 +180,21 @@ def dendrite_samples(
 
     dendrite_records: Dict[int, List[List[float]]] = {}
     for idx in dendrite_roots:
-        pts = [samples[k][:7] for k in dendrite_sample_ids[idx]]
+        pts = [samples[k][:7] for k in sample_id_map[idx]]
         dendrite_records[idx] = pts
     return dendrite_records
 
 def paths_to_soma(
     dendrite_roots: Iterable[int],
     samples: Dict[int, List[float]],
-    dendrite_sample_ids: Dict[int, List[int]],
+    sample_id_map: Dict[int, List[int]],
     soma_samples: Iterable[List[float]],
 ) -> Dict[int, List[int]]:
     """Return the pathway from each dendrite to the soma."""
     # Walk up the tree from each dendrite until hitting the soma root
 
     soma_set = {s[0] for s in soma_samples}
-    path: Dict[int, List[int]] = {}
+    soma_paths: Dict[int, List[int]] = {}
 
     for dend in dendrite_roots:
         current = dend
@@ -201,16 +204,16 @@ def paths_to_soma(
             if parent in soma_set or parent == -1:
                 break
             # if the parent is also a dendrite start, jump to its first index
-            current = dendrite_sample_ids.get(parent, [parent])[0]
+            current = sample_id_map.get(parent, [parent])[0]
             pathway.append(current)
 
-        path[dend] = pathway
+        soma_paths[dend] = pathway
 
-    return path
+    return soma_paths
 
 def terminal_dendrites(
     dendrite_roots: Iterable[int],
-    path: Dict[int, List[int]],
+    soma_paths: Dict[int, List[int]],
     basal: Iterable[int],
     apical: Iterable[int],
 ) -> Tuple[List[int], List[int], List[int]]:
@@ -218,7 +221,7 @@ def terminal_dendrites(
     # A dendrite is terminal if it appears only once in any soma path
 
     appearances = {d: 0 for d in dendrite_roots}
-    for chain in path.values():
+    for chain in soma_paths.values():
         for node in chain:
             if node in appearances:
                 appearances[node] += 1
@@ -232,7 +235,7 @@ def terminal_dendrites(
 def build_descendant_map(
     dendrite_roots: Iterable[int],
     all_terminal: Iterable[int],
-    path: Dict[int, List[int]],
+    soma_paths: Dict[int, List[int]],
 ) -> Dict[int, List[int]]:
     """Return all descendant dendrites for each non-terminal dendrite."""
 
@@ -242,7 +245,7 @@ def build_descendant_map(
         if dend in terminal_set:
             continue
         result: Set[int] = set()
-        for seq in path.values():
+        for seq in soma_paths.values():
             if dend in seq:
                 start = seq.index(dend)
                 result.update(seq[start:])
@@ -269,7 +272,7 @@ def dendrite_lengths(
     """Compute the length of each dendrite."""
     # Distances are measured between consecutive segments
 
-    dist: Dict[int, float] = {}
+    lengths_map: Dict[int, float] = {}
     for idx in dendrite_roots:
         dend = coords_map[idx]
         segs = [samples[parents[dend[0][0]]]] + dend
@@ -277,9 +280,9 @@ def dendrite_lengths(
             distance(a[2], b[2], a[3], b[3], a[4], b[4])
             for a, b in zip(segs[:-1], segs[1:])
         ]
-        dist[idx] = sum(lengths)
+        lengths_map[idx] = sum(lengths)
 
-    return dist
+    return lengths_map
 
 def dendrite_areas(
     coords_map: Dict[int, List[List[float]]],
@@ -290,7 +293,7 @@ def dendrite_areas(
     """Approximate surface area for each dendrite."""
     # Uses a cylinder approximation for every segment
 
-    area: Dict[int, float] = {}
+    surface_area_map: Dict[int, float] = {}
     for idx in dendrite_roots:
         dend = coords_map[idx]
         segs = [samples[parents[dend[0][0]]]] + dend
@@ -299,21 +302,21 @@ def dendrite_areas(
             radius = b[5]
             di = distance(a[2], b[2], a[3], b[3], a[4], b[4])
             contributions.append(2 * pi * radius * di)
-        area[idx] = sum(contributions)
+        surface_area_map[idx] = sum(contributions)
 
-    return area
+    return surface_area_map
 
-def compute_branch_order(dendrite_roots: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
+def compute_branch_order(dendrite_roots: Iterable[int], soma_paths: Dict[int, List[int]]) -> Dict[int, int]:
     """Return the branch order (path length) for each dendrite."""
     # Branch order corresponds to the hop count to the soma
-    return {d: len(path[d]) for d in dendrite_roots}
+    return {d: len(soma_paths[d]) for d in dendrite_roots}
 
-def toward_soma_map(dendrite_roots: Iterable[int], path: Dict[int, List[int]]) -> Dict[int, int]:
+def toward_soma_map(dendrite_roots: Iterable[int], soma_paths: Dict[int, List[int]]) -> Dict[int, int]:
     """Return the next dendrite towards the soma for each dendrite."""
     # Records the first segment encountered when walking toward the soma
     toward_soma: Dict[int, int] = {}
     for dend in dendrite_roots:
-        toward_soma[dend] = path[dend][1] if len(path[dend]) > 1 else 1
+        toward_soma[dend] = soma_paths[dend][1] if len(soma_paths[dend]) > 1 else 1
     return toward_soma
 
 def parse_swc_file(file_path: str):
@@ -323,55 +326,55 @@ def parse_swc_file(file_path: str):
     swc_lines = read_swc_lines(file_path)
     comment_lines, samples = parse_swc_lines(swc_lines)
     (
-        branch_points,
-        axon_bpoints,
-        basal_bpoints,
-        apical_bpoints,
-        soma_bpoints,
+        fork_points,
+        axon_forks,
+        basal_forks,
+        apical_forks,
+        soma_forks,
         soma_samples,
-    ) = find_branch_points(samples)
+    ) = find_fork_points(samples)
     parents = parent_map(samples)
-    dendrite_roots = sort_dendrites(branch_points)
-    dendrite_sample_ids = dendrite_sample_ids(dendrite_roots, samples)
+    dendrite_roots = sort_dendrites(fork_points)
+    sample_id_map = collect_dendrite_sample_ids(dendrite_roots, samples)
     dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_roots, samples)
-    dendrite_samples = dendrite_samples(dendrite_roots, dendrite_sample_ids, samples)
-    path = paths_to_soma(dendrite_roots, samples, dendrite_sample_ids, soma_samples)
-    all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_roots, path, basal, apical)
-    descendants = build_descendant_map(dendrite_roots, all_terminal, path)
-    dist = dendrite_lengths(dendrite_samples, dendrite_roots, parents, samples)
-    area = dendrite_areas(dendrite_samples, dendrite_roots, parents, samples)
+    dendrite_records = collect_dendrite_samples(dendrite_roots, sample_id_map, samples)
+    soma_paths = paths_to_soma(dendrite_roots, samples, sample_id_map, soma_samples)
+    all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_roots, soma_paths, basal, apical)
+    descendants = build_descendant_map(dendrite_roots, all_terminal, soma_paths)
+    lengths = dendrite_lengths(dendrite_records, dendrite_roots, parents, samples)
+    surface_areas = dendrite_areas(dendrite_records, dendrite_roots, parents, samples)
     max_sample_number = max_sample_id(samples)
-    branch_order_map = compute_branch_order(dendrite_roots, path)
-    connectivity_map = toward_soma_map(dendrite_roots, path)
+    branch_order_map = compute_branch_order(dendrite_roots, soma_paths)
+    connectivity_map = toward_soma_map(dendrite_roots, soma_paths)
     dendrite_roots = basal + apical
-    branch_points = basal_bpoints + apical_bpoints
+    fork_points = basal_forks + apical_forks
 
     return (
         swc_lines,
         samples,
         comment_lines,
-        branch_points,
-        axon_bpoints,
-        basal_bpoints,
-        apical_bpoints,
-        soma_bpoints,
+        fork_points,
+        axon_forks,
+        basal_forks,
+        apical_forks,
+        soma_forks,
         soma_samples,
         max_sample_number,
         dendrite_roots,
         descendants,
-        dendrite_sample_ids,
+        sample_id_map,
         dend_names,
         axon,
         basal,
         apical,
         undefined_dendrites,
-        dendrite_samples,
-        path,
+        dendrite_records,
+        soma_paths,
         all_terminal,
         basal_terminal,
         apical_terminal,
-        dist,
-        area,
+        lengths,
+        surface_areas,
         branch_order_map,
         connectivity_map,
         parents,

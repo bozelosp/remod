@@ -82,9 +82,9 @@ def analyze_main(argv=None):
         average_t_area=[]
         average_basal_t_area=[]
         average_apical_t_area=[]
-        average_num_basal_bpoints=[]
-        average_num_apical_bpoints=[]
-        average_num_all_bpoints=[]
+        average_num_basal_forks=[]
+        average_num_apical_forks=[]
+        average_num_all_forks=[]
         
         average_all_branch_order_frequency={k: [] for k in range(0,200)}
         average_basal_branch_order_frequency={k: [] for k in range(0,200)}
@@ -149,9 +149,9 @@ def analyze_main(argv=None):
                 average_t_area = stats.get('average_t_area', [])
                 average_basal_t_area = stats.get('average_basal_t_area', [])
                 average_apical_t_area = stats.get('average_apical_t_area', [])
-                average_num_all_bpoints = stats.get('average_num_all_bpoints', [])
-                average_num_basal_bpoints = stats.get('average_num_basal_bpoints', [])
-                average_num_apical_bpoints = stats.get('average_num_apical_bpoints', [])
+                average_num_all_forks = stats.get('average_num_all_forks', [])
+                average_num_basal_forks = stats.get('average_num_basal_forks', [])
+                average_num_apical_forks = stats.get('average_num_apical_forks', [])
                 average_all_branch_order_frequency = stats.get('average_all_branch_order_frequency', {k: [] for k in range(0,200)})
                 average_basal_branch_order_frequency = stats.get('average_basal_branch_order_frequency', {k: [] for k in range(0,200)})
                 average_apical_branch_order_frequency = stats.get('average_apical_branch_order_frequency', {k: [] for k in range(0,200)})
@@ -189,28 +189,28 @@ def analyze_main(argv=None):
                     swc_lines,
                     samples,
                     comment_lines,
-                    branch_points,
-                    axon_bpoints,
-                    basal_bpoints,
-                    apical_bpoints,
-                    soma_bpoints,
+                    fork_points,
+                    axon_forks,
+                    basal_forks,
+                    apical_forks,
+                    soma_forks,
                     soma_samples,
                     max_sample_number,
                     dendrite_roots,
                     descendants,
-                    dendrite_sample_ids,
+                    sample_id_map,
                     dend_names,
                     axon,
                     basal,
                     apical,
                     undefined_dendrites,
-                    dendrite_samples,
-                    path,
+                    dendrite_records,
+                    soma_paths,
                     all_terminal,
                     basal_terminal,
                     apical_terminal,
-                    dist,
-                    area,
+                    lengths,
+                    surface_areas,
                     branch_order_map,
                     connectivity_map,
                     parents,
@@ -235,50 +235,50 @@ def analyze_main(argv=None):
                 results['number_of_apical_terminal_dendrites'] = len(apical_terminal)
                 average_number_of_apical_terminal_dendrites.append(len(apical_terminal))
         
-                t_length=total_length(dendrite_roots, dist)
+                t_length=total_length(dendrite_roots, lengths)
                 results['all_total_length'] = t_length
                 average_t_length.append(t_length)
         
-                basal_t_length=total_length(basal, dist)
+                basal_t_length=total_length(basal, lengths)
                 results['basal_total_length'] = basal_t_length
                 average_basal_t_length.append(basal_t_length)
         
-                apical_t_length=total_length(apical, dist)
+                apical_t_length=total_length(apical, lengths)
                 results['apical_total_length'] = apical_t_length
                 average_apical_t_length.append(apical_t_length)
         
-                t_area=total_area(dendrite_roots, area)
+                t_area=total_area(dendrite_roots, surface_areas)
                 results['all_total_area'] = t_area
                 average_t_area.append(t_area)
         
-                basal_t_area=total_area(basal, area)
+                basal_t_area=total_area(basal, surface_areas)
                 results['basal_total_area'] = basal_t_area
                 average_basal_t_area.append(basal_t_area)
         
-                apical_t_area=total_area(apical, area)
+                apical_t_area=total_area(apical, surface_areas)
                 results['apical_total_area'] = apical_t_area
                 average_apical_t_area.append(apical_t_area)
         
                 #print list(set([parent_indices[x] for x in branch_points]))
                 #print len(list(set([parent_indices[x] for x in branch_points])))
         
-                fnum_all_bpoints = stats_dir / f'{file_name}_number_of_all_branchpoints.txt'
+                fnum_all_bpoints = stats_dir / f'{file_name}_number_of_all_forkpoints.txt'
                 soma=[x[0] for x in soma_samples]
                 write_value(
                     fnum_all_bpoints,
-                    len(list(set([parents[x] for x in branch_points if parents[x] not in soma]))),
+                    len(list(set([parents[x] for x in fork_points if parents[x] not in soma]))),
                 )
-                average_num_all_bpoints.append(len(list(set([parents[x] for x in branch_points if parents[x] not in soma]))))
+                average_num_all_forks.append(len(list(set([parents[x] for x in fork_points if parents[x] not in soma]))))
         
-                results['number_of_basal_branchpoints'] = len(
-                    list(set([parents[x] for x in basal_bpoints if parents[x] not in soma]))
+                results['number_of_basal_forkpoints'] = len(
+                    list(set([parents[x] for x in basal_forks if parents[x] not in soma]))
                 )
-                average_num_basal_bpoints.append(len(list(set([parents[x] for x in basal_bpoints if parents[x] not in soma]))))
+                average_num_basal_forks.append(len(list(set([parents[x] for x in basal_forks if parents[x] not in soma]))))
         
-                results['number_of_apical_branchpoints'] = len(
-                    list(set([parents[x] for x in apical_bpoints if parents[x] not in soma]))
+                results['number_of_apical_forkpoints'] = len(
+                    list(set([parents[x] for x in apical_forks if parents[x] not in soma]))
                 )
-                average_num_apical_bpoints.append(len(list(set([parents[x] for x in apical_bpoints if parents[x] not in soma]))))
+                average_num_apical_forks.append(len(list(set([parents[x] for x in apical_forks if parents[x] not in soma]))))
         
                 results['list_of_all_dendrites'] = dendrite_roots
         
@@ -287,15 +287,15 @@ def analyze_main(argv=None):
                 results['list_of_apical_dendrites'] = apical
         
                 results['list_of_all_dendritic_lengths'] = {
-                    dend: dist[dend] for dend in dendrite_roots
+                    dend: lengths[dend] for dend in dendrite_roots
                 }
         
                 results['list_of_basal_dendritic_lengths'] = {
-                    dend: dist[dend] for dend in basal
+                    dend: lengths[dend] for dend in basal
                 }
         
                 results['list_of_apical_dendritic_lengths'] = {
-                    dend: dist[dend] for dend in apical
+                    dend: lengths[dend] for dend in apical
                 }
         
                 '''if basal_t_length<150 or apical_t_length<150:
@@ -319,7 +319,7 @@ def analyze_main(argv=None):
                 branch_order_max_basal = None
                 if len(basal) > 0:
     
-                        branch_order_basal = branch_order(basal, path)
+                        branch_order_basal = branch_order(basal, soma_paths)
                         branch_order_freq, branch_order_max_basal = branch_order_frequency(basal, branch_order_values)
                         results['number_of_basal_dendrites_per_branch_order'] = branch_order_freq
                         for order in branch_order_freq:
@@ -329,44 +329,44 @@ def analyze_main(argv=None):
                 branch_order_max_apical = None
                 if len(apical) > 0:
     
-                        branch_order_apical = branch_order(apical, path)
+                        branch_order_apical = branch_order(apical, soma_paths)
                         branch_order_freq, branch_order_max_apical = branch_order_frequency(apical, branch_order_values)
                         results['number_of_apical_dendrites_per_branch_order'] = branch_order_freq
                         for order in branch_order_freq:
                                 average_apical_branch_order_frequency[order].append(branch_order_freq[order])
         
-                branch_order_dlengths = branch_order_dlength(dendrite_roots, branch_order_values, branch_order_max, dist)
+                branch_order_dlengths = branch_order_dlength(dendrite_roots, branch_order_values, branch_order_max, lengths)
                 results['all_dendritic_length_per_branch_order'] = branch_order_dlengths
                 for order in branch_order_dlengths:
                         average_all_branch_order_dlength[order].append(branch_order_dlengths[order])
         
                 if branch_order_basal is not None:
-                        branch_order_dlengths = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, dist)
+                        branch_order_dlengths = branch_order_dlength(basal, branch_order_basal, branch_order_max_basal, lengths)
                         results['basal_dendritic_length_per_branch_order'] = branch_order_dlengths
                         for order in branch_order_dlengths:
                                 average_basal_branch_order_dlength[order].append(branch_order_dlengths[order])
         
                 if branch_order_apical is not None:
-                        branch_order_dlengths = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, dist)
+                        branch_order_dlengths = branch_order_dlength(apical, branch_order_apical, branch_order_max_apical, lengths)
                         results['apical_dendritic_length_per_branch_order'] = branch_order_dlengths
                         for order in branch_order_dlengths:
                                 average_apical_branch_order_dlength[order].append(branch_order_dlengths[order])
         
-                path_lengths=path_length(dendrite_roots, path, dist)
+                path_lengths=path_length(dendrite_roots, soma_paths, lengths)
                 branch_order_path_lengths=branch_order_path_length(dendrite_roots, branch_order_values, branch_order_max, path_lengths)
                 results['all_path_length_per_branch_order'] = branch_order_path_lengths
                 for order in branch_order_path_lengths:
                         average_all_branch_order_path_length[order].append(branch_order_path_lengths[order])
         
                 if branch_order_basal is not None:
-                        path_lengths=path_length(basal, path, dist)
+                        path_lengths=path_length(basal, soma_paths, lengths)
                         branch_order_path_lengths=branch_order_path_length(basal, branch_order_basal, branch_order_max_basal, path_lengths)
                         results['basal_path_length_per_branch_order'] = branch_order_path_lengths
                         for order in branch_order_path_lengths:
                                 average_basal_branch_order_path_length[order].append(branch_order_path_lengths[order])
         
                 if branch_order_apical is not None:
-                        path_lengths=path_length(apical, path, dist)
+                        path_lengths=path_length(apical, soma_paths, lengths)
                         branch_order_path_lengths=branch_order_path_length(apical, branch_order_apical, branch_order_max_apical, path_lengths)
                         results['apical_path_length_per_branch_order'] = branch_order_path_lengths
                         for order in branch_order_path_lengths:
@@ -395,18 +395,18 @@ def analyze_main(argv=None):
                         print >>f, "%s %s" % (length, sholl_median_basal_length[length])
                 f.close'''
         
-                sholl_all_bp=sholl_bp(branch_points, samples, soma_samples, radius)
-                results['sholl_all_branchpoints'] = sholl_all_bp
+                sholl_all_bp=sholl_bp(fork_points, samples, soma_samples, radius)
+                results['sholl_all_forkpoints'] = sholl_all_bp
                 for length in sorted(sholl_all_bp):
                         average_sholl_all_bp[length].append(sholl_all_bp[length])
         
-                sholl_basal_bp=sholl_bp(basal_bpoints, samples, soma_samples, radius)
-                results['sholl_basal_branchpoints'] = sholl_basal_bp
+                sholl_basal_bp=sholl_bp(basal_forks, samples, soma_samples, radius)
+                results['sholl_basal_forkpoints'] = sholl_basal_bp
                 for length in sorted(sholl_basal_bp):
                         average_sholl_basal_bp[length].append(sholl_basal_bp[length])
         
-                sholl_apical_bp=sholl_bp(apical_bpoints, samples, soma_samples, radius)
-                results['sholl_apical_branchpoints'] = sholl_apical_bp
+                sholl_apical_bp=sholl_bp(apical_forks, samples, soma_samples, radius)
+                results['sholl_apical_forkpoints'] = sholl_apical_bp
                 for length in sorted(sholl_apical_bp):
                         average_sholl_apical_bp[length].append(sholl_apical_bp[length])
         
@@ -473,9 +473,9 @@ def analyze_main(argv=None):
                 'average_t_area': average_t_area,
                 'average_basal_t_area': average_basal_t_area,
                 'average_apical_t_area': average_apical_t_area,
-                'average_num_all_bpoints': average_num_all_bpoints,
-                'average_num_basal_bpoints': average_num_basal_bpoints,
-                'average_num_apical_bpoints': average_num_apical_bpoints,
+                'average_num_all_forks': average_num_all_forks,
+                'average_num_basal_forks': average_num_basal_forks,
+                'average_num_apical_forks': average_num_apical_forks,
                 'average_all_branch_order_frequency': average_all_branch_order_frequency,
                 'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
                 'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
@@ -633,30 +633,30 @@ def analyze_main(argv=None):
         write_value(f_average_total_apical_area, f"{avg_total_apical_area[0]} {avg_total_apical_area[1]}")
         
         print()
-        avg_all_bpoints = average_list(average_num_all_bpoints)
-        print("Number of all Branch Points: " + str(avg_all_bpoints[0]), str(avg_all_bpoints[1]))
-        f_average_num_all_bpoints = stats_dir / 'average_number_of_all_branchpoints.txt'
+        avg_all_forks = average_list(average_num_all_forks)
+        print("Number of all Fork Points: " + str(avg_all_forks[0]), str(avg_all_forks[1]))
+        f_average_num_all_forks = stats_dir / 'average_number_of_all_forkpoints.txt'
         write_value(
-            f_average_num_all_bpoints,
-            f"{avg_all_bpoints[0]} {avg_all_bpoints[1]}",
+            f_average_num_all_forks,
+            f"{avg_all_forks[0]} {avg_all_forks[1]}",
         )
         
         print()
-        avg_basal_bpoints = average_list(average_num_basal_bpoints)
-        print("Number of all Basal Branch Points: " + str(avg_basal_bpoints[0]), str(avg_basal_bpoints[1]))
-        f_average_num_basal_bpoints = stats_dir / 'average_number_of_basal_branchpoints.txt'
+        avg_basal_forks = average_list(average_num_basal_forks)
+        print("Number of all Basal Fork Points: " + str(avg_basal_forks[0]), str(avg_basal_forks[1]))
+        f_average_num_basal_forks = stats_dir / 'average_number_of_basal_forkpoints.txt'
         write_value(
-            f_average_num_basal_bpoints,
-            f"{avg_basal_bpoints[0]} {avg_basal_bpoints[1]}",
+            f_average_num_basal_forks,
+            f"{avg_basal_forks[0]} {avg_basal_forks[1]}",
         )
         
         print()
-        avg_apical_bpoints = average_list(average_num_apical_bpoints)
-        print("Number of all Apical Branch Points: " + str(avg_apical_bpoints[0]), str(avg_apical_bpoints[1]))
-        f_average_num_apical_bpoints = stats_dir / 'average_number_of_apical_branchpoints.txt'
+        avg_apical_forks = average_list(average_num_apical_forks)
+        print("Number of all Apical Fork Points: " + str(avg_apical_forks[0]), str(avg_apical_forks[1]))
+        f_average_num_apical_forks = stats_dir / 'average_number_of_apical_forkpoints.txt'
         write_value(
-            f_average_num_apical_bpoints,
-            f"{avg_apical_bpoints[0]} {avg_apical_bpoints[1]}",
+            f_average_num_apical_forks,
+            f"{avg_apical_forks[0]} {avg_apical_forks[1]}",
         )
         
         print()
@@ -784,9 +784,9 @@ def analyze_main(argv=None):
             'average_total_area': avg_total_area,
             'average_total_basal_area': avg_total_basal_area,
             'average_total_apical_area': avg_total_apical_area,
-            'average_num_all_branchpoints': avg_all_bpoints,
-            'average_num_basal_branchpoints': avg_basal_bpoints,
-            'average_num_apical_branchpoints': avg_apical_bpoints,
+            'average_num_all_forkpoints': avg_all_forks,
+            'average_num_basal_forkpoints': avg_basal_forks,
+            'average_num_apical_forkpoints': avg_apical_forks,
             'average_all_branch_order_frequency': average_all_branch_order_frequency,
             'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
             'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
@@ -874,28 +874,28 @@ def edit_main(argv=None):
             swc_lines,
             samples,
             comment_lines,
-            branch_points,
-            axon_bpoints,
-            basal_bpoints,
-            apical_bpoints,
-            soma_bpoints,
+            fork_points,
+            axon_forks,
+            basal_forks,
+            apical_forks,
+            soma_forks,
             soma_samples,
             max_sample_number,
             dendrite_roots,
             descendants,
-            dendrite_sample_ids,
+            sample_id_map,
             dend_names,
             axon,
             basal,
             apical,
             undefined_dendrites,
-            dendrite_samples,
-            path,
+            dendrite_records,
+            soma_paths,
             all_terminal,
             basal_terminal,
             apical_terminal,
-            dist,
-            area,
+            lengths,
+            surface_areas,
             branch_order_map,
             connectivity_map,
             parents,
@@ -944,11 +944,11 @@ def edit_main(argv=None):
         
         if action == 'shrink':
             if extent_unit == 'micrometers':
-                    (status, not_applicable)=shrink_warning(target_dendrites, dist, amount)
+                    (status, not_applicable)=shrink_warning(target_dendrites, lengths, amount)
                     if status:
                             print('Consider these warnings before you proceed to shrink action!\n')
                             for dend in not_applicable:
-                                    print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(dist[dend]) + ')')
+                                    print('Dendrite ' + str(dend) + ' is shorter than ' + str(amount) + ' micrometers (length: ' + str(lengths[dend]) + ')')
                             #sys.exit(0)
         
         now = datetime .datetime.now()
@@ -957,7 +957,7 @@ def edit_main(argv=None):
         
         edit='#REMOD edited the original ' + str(file_name) + ' file as follows: ' + str(which_dendrites) + 'dendrites: ' + str(target_dendrites) + ', action: ' + str(action) + ', extent percent/um: ' + str(extent_unit) + ', amount: ' + str(amount) + ', radius percent/um: ' + str(radius_unit) + ', radius change: ' + str(radius_change) + " - This file was modified on " + str(now.strftime("%Y-%m-%d %H:%M")) + '\n#'
 
-        (new_lines, dendrite_roots, sample_list)=execute_action(target_dendrites, action, amount, extent_unit, dendrite_samples, dist, max_sample_number, radius_change, dendrite_roots, soma_samples, samples, parents, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
+        (new_lines, dendrite_roots, sample_list)=execute_action(target_dendrites, action, amount, extent_unit, dendrite_records, lengths, max_sample_number, radius_change, dendrite_roots, soma_samples, samples, parents, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
 
         if action in ['shrink', 'remove', 'scale']:
             new_lines=index_reassign(dendrite_roots, dendrite_samples, branch_order_map, connectivity_map, axon, basal, apical, undefined_dendrites, soma_samples, branch_order_max, action)
@@ -971,28 +971,28 @@ def edit_main(argv=None):
             swc_lines,
             samples,
             comment_lines,
-            branch_points,
-            axon_bpoints,
-            basal_bpoints,
-            apical_bpoints,
-            soma_bpoints,
+            fork_points,
+            axon_forks,
+            basal_forks,
+            apical_forks,
+            soma_forks,
             soma_samples,
             max_sample_number,
             dendrite_roots,
             descendants,
-            dendrite_sample_ids,
+            sample_id_map,
             dend_names,
             axon,
             basal,
             apical,
             undefined_dendrites,
-            dendrite_samples,
-            path,
+            dendrite_records,
+            soma_paths,
             all_terminal,
             basal_terminal,
             apical_terminal,
-            dist,
-            area,
+            lengths,
+            surface_areas,
             branch_order_map,
             connectivity_map,
             parents,
