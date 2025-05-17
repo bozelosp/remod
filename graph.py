@@ -12,11 +12,11 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import animation
 import matplotlib.pyplot as plt
 
-def round_to(x, rounder): #returns the nearest number to the multiplied "rounder"
+def round_to(x, rounder): # return the nearest number multiplied by 'rounder'
 
 	return round(x/rounder)*rounder
 
-def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
+def distance(x1,x2,y1,y2,z1,z2): # return the Euclidean distance between two 3D points
 
 	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
 	return dist
@@ -32,8 +32,8 @@ def local_plot(my_file):
 	z_points=[]
 	diameter=[]
 
-	plist={}
-	mylist=[]
+	point_map={}
+	segment_list=[]
 
 	for line in my_file:
 	
@@ -52,20 +52,20 @@ def local_plot(my_file):
 			d=float(p.group(6))
 			c=int(p.group(7))
 
-			plist[i]=[i, l, x, y, z, d, c]
-			mylist.append(i)
+			point_map[i]=[i, l, x, y, z, d, c]
+			segment_list.append(i)
 
-	for i in mylist:
+	for i in segment_list:
 
-		con=plist[i][6]
+		con=point_map[i][6]
 
 		if con!=-1:
 
-			x=[ plist[i][2], plist[con][2] ]
-			y=[ plist[i][3], plist[con][3] ]
-			z=[ plist[i][4], plist[con][4] ]
+			x=[ point_map[i][2], point_map[con][2] ]
+			y=[ point_map[i][3], point_map[con][3] ]
+			z=[ point_map[i][4], point_map[con][4] ]
 
-			d=plist[i][5]
+			d=point_map[i][5]
 			
 			parameters=[x, y, z, d]
 
@@ -75,7 +75,7 @@ def local_plot(my_file):
 
 	# Create an init function and the animate functions.
 	# Both are explained in the tutorial. Since we are changing
-	# the the elevation and azimuth and no objects are really
+	# the elevation and azimuth and no objects are really
 	# changed on the plot we don't have to return anything from
 	# the init and animate function. (return value is explained
 	# in the tutorial.
@@ -90,15 +90,15 @@ def local_plot(my_file):
 	
 	plt.show()
 
-def plot_(my_file, my_plot, dlist):
+def plot_(my_file, my_plot, dendrite_list):
 
 	x_points=[]
 	y_points=[]
 	z_points=[]
 	diameter=[]
 
-	plist={}
-	mylist=[]
+	point_map={}
+	segment_list=[]
 
 	for line in my_file:
 	
@@ -117,47 +117,47 @@ def plot_(my_file, my_plot, dlist):
 			d=float(p.group(6))
 			c=int(p.group(7))
 
-			plist[i]=[i, l, x, y, z, d, c]
-			mylist.append(i)
+			point_map[i]=[i, l, x, y, z, d, c]
+			segment_list.append(i)
 
-	ds=[]
+	distance_list=[]
 
-	for i in mylist:
+	for i in segment_list:
 
-		con=plist[i][6]
+		con=point_map[i][6]
 
 		if con!=-1:
 
-			if i in dlist:
-				ds=[]
+			if i in dendrite_list:
+				distance_list=[]
 
-			x=[ plist[i][2], plist[con][2] ]
-			y=[ plist[i][3], plist[con][3] ]
-			z=[ plist[i][4], plist[con][4] ]
+			x=[ point_map[i][2], point_map[con][2] ]
+			y=[ point_map[i][3], point_map[con][3] ]
+			z=[ point_map[i][4], point_map[con][4] ]
 
 			di=distance(x[1],x[0],y[1],y[0],z[1],z[0])
-			ds.append(di)
-			dsu=sum(ds)
+			distance_list.append(di)
+			dsu=sum(distance_list)
 
-			#print ' %d %d %.2f %.2f %.2f %.2f %d - %.2f' % (plist[i][0], plist[i][1], plist[i][2], plist[i][3], plist[i][4], plist[i][5], plist[i][6], dsu)
-			d=plist[i][5]
+			#print ' %d %d %.2f %.2f %.2f %.2f %d - %.2f' % (point_map[i][0], point_map[i][1], point_map[i][2], point_map[i][3], point_map[i][4], point_map[i][5], point_map[i][6], dsu)
+			d=point_map[i][5]
 			parameters=[x, y, z, d]
 
 			my_plot.append(parameters)
 
 	return my_plot
 
-def plot_1(my_plot, dend_add3d, all_terminal, dlist):
+def plot_1(my_plot, dend_add3d, all_terminal, dendrite_list):
 
 	x_points=[]
 	y_points=[]
 	z_points=[]
 	diameter=[]
 
-	plist={}
-	mylist=[]
+	point_map={}
+	segment_list=[]
 
-	for dend in dlist:
+	for dend in dendrite_list:
 	
 		for p in dend_add3d[dend]:
 
@@ -169,8 +169,8 @@ def plot_1(my_plot, dend_add3d, all_terminal, dlist):
 			d=float(p[5])
 			c=int(p[6])
 
-			plist[i]=[i, l, x, y, z, d, c]
-			mylist.append(i)
+			point_map[i]=[i, l, x, y, z, d, c]
+			segment_list.append(i)
 
 
 	for dend in all_terminal:
@@ -179,17 +179,17 @@ def plot_1(my_plot, dend_add3d, all_terminal, dlist):
 
 			i=k[0]
 
-			con=plist[i][6]
+			con=point_map[i][6]
 
 			if con!=-1 or con!=1:
 
 				
 
-				x=[ plist[i][2], plist[con][2] ]
-				y=[ plist[i][3], plist[con][3] ]
-				z=[ plist[i][4], plist[con][4] ]
+				x=[ point_map[i][2], point_map[con][2] ]
+				y=[ point_map[i][3], point_map[con][3] ]
+				z=[ point_map[i][4], point_map[con][4] ]
 
-				d=plist[i][5]
+				d=point_map[i][5]
 				parameters=[x, y, z, d]
 
 				#print parameters
@@ -199,7 +199,7 @@ def plot_1(my_plot, dend_add3d, all_terminal, dlist):
 	return my_plot
 
 
-def graph(initial_file, modified_file, action, dend_add3d, dlist, directory, file_name):
+def graph(initial_file, modified_file, action, dend_add3d, dendrite_list, directory, file_name):
 
 	#fig = plt.figure()
 	#ax = Axes3D(fig)
@@ -208,10 +208,10 @@ def graph(initial_file, modified_file, action, dend_add3d, dlist, directory, fil
 	plot_before=[]
 	plot_after=[]
 
-	plot_before=plot_(initial_file, plot_before, dlist)
-	plot_after=plot_(modified_file, plot_after, dlist)
+	plot_before=plot_(initial_file, plot_before, dendrite_list)
+	plot_after=plot_(modified_file, plot_after, dendrite_list)
 	
-	#plot_after=plot_1(plot_after, dend_add3d, all_terminal, dlist)
+	#plot_after=plot_1(plot_after, dend_add3d, all_terminal, dendrite_list)
 
 	if action=='shrink' or action=='remove':
 

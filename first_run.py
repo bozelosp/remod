@@ -12,7 +12,7 @@ start_time = time.time()
 
 def clearall():
     """clear all globals"""
-    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_all_bo_frequency', 'average_basal_bo_frequency', 'average_apical_bo_frequency', 'average_all_bo_dlength', 'average_basal_bo_dlength', 'average_apical_bo_dlength', 'average_all_bo_plength', 'average_basal_bo_plength', 'average_apical_bo_plength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_median_basal_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'median_dict', 'round_to', 'radius', 'average_number_of_all_dendrites', 'average_number_of_all_terminal_dendrites', 'average_number_of_basal_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_apical_terminal_dendrites', 'km', 'start_time']
+    myl=['directory', 'file_names', 'file_name', 'number_of_files', 'average_t_length', 'average_basal_t_length', 'average_apical_t_length', 'average_t_area', 'average_basal_t_area', 'average_apical_t_area', 'average_num_basal_bpoints', 'average_num_apical_bpoints', 'average_num_all_bpoints', 'average_all_bo_frequency', 'average_basal_bo_frequency', 'average_apical_bo_frequency', 'average_all_bo_dlength', 'average_basal_bo_dlength', 'average_apical_bo_dlength', 'average_all_bo_plength', 'average_basal_bo_plength', 'average_apical_bo_plength', 'average_sholl_all_bp', 'average_sholl_basal_bp', 'average_sholl_apical_bp', 'average_sholl_all_length', 'average_sholl_basal_length', 'average_sholl_apical_length', 'average_sholl_median_basal_length', 'average_sholl_all_intersections', 'average_sholl_basal_intersections', 'average_sholl_apical_intersections', 'dist_angle_basal', 'dist_angle_apical', 'remove_empty_keys', 'average_list', 'average_dict', 'median_dict', 'round_to', 'radius', 'average_number_of_all_dendrites', 'average_number_of_all_terminal_dendrites', 'average_number_of_basal_dendrites', 'average_number_of_basal_terminal_dendrites', 'average_number_of_apical_dendrites', 'average_number_of_apical_terminal_dendrites', 'length_metrics', 'start_time']
     for uniquevar in [var for var in globals().copy() if var[0] != "_" and var != 'clearall' and var !='myl' and var not in myl]:
         del globals()[uniquevar]
 
@@ -23,7 +23,7 @@ def remove_empty_keys(d):
     		del d[k]
     return d
 
-def round_to(x, rounder): #returns the nearest number to the multiplied "rounder"
+def round_to(x, rounder): # return the nearest number multiplied by 'rounder'
 
 	return round(x/rounder)*rounder
 
@@ -65,7 +65,7 @@ def median_dict(d):
 		d[i]=[round_to(med, 0.01), round_to(p25, 0.01), round_to(p75, 0.01)]
 	return d
 
-#python first_run.py /home/bozelosp/Dropbox/remod/swc/ 0-2.swc
+# example usage: python first_run.py /path/to/swc/ 0-2.swc
 
 if (len(sys.argv)==3):
 
@@ -75,7 +75,7 @@ if (len(sys.argv)==3):
 
 	parsed_files=[]
 
-	pvar=0
+	parsed_count=0
 	if os.path.isfile(directory+'log_parsed_files.txt'):
 
 		for line in open(directory+'log_parsed_files.txt'):
@@ -85,7 +85,7 @@ if (len(sys.argv)==3):
 
 		file_names=[ x for x in file_names if x not in parsed_files ]
 
-		pvar=len(parsed_files)
+		parsed_count=len(parsed_files)
 
 else:
 	print("The program failed.\nThe number of argument(s) given is " + str(len(sys.argv))+ ".\n3 arguments are needed: 1) first_run.py 2) directory path and 3) file name. ")
@@ -149,14 +149,14 @@ dist_angle_apical=[]
 
 number_of_files=len(file_names)
 
-km=[]
+length_metrics=[]
 
 if len(parsed_files)>0:
-	print('The following list of files want be parsed again. Morphometric statistics already have been save for them: ' + str(parsed_files))
+	print("The following list of files won't be parsed again. Morphometric statistics already have been saved for them: " + str(parsed_files))
 
 import pickle, os
 
-if pvar>0:
+if parsed_count>0:
 
 	print()
 	print('Retrieving previously calculated morphometric statistics')
@@ -182,14 +182,14 @@ for file_name in file_names:
 	print('Extracting morphometric statistics for file: ' + str(file_name+'.swc'))
 	print()
 
-	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dlist, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
-	first_graph(directory, file_name, dlist, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
+	(swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+	first_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
 
 	fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites.txt'
 	f = open(fnumdend, 'w+')
-	print(str(len(dlist)), file=f)
+	print(str(len(dendrite_list)), file=f)
 	f.close()
-	average_number_of_all_dendrites.append(len(dlist))
+	average_number_of_all_dendrites.append(len(dendrite_list))
 
 	fnumdend=directory+'downloads/statistics/'+file_name+'_number_of_all_terminal_dendrites.txt'
 	f = open(fnumdend, 'w+')
@@ -221,7 +221,7 @@ for file_name in file_names:
 	f.close()
 	average_number_of_apical_terminal_dendrites.append(len(apical_terminal))
 
-	t_length=total_length(dlist, dist)
+	t_length=total_length(dendrite_list, dist)
 	ftotlength=directory+'downloads/statistics/'+file_name+'_all_total_length.txt'
 	f = open(ftotlength, 'w+')
 	print(t_length, file=f)
@@ -242,7 +242,7 @@ for file_name in file_names:
 	f.close()
 	average_apical_t_length.append(apical_t_length)
 
-	t_area=total_area(dlist, area)
+	t_area=total_area(dendrite_list, area)
 	fdendlist=directory+'downloads/statistics/'+file_name+'_all_total_area.txt'
 	f = open(fdendlist, 'w+')
 	print(t_area, file=f)
@@ -288,7 +288,7 @@ for file_name in file_names:
 
 	fdendlist=directory+'downloads/statistics/'+file_name+'_list_of_all_dendrites.txt'
 	f = open(fdendlist, 'w+')
-	for dend in dlist:
+	for dend in dendrite_list:
 		print(dend, file=f)
 	f.close()
 
@@ -306,7 +306,7 @@ for file_name in file_names:
 
 	fdendlength=directory+'downloads/statistics/'+file_name+'_list_of_all_dendritic_lengths.txt' # <--------- temporary
 	f = open(fdendlength, 'w+')
-	for dend in dlist:
+	for dend in dendrite_list:
 		print(str(dend) + ' ' + str(dist[dend]), file=f)
 	f.close()
 
@@ -333,8 +333,8 @@ for file_name in file_names:
 		os.remove(ftotalength)
 		continue'''
 
-	bo=branch_order(dlist, path)
-	(bo_freq, bo_max)=bo_frequency(dlist, bo)
+	bo=branch_order(dendrite_list, path)
+	(bo_freq, bo_max)=bo_frequency(dendrite_list, bo)
 	fbo=directory+'downloads/statistics/'+file_name+'_number_of_all_dendrites_per_branch_order.txt'
 	f = open(fbo, 'w+')
 	for order in bo_freq:
@@ -364,7 +364,7 @@ for file_name in file_names:
 			print(str(order) + ' ' + str(bo_freq[order]), file=f)
 		f.close()
 
-	bo_dlen=bo_dlength(dlist, bo, bo_max, dist)
+	bo_dlen=bo_dlength(dendrite_list, bo, bo_max, dist)
 	fbo_dlen=directory+'downloads/statistics/'+file_name+'_all_dendritic_length_per_branch_order.txt'
 	f = open(fbo_dlen, 'w+')
 	for order in bo_dlen:
@@ -398,8 +398,8 @@ for file_name in file_names:
 			print(str(order) + ' ' + str(bo_dlen[order]), file=f)
 		f.close()
 
-	plength=path_length(dlist, path, dist)
-	bo_plen=bo_plength(dlist, bo, bo_max, plength)
+	plength=path_length(dendrite_list, path, dist)
+	bo_plen=bo_plength(dendrite_list, bo, bo_max, plength)
 	fbo_plen=directory+'downloads/statistics/'+file_name+'_all_path_length_per_branch_order.txt'
 	f = open(fbo_plen, 'w+')
 	for order in bo_plen:
@@ -541,7 +541,7 @@ for file_name in file_names:
 
 	print("Successful parsing and calculation of morphometric statistics!\n\n------------------------------------------\n")
 
-	#km.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
+	#length_metrics.append([str(file_name), str(t_length), str(basal_t_length), str(apical_t_length), str(len(basal)), str(len(apical))])
 
 	clearall()
 
@@ -554,12 +554,12 @@ import pickle, os
 fpickle=directory+'current_average_statistics.p'
 pickle.dump([average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections], open(fpickle, "wb"))
 
-'''print km
+'''print length_metrics
 
 kmeans_path=directory+'downloads/statistics/'+'kmeans.txt'
 kmeans_file = open(kmeans_path, 'w+')
 
-for i in km:
+for i in length_metrics:
 	print >>kmeans_file, i
 
 kmeans_file.close()'''
@@ -909,10 +909,10 @@ plot_average_data(prefix)
 print 'Sholl analysis (dendritic length) for apical' + str(median_dict(average_sholl_median_basal_length))
 f_average_sholl_median_basal_length=directory+'downloads/statistics/average_sholl_median_basal_length.txt'
 f = open(f_average_sholl_median_basal_length, 'w+')
-mylist=average_sholl_median_basal_length
-for i in sorted(mylist):
-	print i,  mylist[i]
-	print >>f, i,  mylist[i]
+segment_list=average_sholl_median_basal_length
+for i in sorted(segment_list):
+	print i,  segment_list[i]
+	print >>f, i,  segment_list[i]
 f.close()'''
 
 #average_sholl_median_basal_length=remove_empty_keys(average_sholl_median_basal_length)
@@ -982,7 +982,7 @@ for i in la_apical:
 	point=createP(i[0], i[1], principal_axis, soma_root, 1)
 	print point[0][0], point[0][1], point[0][2]'''
 
-#structured_tree(directory, file_name, soma_index, dlist, dend_add3d)
+#structured_tree(directory, file_name, soma_index, dendrite_list, dend_add3d)
 
 '''(principal_axis, soma_root)=axis(apical, dend_add3d, soma_index)
 dist_angle_basal=dist_angle_analysis(basal, dend_add3d, soma_root, principal_axis)
