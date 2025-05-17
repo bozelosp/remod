@@ -122,17 +122,17 @@ def main():
     average_num_apical_bpoints=[]
     average_num_all_bpoints=[]
     
-    average_all_bo_frequency={k: [] for k in range(0,200)}
-    average_basal_bo_frequency={k: [] for k in range(0,200)}
-    average_apical_bo_frequency={k: [] for k in range(0,200)}
+    average_all_branch_order_frequency={k: [] for k in range(0,200)}
+    average_basal_branch_order_frequency={k: [] for k in range(0,200)}
+    average_apical_branch_order_frequency={k: [] for k in range(0,200)}
     
-    average_all_bo_dlength={k: [] for k in range(0,200)}
-    average_basal_bo_dlength={k: [] for k in range(0,200)}
-    average_apical_bo_dlength={k: [] for k in range(0,200)}
+    average_all_branch_order_dlength={k: [] for k in range(0,200)}
+    average_basal_branch_order_dlength={k: [] for k in range(0,200)}
+    average_apical_branch_order_dlength={k: [] for k in range(0,200)}
     
-    average_all_bo_plength={k: [] for k in range(0,200)}
-    average_basal_bo_plength={k: [] for k in range(0,200)}
-    average_apical_bo_plength={k: [] for k in range(0,200)}
+    average_all_branch_order_plength={k: [] for k in range(0,200)}
+    average_basal_branch_order_plength={k: [] for k in range(0,200)}
+    average_apical_branch_order_plength={k: [] for k in range(0,200)}
     
     radius=20
     
@@ -171,7 +171,41 @@ def main():
     
             fpickle = directory / 'current_average_statistics.p'
             with open(fpickle, "rb") as f:
-                    (average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections) = pickle.load(f)
+                stats = pickle.load(f)
+
+            average_number_of_all_terminal_dendrites = stats.get('average_number_of_all_terminal_dendrites', [])
+            average_number_of_basal_terminal_dendrites = stats.get('average_number_of_basal_terminal_dendrites', [])
+            average_number_of_apical_terminal_dendrites = stats.get('average_number_of_apical_terminal_dendrites', [])
+            average_number_of_all_dendrites = stats.get('average_number_of_all_dendrites', [])
+            average_number_of_basal_dendrites = stats.get('average_number_of_basal_dendrites', [])
+            average_number_of_apical_dendrites = stats.get('average_number_of_apical_dendrites', [])
+            average_t_length = stats.get('average_t_length', [])
+            average_basal_t_length = stats.get('average_basal_t_length', [])
+            average_apical_t_length = stats.get('average_apical_t_length', [])
+            average_t_area = stats.get('average_t_area', [])
+            average_basal_t_area = stats.get('average_basal_t_area', [])
+            average_apical_t_area = stats.get('average_apical_t_area', [])
+            average_num_all_bpoints = stats.get('average_num_all_bpoints', [])
+            average_num_basal_bpoints = stats.get('average_num_basal_bpoints', [])
+            average_num_apical_bpoints = stats.get('average_num_apical_bpoints', [])
+            average_all_branch_order_frequency = stats.get('average_all_branch_order_frequency', {k: [] for k in range(0,200)})
+            average_basal_branch_order_frequency = stats.get('average_basal_branch_order_frequency', {k: [] for k in range(0,200)})
+            average_apical_branch_order_frequency = stats.get('average_apical_branch_order_frequency', {k: [] for k in range(0,200)})
+            average_all_branch_order_dlength = stats.get('average_all_branch_order_dlength', {k: [] for k in range(0,200)})
+            average_basal_branch_order_dlength = stats.get('average_basal_branch_order_dlength', {k: [] for k in range(0,200)})
+            average_apical_branch_order_dlength = stats.get('average_apical_branch_order_dlength', {k: [] for k in range(0,200)})
+            average_all_branch_order_plength = stats.get('average_all_branch_order_plength', {k: [] for k in range(0,200)})
+            average_basal_branch_order_plength = stats.get('average_basal_branch_order_plength', {k: [] for k in range(0,200)})
+            average_apical_branch_order_plength = stats.get('average_apical_branch_order_plength', {k: [] for k in range(0,200)})
+            average_sholl_all_length = stats.get('average_sholl_all_length', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_basal_length = stats.get('average_sholl_basal_length', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_apical_length = stats.get('average_sholl_apical_length', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_all_bp = stats.get('average_sholl_all_bp', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_basal_bp = stats.get('average_sholl_basal_bp', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_apical_bp = stats.get('average_sholl_apical_bp', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_all_intersections = stats.get('average_sholl_all_intersections', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_basal_intersections = stats.get('average_sholl_basal_intersections', {k: [] for k in np.arange(0, 10000, radius)})
+            average_sholl_apical_intersections = stats.get('average_sholl_apical_intersections', {k: [] for k in np.arange(0, 10000, radius)})
     
     
     all_results = {}
@@ -187,7 +221,37 @@ def main():
             print('Extracting morphometric statistics for file: ' + str(file_name+'.swc'))
             print()
     
-            (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+            (
+                swc_lines,
+                points,
+                comment_lines,
+                parents,
+                branch_points,
+                axon_bpoints,
+                basal_bpoints,
+                apical_bpoints,
+                else_bpoints,
+                soma_index,
+                max_index,
+                dendrite_list,
+                descendants,
+                dend_indices,
+                dend_names,
+                axon,
+                basal,
+                apical,
+                elsep,
+                dend_add3d,
+                path,
+                all_terminal,
+                basal_terminal,
+                apical_terminal,
+                dist,
+                area,
+                branch_order_map,
+                con,
+                parental_points,
+            ) = read_file(fname)  # extracts important connectivity and morphological data
             first_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points,soma_index) #plots the original and modified tree (overlaying one another)
     
             results['number_of_all_dendrites'] = len(dendrite_list)
@@ -282,80 +346,68 @@ def main():
                     os.remove(ftotalength)
                     continue'''
     
-            branch_order=branch_order(dendrite_list, path)
-            (bo_freq, bo_max)=bo_frequency(dendrite_list, branch_order)
-            results['number_of_all_dendrites_per_branch_order'] = bo_freq
-            for order in bo_freq:
-                    average_all_bo_frequency[order].append(bo_freq[order])
+            branch_order_values = branch_order_map
+            branch_order_freq, branch_order_max = bo_frequency(dendrite_list, branch_order_values)
+            results['number_of_all_dendrites_per_branch_order'] = branch_order_freq
+            for order in branch_order_freq:
+                    average_all_branch_order_frequency[order].append(branch_order_freq[order])
     
-            if len(basal)>0:
+            branch_order_basal = None
+            branch_order_max_basal = None
+            if len(basal) > 0:
+
+                    branch_order_basal = branch_order(basal, path)
+                    branch_order_freq, branch_order_max_basal = bo_frequency(basal, branch_order_values)
+                    results['number_of_basal_dendrites_per_branch_order'] = branch_order_freq
+                    for order in branch_order_freq:
+                            average_basal_branch_order_frequency[order].append(branch_order_freq[order])
     
-                    bo_basal=branch_order(basal, path)
-                    (bo_freq, bo_max_basal)=bo_frequency(basal, branch_order)
-                    results['number_of_basal_dendrites_per_branch_order'] = bo_freq
-                    for order in bo_freq:
-                            average_basal_bo_frequency[order].append(bo_freq[order])
+            branch_order_apical = None
+            branch_order_max_apical = None
+            if len(apical) > 0:
+
+                    branch_order_apical = branch_order(apical, path)
+                    branch_order_freq, branch_order_max_apical = bo_frequency(apical, branch_order_values)
+                    results['number_of_apical_dendrites_per_branch_order'] = branch_order_freq
+                    for order in branch_order_freq:
+                            average_apical_branch_order_frequency[order].append(branch_order_freq[order])
     
-            if len(apical)>0:
+            branch_order_dlen = bo_dlength(dendrite_list, branch_order_values, branch_order_max, dist)
+            results['all_dendritic_length_per_branch_order'] = branch_order_dlen
+            for order in branch_order_dlen:
+                    average_all_branch_order_dlength[order].append(branch_order_dlen[order])
     
-                    bo_apical=branch_order(apical, path)
-                    (bo_freq, bo_max_apical)=bo_frequency(apical, branch_order)
-                    results['number_of_apical_dendrites_per_branch_order'] = bo_freq
-                    for order in bo_freq:
-                            average_apical_bo_frequency[order].append(bo_freq[order])
+            if branch_order_basal is not None:
+                    branch_order_dlen = bo_dlength(basal, branch_order_basal, branch_order_max_basal, dist)
+                    results['basal_dendritic_length_per_branch_order'] = branch_order_dlen
+                    for order in branch_order_dlen:
+                            average_basal_branch_order_dlength[order].append(branch_order_dlen[order])
     
-            bo_dlen=bo_dlength(dendrite_list, branch_order, bo_max, dist)
-            results['all_dendritic_length_per_branch_order'] = bo_dlen
-            for order in bo_dlen:
-                    average_all_bo_dlength[order].append(bo_dlen[order])
-    
-            try:
-                    bo_basal
-            except NameError:
-                    pass
-            else:
-                    bo_dlen=bo_dlength(basal, bo_basal, bo_max_basal, dist)
-                    results['basal_dendritic_length_per_branch_order'] = bo_dlen
-                    for order in bo_dlen:
-                            average_basal_bo_dlength[order].append(bo_dlen[order])
-    
-            try:
-                    bo_apical
-            except NameError:
-                    pass
-            else:
-                    bo_dlen=bo_dlength(apical, bo_apical, bo_max_apical, dist)
-                    results['apical_dendritic_length_per_branch_order'] = bo_dlen
-                    for order in bo_dlen:
-                            average_apical_bo_dlength[order].append(bo_dlen[order])
+            if branch_order_apical is not None:
+                    branch_order_dlen = bo_dlength(apical, branch_order_apical, branch_order_max_apical, dist)
+                    results['apical_dendritic_length_per_branch_order'] = branch_order_dlen
+                    for order in branch_order_dlen:
+                            average_apical_branch_order_dlength[order].append(branch_order_dlen[order])
     
             plength=path_length(dendrite_list, path, dist)
-            bo_plen=bo_plength(dendrite_list, branch_order, bo_max, plength)
-            results['all_path_length_per_branch_order'] = bo_plen
-            for order in bo_plen:
-                    average_all_bo_plength[order].append(bo_plen[order])
+            branch_order_plen=bo_plength(dendrite_list, branch_order_values, branch_order_max, plength)
+            results['all_path_length_per_branch_order'] = branch_order_plen
+            for order in branch_order_plen:
+                    average_all_branch_order_plength[order].append(branch_order_plen[order])
     
-            try:    
-                    bo_basal
-            except NameError:
-                    pass
-            else:
+            if branch_order_basal is not None:
                     plength=path_length(basal, path, dist)
-                    bo_plen=bo_plength(basal, bo_basal, bo_max_basal, plength)
-                    results['basal_path_length_per_branch_order'] = bo_plen
-                    for order in bo_plen:
-                            average_basal_bo_plength[order].append(bo_plen[order])
+                    branch_order_plen=bo_plength(basal, branch_order_basal, branch_order_max_basal, plength)
+                    results['basal_path_length_per_branch_order'] = branch_order_plen
+                    for order in branch_order_plen:
+                            average_basal_branch_order_plength[order].append(branch_order_plen[order])
     
-            try:
-                    bo_apical
-            except NameError:
-                    pass
-            else:   
+            if branch_order_apical is not None:
                     plength=path_length(apical, path, dist)
-                    bo_plen=bo_plength(apical, bo_apical, bo_max_apical, plength)
-                    results['apical_path_length_per_branch_order'] = bo_plen
-                    for order in bo_plen:
-                            average_apical_bo_plength[order].append(bo_plen[order])
+                    branch_order_plen=bo_plength(apical, branch_order_apical, branch_order_max_apical, plength)
+                    results['apical_path_length_per_branch_order'] = branch_order_plen
+                    for order in branch_order_plen:
+                            average_apical_branch_order_plength[order].append(branch_order_plen[order])
     
             sholl_all_length=sholl_length(points, parental_points, soma_index, radius, [3,4])
             results['sholl_all_length'] = sholl_all_length
@@ -445,7 +497,44 @@ def main():
     import pickle, os
     fpickle = directory / 'current_average_statistics.p'
     with open(fpickle, "wb") as f:
-            pickle.dump([average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_number_of_all_terminal_dendrites,average_number_of_basal_terminal_dendrites,average_number_of_apical_terminal_dendrites,average_t_length,average_basal_t_length,average_apical_t_length,average_t_area,average_basal_t_area,average_apical_t_area,average_num_all_bpoints,average_num_basal_bpoints,average_num_apical_bpoints,average_all_bo_frequency,average_basal_bo_frequency,average_apical_bo_frequency,average_all_bo_dlength,average_basal_bo_dlength,average_apical_bo_dlength,average_all_bo_plength,average_basal_bo_plength,average_apical_bo_plength,average_sholl_all_length,average_sholl_basal_length,average_sholl_apical_length,average_sholl_all_bp,average_sholl_basal_bp,average_sholl_apical_bp,average_sholl_all_intersections,average_sholl_apical_intersections,average_sholl_apical_intersections], f)
+        pickle.dump(
+            {
+                'average_number_of_all_terminal_dendrites': average_number_of_all_terminal_dendrites,
+                'average_number_of_basal_terminal_dendrites': average_number_of_basal_terminal_dendrites,
+                'average_number_of_apical_terminal_dendrites': average_number_of_apical_terminal_dendrites,
+                'average_number_of_all_dendrites': average_number_of_all_dendrites,
+                'average_number_of_basal_dendrites': average_number_of_basal_dendrites,
+                'average_number_of_apical_dendrites': average_number_of_apical_dendrites,
+                'average_t_length': average_t_length,
+                'average_basal_t_length': average_basal_t_length,
+                'average_apical_t_length': average_apical_t_length,
+                'average_t_area': average_t_area,
+                'average_basal_t_area': average_basal_t_area,
+                'average_apical_t_area': average_apical_t_area,
+                'average_num_all_bpoints': average_num_all_bpoints,
+                'average_num_basal_bpoints': average_num_basal_bpoints,
+                'average_num_apical_bpoints': average_num_apical_bpoints,
+                'average_all_branch_order_frequency': average_all_branch_order_frequency,
+                'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
+                'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
+                'average_all_branch_order_dlength': average_all_branch_order_dlength,
+                'average_basal_branch_order_dlength': average_basal_branch_order_dlength,
+                'average_apical_branch_order_dlength': average_apical_branch_order_dlength,
+                'average_all_branch_order_plength': average_all_branch_order_plength,
+                'average_basal_branch_order_plength': average_basal_branch_order_plength,
+                'average_apical_branch_order_plength': average_apical_branch_order_plength,
+                'average_sholl_all_length': average_sholl_all_length,
+                'average_sholl_basal_length': average_sholl_basal_length,
+                'average_sholl_apical_length': average_sholl_apical_length,
+                'average_sholl_all_bp': average_sholl_all_bp,
+                'average_sholl_basal_bp': average_sholl_basal_bp,
+                'average_sholl_apical_bp': average_sholl_apical_bp,
+                'average_sholl_all_intersections': average_sholl_all_intersections,
+                'average_sholl_basal_intersections': average_sholl_basal_intersections,
+                'average_sholl_apical_intersections': average_sholl_apical_intersections,
+            },
+            f,
+        )
     
     '''print length_metrics
     
@@ -462,17 +551,17 @@ def main():
             import sys
             sys.exit(0)
     
-    average_all_bo_frequency=remove_empty_keys(average_all_bo_frequency)
-    average_basal_bo_frequency=remove_empty_keys(average_basal_bo_frequency)
-    average_apical_bo_frequency=remove_empty_keys(average_apical_bo_frequency)
+    average_all_branch_order_frequency=remove_empty_keys(average_all_branch_order_frequency)
+    average_basal_branch_order_frequency=remove_empty_keys(average_basal_branch_order_frequency)
+    average_apical_branch_order_frequency=remove_empty_keys(average_apical_branch_order_frequency)
     
-    average_all_bo_dlength=remove_empty_keys(average_all_bo_dlength)
-    average_basal_bo_dlength=remove_empty_keys(average_basal_bo_dlength)
-    average_apical_bo_dlength=remove_empty_keys(average_apical_bo_dlength)
+    average_all_branch_order_dlength=remove_empty_keys(average_all_branch_order_dlength)
+    average_basal_branch_order_dlength=remove_empty_keys(average_basal_branch_order_dlength)
+    average_apical_branch_order_dlength=remove_empty_keys(average_apical_branch_order_dlength)
     
-    average_all_bo_plength=remove_empty_keys(average_all_bo_plength)
-    average_basal_bo_plength=remove_empty_keys(average_basal_bo_plength)
-    average_apical_bo_plength=remove_empty_keys(average_apical_bo_plength)
+    average_all_branch_order_plength=remove_empty_keys(average_all_branch_order_plength)
+    average_basal_branch_order_plength=remove_empty_keys(average_basal_branch_order_plength)
+    average_apical_branch_order_plength=remove_empty_keys(average_apical_branch_order_plength)
     
     average_sholl_all_bp=remove_empty_keys(average_sholl_all_bp)
     average_sholl_basal_bp=remove_empty_keys(average_sholl_basal_bp)
@@ -611,84 +700,84 @@ def main():
     
     print()
     print("Average Number of All Dendrites per Branch Order: ") 
-    average_dict(average_all_bo_frequency)
+    average_dict(average_all_branch_order_frequency)
     f_average_bo_frequency=os.path.join(stats_dir, 'average_number_of_all_dendrites_per_branch_order.txt')
     with open(f_average_bo_frequency, 'w+') as f:
-            for i in average_all_bo_frequency:
-                    print(i,  ' '.join(map(str, average_all_bo_frequency[i])))
-                    print(i, ' '.join(map(str, average_all_bo_frequency[i])), file=f)
+            for i in average_all_branch_order_frequency:
+                    print(i,  ' '.join(map(str, average_all_branch_order_frequency[i])))
+                    print(i, ' '.join(map(str, average_all_branch_order_frequency[i])), file=f)
     
     print()
     print("Average Number of Basal Dendrites per Branch Order: ")
-    average_dict(average_basal_bo_frequency)
+    average_dict(average_basal_branch_order_frequency)
     f_average_bo_frequency=os.path.join(stats_dir, 'average_number_of_basal_dendrites_per_branch_order.txt')
     with open(f_average_bo_frequency, 'w+') as f:
-            for i in average_basal_bo_frequency:
-                    print(i,  ' '.join(map(str, average_basal_bo_frequency[i])))
-                    print(i, ' '.join(map(str, average_basal_bo_frequency[i])), file=f)
+            for i in average_basal_branch_order_frequency:
+                    print(i,  ' '.join(map(str, average_basal_branch_order_frequency[i])))
+                    print(i, ' '.join(map(str, average_basal_branch_order_frequency[i])), file=f)
     
     print()
     print("Average Number of Apical Dendrites per Branch Order: ")
-    average_dict(average_apical_bo_frequency)
+    average_dict(average_apical_branch_order_frequency)
     f_average_bo_frequency=os.path.join(stats_dir, 'average_number_of_apical_dendrites_per_branch_order.txt')
     with open(f_average_bo_frequency, 'w+') as f:
-            for i in average_apical_bo_frequency:
-                    print(i,  ' '.join(map(str, average_apical_bo_frequency[i])))
-                    print(i, ' '.join(map(str, average_apical_bo_frequency[i])), file=f)
+            for i in average_apical_branch_order_frequency:
+                    print(i,  ' '.join(map(str, average_apical_branch_order_frequency[i])))
+                    print(i, ' '.join(map(str, average_apical_branch_order_frequency[i])), file=f)
     
     print()
     print("Average All Dendritic Length per Branch Order: ")
-    average_dict(average_all_bo_dlength)
+    average_dict(average_all_branch_order_dlength)
     f_average_bo_dlength=os.path.join(stats_dir, 'average_all_dendritic_length_per_branch_order.txt')
     with open(f_average_bo_dlength, 'w+') as f:
-            for i in average_all_bo_dlength:
-                    print(i, ' '.join(map(str, average_all_bo_dlength[i])))
-                    print(i, ' '.join(map(str, average_all_bo_dlength[i])), file=f)
+            for i in average_all_branch_order_dlength:
+                    print(i, ' '.join(map(str, average_all_branch_order_dlength[i])))
+                    print(i, ' '.join(map(str, average_all_branch_order_dlength[i])), file=f)
     
     print()
     print("Average Basal Dendritic Length per Branch Order: ")
-    average_dict(average_basal_bo_dlength)
+    average_dict(average_basal_branch_order_dlength)
     f_average_bo_dlength=os.path.join(stats_dir, 'average_basal_dendritic_length_per_branch_order.txt')
     with open(f_average_bo_dlength, 'w+') as f:
-            for i in average_basal_bo_dlength:
-                    print(i, ' '.join(map(str, average_basal_bo_dlength[i])))
-                    print(i, ' '.join(map(str, average_basal_bo_dlength[i])), file=f)
+            for i in average_basal_branch_order_dlength:
+                    print(i, ' '.join(map(str, average_basal_branch_order_dlength[i])))
+                    print(i, ' '.join(map(str, average_basal_branch_order_dlength[i])), file=f)
     
     print()
     print("Average Apical Dendritic Length per Branch Order: ")
-    average_dict(average_apical_bo_dlength)
+    average_dict(average_apical_branch_order_dlength)
     f_average_bo_dlength=os.path.join(stats_dir, 'average_apical_dendritic_length_per_branch_order.txt')
     with open(f_average_bo_dlength, 'w+') as f:
-            for i in average_apical_bo_dlength:
-                    print(i, ' '.join(map(str, average_apical_bo_dlength[i])))
-                    print(i, ' '.join(map(str, average_apical_bo_dlength[i])), file=f)
+            for i in average_apical_branch_order_dlength:
+                    print(i, ' '.join(map(str, average_apical_branch_order_dlength[i])))
+                    print(i, ' '.join(map(str, average_apical_branch_order_dlength[i])), file=f)
     
     print()
     print("Average All Path Length per Branch Order: ")
-    average_dict(average_all_bo_plength)
+    average_dict(average_all_branch_order_plength)
     f_average_bo_plength=os.path.join(stats_dir, 'average_all_path_length_per_branch_order.txt')
     with open(f_average_bo_plength, 'w+') as f:
-            for i in average_all_bo_plength:
-                    print(i, ' '.join(map(str, average_all_bo_plength[i])))
-                    print(i, ' '.join(map(str, average_all_bo_plength[i])), file=f)
+            for i in average_all_branch_order_plength:
+                    print(i, ' '.join(map(str, average_all_branch_order_plength[i])))
+                    print(i, ' '.join(map(str, average_all_branch_order_plength[i])), file=f)
     
     print()
     print("Average Basal Path Length per Branch Order: ")
-    average_dict(average_basal_bo_plength)
+    average_dict(average_basal_branch_order_plength)
     f_average_bo_plength=os.path.join(stats_dir, 'average_basal_path_length_per_branch_order.txt')
     with open(f_average_bo_plength, 'w+') as f:
-            for i in average_basal_bo_plength:
-                    print(i, ' '.join(map(str, average_basal_bo_plength[i])))
-                    print(i, ' '.join(map(str, average_basal_bo_plength[i])), file=f)
+            for i in average_basal_branch_order_plength:
+                    print(i, ' '.join(map(str, average_basal_branch_order_plength[i])))
+                    print(i, ' '.join(map(str, average_basal_branch_order_plength[i])), file=f)
     
     print()
     print("Average Apical Path Length per Branch Order: ")
-    average_dict(average_apical_bo_plength)
+    average_dict(average_apical_branch_order_plength)
     f_average_bo_plength=os.path.join(stats_dir, 'average_apical_path_length_per_branch_order.txt')
     with open(f_average_bo_plength, 'w+') as f:
-            for i in average_apical_bo_plength:
-                    print(i, ' '.join(map(str, average_apical_bo_plength[i])))
-                    print(i, ' '.join(map(str, average_apical_bo_plength[i])), file=f)
+            for i in average_apical_branch_order_plength:
+                    print(i, ' '.join(map(str, average_apical_branch_order_plength[i])))
+                    print(i, ' '.join(map(str, average_apical_branch_order_plength[i])), file=f)
     
     print()
     print('Sholl analysis (branch points) for all dendrites')
@@ -791,15 +880,15 @@ def main():
         'average_num_all_branchpoints': avg_all_bpoints,
         'average_num_basal_branchpoints': avg_basal_bpoints,
         'average_num_apical_branchpoints': avg_apical_bpoints,
-        'average_all_bo_frequency': average_all_bo_frequency,
-        'average_basal_bo_frequency': average_basal_bo_frequency,
-        'average_apical_bo_frequency': average_apical_bo_frequency,
-        'average_all_bo_dlength': average_all_bo_dlength,
-        'average_basal_bo_dlength': average_basal_bo_dlength,
-        'average_apical_bo_dlength': average_apical_bo_dlength,
-        'average_all_bo_plength': average_all_bo_plength,
-        'average_basal_bo_plength': average_basal_bo_plength,
-        'average_apical_bo_plength': average_apical_bo_plength,
+        'average_all_branch_order_frequency': average_all_branch_order_frequency,
+        'average_basal_branch_order_frequency': average_basal_branch_order_frequency,
+        'average_apical_branch_order_frequency': average_apical_branch_order_frequency,
+        'average_all_branch_order_dlength': average_all_branch_order_dlength,
+        'average_basal_branch_order_dlength': average_basal_branch_order_dlength,
+        'average_apical_branch_order_dlength': average_apical_branch_order_dlength,
+        'average_all_branch_order_plength': average_all_branch_order_plength,
+        'average_basal_branch_order_plength': average_basal_branch_order_plength,
+        'average_apical_branch_order_plength': average_apical_branch_order_plength,
         'average_sholl_all_bp': average_sholl_all_bp,
         'average_sholl_basal_bp': average_sholl_basal_bp,
         'average_sholl_apical_bp': average_sholl_apical_bp,
