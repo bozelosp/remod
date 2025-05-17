@@ -17,7 +17,7 @@ from morphology_statistics import (
     branch_order_path_length,
     path_length,
     sholl_length,
-    sholl_fork_points,
+    sholl_branch_points,
     sholl_intersections,
 )
 
@@ -36,11 +36,11 @@ def compute_statistics(swc_path: Path) -> dict:
         _swc_lines,
         samples,
         _comments,
-        fork_points,
-        axon_forks,
-        basal_forks,
-        apical_forks,
-        _soma_forks,
+        branch_points,
+        axon_branches,
+        basal_branches,
+        apical_branches,
+        _soma_branches,
         soma_samples,
         _max_sample_number,
         dendrite_roots,
@@ -80,9 +80,9 @@ def compute_statistics(swc_path: Path) -> dict:
     results["apical_total_area"] = total_area(apical, surface_areas)
 
     soma_ids = {s[0] for s in soma_samples}
-    results["number_of_all_forkpoints"] = len({parents[x] for x in fork_points if parents[x] not in soma_ids})
-    results["number_of_basal_forkpoints"] = len({parents[x] for x in basal_forks if parents[x] not in soma_ids})
-    results["number_of_apical_forkpoints"] = len({parents[x] for x in apical_forks if parents[x] not in soma_ids})
+    results["number_of_all_branchpoints"] = len({parents[x] for x in branch_points if parents[x] not in soma_ids})
+    results["number_of_basal_branchpoints"] = len({parents[x] for x in basal_branches if parents[x] not in soma_ids})
+    results["number_of_apical_branchpoints"] = len({parents[x] for x in apical_branches if parents[x] not in soma_ids})
 
     branch_freq, branch_max = branch_order_frequency(dendrite_roots, branch_order_map)
     results["number_of_all_dendrites_per_branch_order"] = branch_freq
@@ -114,9 +114,9 @@ def compute_statistics(swc_path: Path) -> dict:
     results["sholl_basal_length"] = sholl_length(samples, parents, soma_samples, RADIUS, [3])
     results["sholl_apical_length"] = sholl_length(samples, parents, soma_samples, RADIUS, [4])
 
-    results["sholl_all_forkpoints"] = sholl_fork_points(fork_points, samples, soma_samples, RADIUS)
-    results["sholl_basal_forkpoints"] = sholl_fork_points(basal_forks, samples, soma_samples, RADIUS)
-    results["sholl_apical_forkpoints"] = sholl_fork_points(apical_forks, samples, soma_samples, RADIUS)
+    results["sholl_all_branchpoints"] = sholl_branch_points(branch_points, samples, soma_samples, RADIUS)
+    results["sholl_basal_branchpoints"] = sholl_branch_points(basal_branches, samples, soma_samples, RADIUS)
+    results["sholl_apical_branchpoints"] = sholl_branch_points(apical_branches, samples, soma_samples, RADIUS)
 
     results["sholl_all_intersections"] = sholl_intersections(samples, parents, soma_samples, RADIUS, [3, 4])
     results["sholl_basal_intersections"] = sholl_intersections(samples, parents, soma_samples, RADIUS, [3])
