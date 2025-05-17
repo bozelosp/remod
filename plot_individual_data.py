@@ -1,4 +1,10 @@
-import os
+"""Plot helpers used to visualise dendritic statistics."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Sequence
+
 import numpy as np
 import matplotlib
 
@@ -109,6 +115,12 @@ SHOLL_SPECS = [
     ("sholl_apical_intersections.txt", "sholl_apical_intersections.svg", "Average Number of Apical Intersections", True),
 ]
 
+__all__ = [
+    "plot_the_data",
+    "plot_average_data",
+    "plot_compare_data",
+]
+
 COMPARE_OTHER = [
     (
         "compare_total_number_of_branchpoints.svg",
@@ -141,30 +153,40 @@ COMPARE_OTHER = [
 
 
 
-def read_single(path: str) -> float:
+def read_single_value(path: Path) -> float:
+    """Return the single float stored in ``path`` or ``0.0`` on failure."""
+
     try:
         return float(read_value(path))
     except Exception:
         return 0.0
 
 
-def read_table(path: str, with_error: bool = False):
-    if not os.path.isfile(path):
+def read_table_data(path: Path, with_error: bool = False):
+    """Return parsed columns from ``path`` or empty lists on failure."""
+
+    if not path.is_file():
         return [], [], [] if with_error else []
+
     try:
         data = np.loadtxt(path)
     except Exception:
         return [], [], [] if with_error else []
+
     data = np.atleast_2d(data)
     labels = data[:, 0].astype(int).tolist()
     means = data[:, 1].astype(float).tolist()
+
     if with_error and data.shape[1] > 2:
-        errs = data[:, 2].astype(float).tolist()
-        return labels, means, errs
+        errors = data[:, 2].astype(float).tolist()
+        return labels, means, errors
+
     return labels, means
 
 
-def read_compare(path: str):
+def read_compare_values(path: Path) -> tuple[float, float, float, float]:
+    """Return means and errors for two groups stored in ``path``."""
+
     try:
         a_mean, a_err, b_mean, b_err = read_values(path)[:4]
     except Exception:
@@ -172,80 +194,110 @@ def read_compare(path: str):
     return a_mean, a_err, b_mean, b_err
 
 
-def bar(labels, values, fname, *, ylabel="", xlabel="", color=BAR_A, err=None, width=0.5):
+def bar_plot(
+    labels: Sequence[str | int],
+    values: Sequence[float],
+    file_path: Path,
+    *,
+    ylabel: str = "",
+    xlabel: str = "",
+    color: str = BAR_A,
+    err: Sequence[float] | None = None,
+    width: float = 0.5,
+) -> None:
+    """Create a single bar plot and write it to ``file_path``."""
+
     fig, ax = plt.subplots()
-    idx = np.arange(len(labels))
-    ax.bar(idx, values, width, color=color, yerr=err)
+    indices = np.arange(len(labels))
+    ax.bar(indices, values, width, color=color, yerr=err)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
-    ax.set_xticks(idx)
+    ax.set_xticks(indices)
     ax.set_xticklabels([str(l) for l in labels])
     plt.tight_layout()
-    plt.savefig(fname, format="svg", dpi=1000)
+    plt.savefig(file_path, format="svg", dpi=1000)
     plt.close()
 
 
-def grouped(labels, series, legends, fname, *, ylabel="", xlabel="", errs=None, width=0.4):
+def grouped_bar_plot(
+    labels: Sequence[str | int],
+    series: Sequence[Sequence[float]],
+    legends: Sequence[str],
+    file_path: Path,
+    *,
+    ylabel: str = "",
+    xlabel: str = "",
+    errs: Sequence[Sequence[float]] | None = None,
+    width: float = 0.4,
+) -> None:
+    """Create a grouped bar chart and save it to ``file_path``."""
+
     fig, ax = plt.subplots()
-    idx = np.arange(len(labels))
+    indices = np.arange(len(labels))
     for i, data in enumerate(series):
-        e = errs[i] if errs else None
-        ax.bar(idx + i * width, data, width, color=[BAR_A, BAR_B][i % 2], yerr=e, label=legends[i])
+        error = errs[i] if errs else None
+        ax.bar(indices + i * width, data, width, color=[BAR_A, BAR_B][i % 2], yerr=error, label=legends[i])
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
-    ax.set_xticks(idx + width * (len(series) - 1) / 2)
+    ax.set_xticks(indices + width * (len(series) - 1) / 2)
     ax.set_xticklabels([str(l) for l in labels])
     ax.legend()
     plt.tight_layout()
-    plt.savefig(fname, format="svg", dpi=1000)
+    plt.savefig(file_path, format="svg", dpi=1000)
     plt.close()
 
 
-def _alt(labels):
-    return ["" if i % 2 else l for i, l in enumerate(labels)]
+def _alternate_labels(labels: Sequence[str]) -> list[str]:
+    """Return ``labels`` with every other label replaced by ``""``."""
+
+    return ["" if i % 2 else label for i, label in enumerate(labels)]
 
 
-def _set_figsize() -> None:
+def _configure_figure_size() -> None:
+    """Apply the default figure size."""
+
     from pylab import rcParams
+
     rcParams["figure.figsize"] = FIG_SIZE
 
 
-def _read_bulk(directory: str, files, reader):
-    join = os.path.join
-    return [reader(join(directory, f)) for f in files]
+def _read_bulk_files(directory: Path, files: Sequence[str], reader):
+    """Return ``reader`` applied to each file in ``directory``."""
+
+    return [reader(directory / name) for name in files]
 
 
-def _plot_counts(directory: str, with_error: bool) -> None:
-    reader = read_values if with_error else read_single
-    counts = _read_bulk(directory, COUNT_FILES, reader)
-    terminals = _read_bulk(directory, TERMINAL_FILES, reader)
+def _plot_counts(directory: Path, with_error: bool) -> None:
+    reader = read_values if with_error else read_single_value
+    counts = _read_bulk_files(directory, COUNT_FILES, reader)
+    terminals = _read_bulk_files(directory, TERMINAL_FILES, reader)
     if with_error:
         values = [[c[0] for c in counts], [c[0] for c in terminals]]
         errs = [[c[1] for c in counts], [c[1] for c in terminals]]
     else:
         values = [counts, terminals]
         errs = None
-    grouped(
+    grouped_bar_plot(
         REGIONS,
         values,
         ["All", "Terminal"],
-        os.path.join(directory, "total_number_of_dendrites.svg"),
+        directory / "total_number_of_dendrites.svg",
         ylabel="Total Number of Dendrites",
         xlabel="Dendritic Region",
         errs=errs,
     )
 
 
-def _plot_totals(directory: str, with_error: bool) -> None:
-    reader = read_values if with_error else read_single
+def _plot_totals(directory: Path, with_error: bool) -> None:
+    reader = read_values if with_error else read_single_value
     for out_name, ylabel, files in TOTAL_SPECS:
-        vals = _read_bulk(directory, files, reader)
+        vals = _read_bulk_files(directory, files, reader)
         values = [v[0] for v in vals] if with_error else vals
         errs = [v[1] for v in vals] if with_error else None
-        bar(
+        bar_plot(
             REGIONS,
             values,
-            os.path.join(directory, out_name),
+            directory / out_name,
             ylabel=ylabel,
             xlabel="Dendritic Region",
             err=errs,
@@ -253,76 +305,85 @@ def _plot_totals(directory: str, with_error: bool) -> None:
         )
 
 
-def _plot_series(directory: str, with_error: bool) -> None:
-    for fname, out_name, ylabel in SERIES_SPECS:
-        path = os.path.join(directory, fname)
-        if not os.path.isfile(path):
+def _plot_from_specs(
+    directory: Path,
+    specs,
+    with_error: bool,
+    x_label: str,
+) -> None:
+    """Render bar plots described by ``specs`` inside ``directory``."""
+    for spec in specs:
+        filename, out_name, ylabel, *rest = spec
+        alt = rest[0] if rest else False
+        path = directory / filename
+        if not path.is_file():
             continue
-        result = read_table(path, with_error=with_error)
-        labels = result[0]
-        means = result[1]
-        errs = result[2] if with_error and len(result) > 2 else None
-        bar(
-            labels,
-            means,
-            os.path.join(directory, out_name),
-            ylabel=ylabel,
-            xlabel="Branch Order",
-            err=errs,
-        )
-
-
-def _plot_sholl(directory: str, with_error: bool) -> None:
-    for fname, out_name, ylabel, alt in SHOLL_SPECS:
-        path = os.path.join(directory, fname)
-        if not os.path.isfile(path):
-            continue
-        result = read_table(path, with_error=with_error)
-        labels = result[0]
-        means = result[1]
-        errs = result[2] if with_error and len(result) > 2 else None
+        result = read_table_data(path, with_error=with_error)
+        labels, means = result[:2]
+        errors = result[2] if with_error and len(result) > 2 else None
         if alt:
-            labels = _alt([str(l) for l in labels])
-        bar(
+            labels = _alternate_labels([str(l) for l in labels])
+        bar_plot(
             labels,
             means,
-            os.path.join(directory, out_name),
+            directory / out_name,
             ylabel=ylabel,
-            xlabel="Radial Distance from the Soma (um)",
-            err=errs,
+            xlabel=x_label,
+            err=errors,
         )
 
 
-def plot_the_data(directory: str):
-    _set_figsize()
-
-    _plot_counts(directory, False)
-    _plot_totals(directory, False)
-    _plot_series(directory, False)
-    _plot_sholl(directory, False)
+def _plot_series(directory: Path, with_error: bool) -> None:
+    _plot_from_specs(directory, SERIES_SPECS, with_error, "Branch Order")
 
 
-def plot_average_data(directory: str):
-    _set_figsize()
+def _plot_sholl(directory: Path, with_error: bool) -> None:
+    _plot_from_specs(
+        directory,
+        SHOLL_SPECS,
+        with_error,
+        "Radial Distance from the Soma (um)",
+    )
 
-    _plot_counts(directory, True)
-    _plot_totals(directory, True)
-    _plot_series(directory, True)
-    _plot_sholl(directory, True)
+
+def plot_the_data(directory: str) -> None:
+    directory_path = Path(directory)
+    _configure_figure_size()
+
+    _plot_counts(directory_path, False)
+    _plot_totals(directory_path, False)
+    _plot_series(directory_path, False)
+    _plot_sholl(directory_path, False)
 
 
-def plot_compare_data(directory: str):
-    _set_figsize()
+def plot_average_data(directory: str) -> None:
+    directory_path = Path(directory)
+    _configure_figure_size()
 
-    def gather(files):
-        a_m, a_e, b_m, b_e = [], [], [], []
-        for f in files:
-            m_a, e_a, m_b, e_b = read_compare(os.path.join(directory, f))
-            a_m.append(m_a)
-            a_e.append(e_a)
-            b_m.append(m_b)
-            b_e.append(e_b)
-        return [a_m, b_m], [a_e, b_e]
+    _plot_counts(directory_path, True)
+    _plot_totals(directory_path, True)
+    _plot_series(directory_path, True)
+    _plot_sholl(directory_path, True)
+
+
+def plot_compare_data(directory: str) -> None:
+    directory_path = Path(directory)
+    _configure_figure_size()
+
+    def gather(files: Sequence[str]):
+        group_a_means: list[float] = []
+        group_a_errs: list[float] = []
+        group_b_means: list[float] = []
+        group_b_errs: list[float] = []
+
+        for name in files:
+            mean_a, err_a, mean_b, err_b = read_compare_values(directory_path / name)
+            group_a_means.append(mean_a)
+            group_a_errs.append(err_a)
+            group_b_means.append(mean_b)
+            group_b_errs.append(err_b)
+
+        return [group_a_means, group_b_means], [group_a_errs, group_b_errs]
 
     labels = ["All", "Basal", "Apical", "All Terminal", "Basal Terminal", "Apical Terminal"]
     series, errs = gather([
@@ -333,11 +394,11 @@ def plot_compare_data(directory: str):
         "compare_number_of_basal_terminal_dendrites.txt",
         "compare_number_of_apical_terminal_dendrites.txt",
     ])
-    grouped(
+    grouped_bar_plot(
         labels,
         series,
         ["Group A", "Group B"],
-        os.path.join(directory, "compare_total_number_of_dendrites.svg"),
+        directory / "compare_total_number_of_dendrites.svg",
         ylabel="Total Number of Dendrites",
         xlabel="Dendritic Region",
         errs=errs,
@@ -345,45 +406,45 @@ def plot_compare_data(directory: str):
 
     for out_name, files, ylabel in COMPARE_OTHER:
         series, errs = gather(files)
-        grouped(
+        grouped_bar_plot(
             REGIONS,
             series,
             ["Group A", "Group B"],
-            os.path.join(directory, out_name),
+            directory / out_name,
             ylabel=ylabel,
             xlabel="Dendritic Region",
             errs=errs,
         )
 
     for fname, out_name, ylabel in SERIES_SPECS:
-        path = os.path.join(directory, "compare_" + fname)
-        if not os.path.isfile(path):
+        path = directory / f"compare_{fname}"
+        if not path.is_file():
             continue
         data = np.loadtxt(path)
         labels = data[:, 0].astype(int).tolist()
-        grouped(
+        grouped_bar_plot(
             labels,
             [data[:, 1].tolist(), data[:, 4].tolist()],
             ["Group A", "Group B"],
-            os.path.join(directory, out_name.replace("number_", "compare_number_")),
+            directory / out_name.replace("number_", "compare_number_"),
             ylabel=ylabel,
             xlabel="Branch Order",
             errs=[data[:, 2].tolist(), data[:, 5].tolist()],
         )
 
     for fname, out_name, ylabel, alt in SHOLL_SPECS:
-        path = os.path.join(directory, "compare_" + fname)
-        if not os.path.isfile(path):
+        path = directory / f"compare_{fname}"
+        if not path.is_file():
             continue
         data = np.loadtxt(path)
         labels = data[:, 0].astype(int).tolist()
         if alt:
-            labels = _alt([str(l) for l in labels])
-        grouped(
+            labels = _alternate_labels([str(l) for l in labels])
+        grouped_bar_plot(
             labels,
             [data[:, 1].tolist(), data[:, 4].tolist()],
             ["Group A", "Group B"],
-            os.path.join(directory, out_name.replace("sholl_", "compare_sholl_")),
+            directory / out_name.replace("sholl_", "compare_sholl_"),
             ylabel=ylabel,
             xlabel="Radial Distance from the Soma (um)",
             errs=[data[:, 2].tolist(), data[:, 5].tolist()],
