@@ -11,11 +11,11 @@ to dendritic trees and visualise the results.
 - Parse SWC files and extract measurements such as branch counts, branch-order
   distributions, total length/area and Sholl profiles.
 - Automatically store aggregated statistics in `downloads/statistics/`.
-- Modify morphologies using `second_run.py` (remove, extend or change the
-  diameter of dendrites).
+- Modify morphologies using the unified `run.py edit` command to remove,
+  extend or change dendrites.
 - Visualise original and edited trees with 3‑D plots.
 - Additional helper scripts to merge segments and plot data. Node indices are
-  renumbered automatically by `second_run.py` after relevant edits.
+  renumbered automatically after relevant edits.
 
 ## Installation
 
@@ -34,30 +34,30 @@ Using a virtual environment is recommended but not mandatory.
 1. **Prepare your SWC files** – place your `.swc` files in a directory. Example
    data can be found under `trash/`.
 
-2. **Compute statistics** – run `first_run.py` and provide the directory and a
-   comma-separated list of file names:
+2. **Compute statistics** – run `run.py analyze` and provide
+   the directory and a comma-separated list of file names:
 
    ```bash
-   python first_run.py /path/to/swc 0-2.swc
+   python run.py analyze /path/to/swc 0-2.swc
    ```
 
    Results such as total dendritic length, branch-order frequency and Sholl
    intersections are saved in `downloads/statistics/`.
 
-3. **Remodel a morphology** – use `second_run.py` to apply structural changes.
+3. **Remodel a morphology** – use `run.py edit` to apply structural changes.
    The example below removes 50% of all terminal dendrites from `0-2.swc` and
    writes the modified neuron to `downloads/files/0-2_new.swc`:
 
    ```bash
-   python second_run.py \
-       --directory /path/to/swc \
-       --file-name 0-2.swc \
-       --who who_all_terminal \
-       --action remove \
-       --hm-choice percent \
-       --amount 50 \
-       --var-choice percent \
-       --diam-change 10
+   python run.py edit \
+      --directory /path/to/swc \
+      --file-name 0-2.swc \
+      --who who_all_terminal \
+      --action remove \
+      --hm-choice percent \
+      --amount 50 \
+      --var-choice percent \
+      --diam-change 10
    ```
 
 4. **Visualise** – run `neuron_visualization.py` or `graph.py` to generate 3‑D
@@ -68,13 +68,13 @@ Using a virtual environment is recommended but not mandatory.
 
 The individual scripts are designed to be used as a pipeline:
 
-1. **Analyse** – start with `first_run.py` to compute baseline statistics for a
+1. **Analyse** – start with `run.py analyze` to compute baseline statistics for a
    set of SWC files. It expects a directory and a comma-separated list of
    filenames. The resulting metrics are written to
    `downloads/statistics/`.
-2. **Modify** – apply structural changes with `second_run.py`. This script can remove, extend or shrink
-   selected dendrites and stores edited files under `downloads/files/`.
-3. **Reassign indices** – `second_run.py` automatically renumbers nodes after
+2. **Modify** – apply structural changes with `run.py edit`.
+   This script can remove, extend or shrink selected dendrites and stores edited files under `downloads/files/`.
+3. **Reassign indices** – `run.py edit` automatically renumbers nodes after
    modifications, so no extra command is needed.
 4. **Visualise and plot** – generate 3‑D views using `neuron_visualization.py`
    or `graph.py` and create summary plots with `plot_data.py` or
