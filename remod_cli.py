@@ -7,7 +7,7 @@ import numpy as np
 import collections
 from pathlib import Path
 
-from swc_parser import *
+from swc_parser import parse_swc_file, index_reassign
 read_file = parse_swc_file
 from neuron_export import *
 from morphology_statistics import (
@@ -38,7 +38,6 @@ from file_io import write_json, write_value, write_swc, write_dict, write_pickle
 from morphology_statistics import *
 from remodeling_actions import execute_action
 from overlay_graph import *
-from reassign_indices import *
 
 def analyze_main(argv=None):
         """Compute morphometric statistics for one or more SWC files."""
