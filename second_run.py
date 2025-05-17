@@ -67,7 +67,7 @@ def main():
     print('Open file: ' + str(file_name))
     print()
     
-    (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
+    (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname) #extracts important connectivity and morphological data
     
     print('\nSWC parsing is completed!\n')
     
@@ -143,7 +143,7 @@ def main():
     print('The dendrites stemming from these segments will be edited: ')
     print(str(who))
     
-    (bo_freq, bo_max)=bo_frequency(dendrite_list, bo)
+    (bo_freq, bo_max)=bo_frequency(dendrite_list, branch_order)
     
     if action == 'shrink':
         if hm_choice == 'micrometers':
@@ -163,14 +163,14 @@ def main():
     (newfile, dendrite_list, segment_list)=execute_action(who, action, amount, hm_choice, dend_add3d, dist, max_index, diam_change, dendrite_list, soma_index, points, parental_points, descendants, all_terminal) #executes the selected action and print the modified tree to a '*_new.hoc' file
     
     if action in ['shrink', 'remove', 'scale']:
-        newfile=index_reassign(dendrite_list, dend_add3d, bo, con, axon, basal, apical, elsep, soma_index, bo_max, action)
+        newfile=index_reassign(dendrite_list, dend_add3d, branch_order, con, axon, basal, apical, elsep, soma_index, bo_max, action)
     
     newfile=comment_lines + newfile
     check_indices(newfile) #check if indices are continuous from 0 and u
     print_newfile(directory, file_name, newfile, edit)
     
     fname=directory+'downloads/files/'+file_name.replace('.swc','') + '_new.swc'
-    (swc_lines, points, comment_lines, parents, bpoints, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, bo, con, parental_points)=read_file(fname)
+    (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname)
     second_graph(directory, file_name, dendrite_list, dend_add3d, points, parental_points, soma_index) #plots the original and modified tree (overlaying one another)
     
     print()
