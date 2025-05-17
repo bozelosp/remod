@@ -5,13 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable, Sequence
 
-import re
-
 from utils import round_to
-
-# Regular expression used to parse a single SWC line:
-# index type x y z radius parent
-_LINE_RE = re.compile(r"(\d+) (\d+) (\S+) (\S+) (\S+) (\S+) (-?\d+)")
+from extract_swc_morphology import parse_swc_lines
 
 
 PointMap = dict[int, list[float]]
@@ -20,31 +15,23 @@ PlotEntry = list[Sequence[float]]
 
 def _parse_swc_lines(lines: Iterable[str]) -> tuple[PointMap, list[int]]:
     """Return a mapping of node indices to coordinates and a list of segments."""
-    # Convert each valid SWC line into a structured entry
+
+    # Delegate parsing to ``extract_swc_morphology`` for consistency
+    _, points = parse_swc_lines(lines)
 
     point_map: PointMap = {}
     segments: list[int] = []
-    for line in lines:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        # ``split`` is faster and clearer than a regex for well behaved SWC lines
-        parts = line.split()
-        if len(parts) != 7:
-            continue
-
-        idx, typ, x, y, z, radius, parent = parts
-        point_map[int(idx)] = [
-            int(idx),
-            int(typ),
-            round_to(float(x), 0.01),
-            round_to(float(y), 0.01),
-            round_to(float(z), 0.01),
-            float(radius),
-            int(parent),
+    for idx, vals in points.items():
+        point_map[idx] = [
+            int(vals[0]),
+            int(vals[1]),
+            round_to(float(vals[2]), 0.01),
+            round_to(float(vals[3]), 0.01),
+            round_to(float(vals[4]), 0.01),
+            float(vals[5]),
+            int(vals[6]),
         ]
-        segments.append(int(idx))
+        segments.append(idx)
 
     return point_map, segments
 
