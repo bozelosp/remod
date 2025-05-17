@@ -6,7 +6,7 @@
 
 - Parse SWC files and compute forkpoint counts, branch order distributions,
   path and total lengths, surface areas and Sholl measurements.
-- Automatically store aggregated statistics in `downloads/statistics/`.
+- Output aggregated statistics as JSON using `json_stats.py`.
 - Remodel morphologies via `remod_cli.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and radii can be adjusted.
 - Node indices are renumbered automatically after editing.
 - Visualise original and modified trees with the built in export utilities
@@ -27,14 +27,16 @@ Using a virtual environment is recommended but not mandatory.
 ## Quick start
 
 1. **Prepare your SWC files** – place your `.swc` files in a directory. Example data are available under `swc_files/`.
-2. **Compute statistics** – run `remod_cli.py analyze` with the directory and a comma separated list of file names:
+2. **Compute statistics** – run `json_stats.py` with the directory and a comma
+   separated list of file names:
 
    ```bash
-   python remod_cli.py analyze /path/to/swc 0-2.swc
+   python json_stats.py /path/to/swc 0-2.swc
    ```
 
-   Results such as total dendritic length, forkpoint counts, branch order
-   frequency and Sholl intersections are saved in `downloads/statistics/`.
+   The script outputs a single JSON object containing all morphometric
+   statistics. Use `--output` to save the data to a file instead of printing
+   to the terminal.
 3. **Remodel a morphology** – use `remod_cli.py edit` to apply structural changes.  The example below removes 50% of all terminal dendrites from `0-2.swc` and writes the modified neuron to `downloads/files/0-2_new.swc`:
 
    ```bash
@@ -52,7 +54,7 @@ Using a virtual environment is recommended but not mandatory.
    Other actions include `shrink`, `extend`, `branch` and `scale`.  Dendrites can be selected randomly using `--random-ratio` or specified explicitly with `--manual-dendrites`.
 4. **Visualise** – call the export helpers in `file_io.py` to generate 3‑D
    plots or overlays comparing the original and edited morphologies. Use
-   `plot_statistics.py` on `downloads/statistics/` to create summary graphs;
+   `plot_statistics.py` on the JSON statistics to create summary graphs;
    add `--average` or `--compare` for group averages or comparative views.
    Figures are stored in the `downloads/` directory.
 
@@ -60,7 +62,7 @@ Using a virtual environment is recommended but not mandatory.
 
 The typical pipeline is:
 
-1. **Analyse** – `remod_cli.py analyze` computes baseline statistics for a set of SWC files and writes them to `downloads/statistics/`.
+1. **Analyse** – run `json_stats.py` to compute morphometric statistics for a set of SWC files and output a single JSON document.
 2. **Modify** – `remod_cli.py edit` applies the chosen remodeling actions and saves edited files under `downloads/files/`.
 3. **Reassign indices** – node indices are automatically renumbered after modifications.
 4. **Visualise and plot** – generate 3‑D views and overlays using the
