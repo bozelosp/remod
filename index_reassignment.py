@@ -114,9 +114,9 @@ def index_reassign(
             )
 
     # Convert to SWC text lines
-    newfile = [
+    new_lines = [
         f" {s[0]} {int(s[1])} {s[2]:.2f} {s[3]:.2f} {s[4]:.2f} {s[5]:.2f} {int(s[6])}"
         for s in segments
     ]
-    return newfile
+    return new_lines
 

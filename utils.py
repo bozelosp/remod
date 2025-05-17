@@ -146,8 +146,8 @@ def parse_edit_args(args: list[str] | None = None):
     parser.add_argument("--random-ratio", type=float, default=0.0,
                         help="Ratio for random selection (percent)")
     parser.add_argument(
-        "--who-manual-variable",
-        dest="manual_dendrite_ids",
+        "--manual-dendrites",
+        dest="manual_dendrites",
         default="none",
         help="Comma separated manual dendrite ids",
     )
@@ -225,10 +225,10 @@ def shrink_warning(who, dist, amount):
     return status, not_applicable
 
 
-def check_indices(newfile):
+def check_indices(new_lines):
     """Print a warning if segment indices are not continuous."""
     ilist = []
-    for line in newfile:
+    for line in new_lines:
         if line.startswith("#"):
             continue
         index = re.search(r"(\d+) (\d+) (.*?) (.*?) (.*?) (.*?) (-?\d+)", line)

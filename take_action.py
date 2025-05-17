@@ -52,10 +52,10 @@ def create_points(
     angle: float,
     start_point: Iterable[float],
     end_point: Iterable[float],
-    flag: int,
+    branch_option: int,
 ) -> List[List[float]]:
     """Return one or two new NEURON ``pt3dadd`` points."""
-    # The flag controls whether branching occurs
+    # ``branch_option`` controls whether branching occurs
 
     rotation_angle = radians(angle)
 
@@ -104,7 +104,7 @@ def create_points(
     new_current_point = [v1[0, 0], v1[0, 1], v1[0, 2]]
     new_points = [new_current_point]
 
-    if flag == 2:
+    if branch_option == 2:
         rotation_angle += 3.1415
         rotation_matrix_two_alt = np.matrix(
             [
@@ -125,7 +125,7 @@ def create_points(
 def add_random_point(
     current_point: List[Any],
     parent_point: List[Any],
-    flag: int,
+    branch_option: int,
     lengths: List[float],
     cumulative_indices: List[int],
 ) -> Tuple[List[List[float]], float]:
@@ -138,7 +138,7 @@ def add_random_point(
     length = select_length(lengths, cumulative_indices)
     angle = 5
 
-    new_point = create_points(length, angle, start_point, end_point, flag)
+    new_point = create_points(length, angle, start_point, end_point, branch_option)
 
     return new_point, length
 
@@ -177,7 +177,7 @@ def extend_dendrite(
     current_point: List[Any],
     parent_point: List[Any],
     max_index: int,
-    branch_flag: int,
+    enable_branching: int,
 ) -> Tuple[int, List[List[Any]]]:
     """Grow the dendrite and return its new segments."""
     # Repeatedly adds points until the desired distance is reached
@@ -187,15 +187,15 @@ def extend_dendrite(
 
     original_parent_point = parent_point
 
-    segment_index = max_index
+    next_index = max_index
 
     while cumulative_distance < target_distance[dendrite_id]:
         new_point, length = add_random_point(
-            current_point, parent_point, branch_flag, LENGTHS, CUMULATIVE_INDICES
+            current_point, parent_point, enable_branching, LENGTHS, CUMULATIVE_INDICES
         )
 
         segment = [
-            segment_index + 1,
+            next_index + 1,
             parent_point[1],
             new_point[0][0],
             new_point[0][1],
@@ -205,7 +205,7 @@ def extend_dendrite(
         ]
         new_lines.append(segment)
 
-        segment_index += 1
+        next_index += 1
         parent_point = current_point
         current_point = segment
         cumulative_distance += length
@@ -229,10 +229,10 @@ def extend_dendrite(
     yn = round_to((y1 + per * yn), 0.01)
     zn = round_to((z1 + per * zn), 0.01)
 
-    new_point = [segment_index, parent_point[1], xn, yn, zn, parent_point[5], current_point[6]]
+    new_point = [next_index, parent_point[1], xn, yn, zn, parent_point[5], current_point[6]]
     new_lines[-1] = new_point
 
-    max_index = segment_index
+    max_index = next_index
 
     return max_index, new_lines
 
@@ -256,7 +256,7 @@ def shrink(
 
         new_dist=dict()
 
-        step=dict()
+        initial_distance=dict()
 
         for dend in target_dendrites:
         
@@ -271,7 +271,7 @@ def shrink(
                 y=next_point[3]
                 z=next_point[4]
 
-                step[dend]=distance(x,xp,y,yp,z,zp)
+                initial_distance[dend]=distance(x,xp,y,yp,z,zp)
 
         for dend in target_dendrites:
 
@@ -280,7 +280,7 @@ def shrink(
                         initial_position=dend_coords[dend][-1]
 
                 segment_list=[]
-                cumulative_distance=step[dend]
+                cumulative_distance=initial_distance[dend]
 
                 if extent_unit=='percent':
                         new_dist[dend]=dist[dend]*((100-float(amount))/100)
@@ -364,10 +364,14 @@ def shrink(
 
                         final_position=dend_coords[dend][-1]
 
-                        vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-                        translation_vec = tuple(vec)
+                        offset_vector=[
+                            initial_position[2]-final_position[2],
+                            initial_position[3]-final_position[3],
+                            initial_position[4]-final_position[4],
+                        ]
+                        translation_vector = tuple(offset_vector)
                         dend_coords = translate_descendants(
-                            translation_vec, dend, descendants, dend_coords
+                            translation_vector, dend, descendants, dend_coords
                         )
 
         segment_list=[]
@@ -379,11 +383,11 @@ def shrink(
 
         segment_list.sort(key=lambda x: x[0])
 
-        newfile=[]
+        new_lines=[]
         for k in segment_list:
-                newfile.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
+                new_lines.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
 
-        return newfile
+        return new_lines
 
 '''def shrink(target_dendrites, action, amount, extent_unit, dend_coords, dist, soma_segments, points, parent_indices): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
@@ -596,11 +600,11 @@ def remove(
                                 segment_list.append(k)
         segment_list.sort(key=lambda x: x[0])
 
-        newfile=[]
+        new_lines=[]
         for k in segment_list:
-                newfile.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
+                new_lines.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
 
-        return newfile
+        return new_lines
 
 def extend(
     target_dendrites,
@@ -712,10 +716,14 @@ def extend(
 
                         final_position=new_segments[dend][-1]
 
-                        vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
-                        translation_vec = tuple(vec)
+                        offset_vector=[
+                            initial_position[2]-final_position[2],
+                            initial_position[3]-final_position[3],
+                            initial_position[4]-final_position[4],
+                        ]
+                        translation_vector = tuple(offset_vector)
                         dend_coords = translate_descendants(
-                            translation_vec, dend, descendants, dend_coords
+                            translation_vector, dend, descendants, dend_coords
                         )
 
                         dend_coords[parent_updates[0]][0][6]=dend_coords[dend][-1][0]
@@ -728,12 +736,12 @@ def extend(
 
         segment_list.sort(key=lambda x: x[0])
 
-        newfile=[]
+        new_lines=[]
         for k in segment_list:
                 m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                newfile.append(m)
+                new_lines.append(m)
 
-        return newfile
+        return new_lines
 
 def branch(
     target_dendrites,
@@ -829,12 +837,12 @@ def branch(
                                         segment_list.append(k)
                 segment_list.sort(key=lambda x: x[0])
 
-                newfile=[]
+                new_lines=[]
                 for k in segment_list:
                         m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                        newfile.append(m)
+                        new_lines.append(m)
 
-        return (newfile, dendrite_list, segment_list)
+        return (new_lines, dendrite_list, segment_list)
 
 (LENGTHS, CUMULATIVE_INDICES) = parse_length_distribution()
 
@@ -861,12 +869,12 @@ def diameter_change(target_dendrites, diam_change, dend_coords, dendrite_list, s
                                 
         segment_list.sort(key=lambda x: x[0])
 
-        newfile=[]
+        new_lines=[]
         for k in segment_list:
                 m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                newfile.append(m)
+                new_lines.append(m)
 
-        return newfile
+        return new_lines
 
 def scale(target_dendrites, soma_segments, dend_coords, amount):
         """Scale coordinates and diameter of dendrites by ``amount`` percent."""
@@ -893,11 +901,11 @@ def scale(target_dendrites, soma_segments, dend_coords, amount):
                                 segment_list.append(k)
         segment_list.sort(key=lambda x: x[0])
 
-        newfile=[]
+        new_lines=[]
         for k in segment_list:
-                newfile.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
+                new_lines.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
 
-        return newfile
+        return new_lines
 
 # ---------------------------------------------------------------------------
 # Dispatcher originally implemented in ``take_action.py``
@@ -1000,7 +1008,7 @@ def execute_action(
     # Delegates to the appropriate action implementation
 
     segment_list: List[List[Any]] = []
-    newfile: List[str] = []
+    new_lines: List[str] = []
 
     if action != "none":
         actions, branch_func = _build_actions(
@@ -1020,16 +1028,16 @@ def execute_action(
         )
 
         if action == "branch":
-            newfile, dendrite_list, segment_list = branch_func()
+            new_lines, dendrite_list, segment_list = branch_func()
         else:
             try:
-                newfile = actions[action]()
+                new_lines = actions[action]()
             except KeyError as exc:
                 raise ValueError(f"Unknown action: {action}") from exc
 
     if diam_change != "none":
-        newfile = diameter_change(
+        new_lines = diameter_change(
             target_dendrites, diam_change, dend_coords, dendrite_list, soma_segments
         )
 
-    return newfile, dendrite_list, segment_list
+    return new_lines, dendrite_list, segment_list
