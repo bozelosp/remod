@@ -15,7 +15,7 @@ DEFAULT_COLOR: Color = "0x0000FF"
 
 
 def _soma_connections(soma_points: Sequence[Sequence]) -> Iterator[List]:
-    """Yield line segments connecting soma points to their parent."""
+    """Yield line segments connecting soma samples to their parent."""
     # Every soma section is drawn in blue to distinguish it from dendrites
 
     lookup = {p[0]: p for p in soma_points}
@@ -35,20 +35,20 @@ def _soma_connections(soma_points: Sequence[Sequence]) -> Iterator[List]:
 
 
 def _dendrite_connections(
-    dendrite_list: Iterable[int],
-    dend_coords: Dict[int, Sequence[Sequence]],
-    points: Dict[int, Sequence],
-    parent_samples: Dict[int, int],
+    dendrite_roots: Iterable[int],
+    dendrite_samples: Dict[int, Sequence[Sequence]],
+    samples: Dict[int, Sequence],
+    parents: Dict[int, int],
 ) -> List[List]:
-    """Return line segments between dendrite points and their parents."""
-    # Skips axon points which are marked with type 2
+    """Return line segments between dendrite samples and their parents."""
+    # Skips axon samples which are marked with type 2
 
-    for dend in dendrite_list:
-        for point in dend_coords[dend]:
-            parent_idx = parent_samples.get(point[6], -1)
+    for dend in dendrite_roots:
+        for point in dendrite_samples[dend]:
+            parent_idx = parents.get(point[6], -1)
             if parent_idx == -1 or point[1] == 2:
                 continue
-            parent = points[parent_idx]
+            parent = samples[parent_idx]
             yield [
                 point[2],
                 point[3],
@@ -62,10 +62,10 @@ def _dendrite_connections(
 
 
 def _collect_segments(
-    dendrite_list: Iterable[int],
-    dend_coords: Dict[int, Sequence[Sequence]],
-    points: Dict[int, Sequence],
-    parent_samples: Dict[int, int],
+    dendrite_roots: Iterable[int],
+    dendrite_samples: Dict[int, Sequence[Sequence]],
+    samples: Dict[int, Sequence],
+    parents: Dict[int, int],
     soma_samples: Sequence[Sequence],
 ) -> List[List]:
     """Gather all line segments for soma and dendrites."""
@@ -75,7 +75,7 @@ def _collect_segments(
         chain(
             _soma_connections(soma_samples),
             _dendrite_connections(
-                dendrite_list, dend_coords, points, parent_samples
+                dendrite_roots, dendrite_samples, samples, parents
             ),
         )
     )
@@ -84,10 +84,10 @@ def _collect_segments(
 def _export_graph(
     abs_path: Path | str,
     file_name: str,
-    dendrite_list: Iterable[int],
-    dend_coords: Dict[int, Sequence[Sequence]],
-    points: Dict[int, Sequence],
-    parent_samples: Dict[int, int],
+    dendrite_roots: Iterable[int],
+    dendrite_samples: Dict[int, Sequence[Sequence]],
+    samples: Dict[int, Sequence],
+    parents: Dict[int, int],
     soma_samples: Sequence[Sequence],
     suffix: str,
     verbose: bool = False,
@@ -96,7 +96,7 @@ def _export_graph(
     # Build the list of line segments and write them to disk
 
     segments = _collect_segments(
-        dendrite_list, dend_coords, points, parent_samples, soma_samples
+        dendrite_roots, dendrite_samples, samples, parents, soma_samples
     )
 
     if verbose:
@@ -110,10 +110,10 @@ def _export_graph(
 def first_graph(
     abs_path: Path | str,
     file_name: str,
-    dendrite_list: Iterable[int],
-    dend_coords: Dict[int, Sequence[Sequence]],
-    points: Dict[int, Sequence],
-    parent_samples: Dict[int, int],
+    dendrite_roots: Iterable[int],
+    dendrite_samples: Dict[int, Sequence[Sequence]],
+    samples: Dict[int, Sequence],
+    parents: Dict[int, int],
     soma_samples: Sequence[Sequence],
 ) -> None:
     """Write coordinates of the original morphology to ``*_before.txt``."""
@@ -122,10 +122,10 @@ def first_graph(
     _export_graph(
         abs_path,
         file_name,
-        dendrite_list,
-        dend_coords,
-        points,
-        parent_samples,
+        dendrite_roots,
+        dendrite_samples,
+        samples,
+        parents,
         soma_samples,
         "before",
     )
@@ -133,10 +133,10 @@ def first_graph(
 def second_graph(
     abs_path: Path | str,
     file_name: str,
-    dendrite_list: Iterable[int],
-    dend_coords: Dict[int, Sequence[Sequence]],
-    points: Dict[int, Sequence],
-    parent_samples: Dict[int, int],
+    dendrite_roots: Iterable[int],
+    dendrite_samples: Dict[int, Sequence[Sequence]],
+    samples: Dict[int, Sequence],
+    parents: Dict[int, int],
     soma_samples: Sequence[Sequence],
 ) -> None:
     """Write coordinates of the edited morphology to ``*_after.txt``."""
@@ -145,10 +145,10 @@ def second_graph(
     _export_graph(
         abs_path,
         file_name,
-        dendrite_list,
-        dend_coords,
-        points,
-        parent_samples,
+        dendrite_roots,
+        dendrite_samples,
+        samples,
+        parents,
         soma_samples,
         "after",
         verbose=True,

@@ -18,15 +18,15 @@ def build_plot_from_lines(lines: Iterable[str]) -> list[PlotEntry]:
     from extract_swc_morphology import parse_swc_lines
     from utils import round_to
 
-    _, points = parse_swc_lines(lines)
+    _, samples = parse_swc_lines(lines)
     plot: list[PlotEntry] = []
-    for idx, vals in points.items():
+    for idx, vals in samples.items():
         parent = int(vals[6])
-        if parent == -1 or parent not in points:
+        if parent == -1 or parent not in samples:
             continue
-        x = [round_to(float(vals[2]), 0.01), round_to(float(points[parent][2]), 0.01)]
-        y = [round_to(float(vals[3]), 0.01), round_to(float(points[parent][3]), 0.01)]
-        z = [round_to(float(vals[4]), 0.01), round_to(float(points[parent][4]), 0.01)]
+        x = [round_to(float(vals[2]), 0.01), round_to(float(samples[parent][2]), 0.01)]
+        y = [round_to(float(vals[3]), 0.01), round_to(float(samples[parent][3]), 0.01)]
+        z = [round_to(float(vals[4]), 0.01), round_to(float(samples[parent][4]), 0.01)]
         plot.append([x, y, z, float(vals[5])])
     return plot
 
