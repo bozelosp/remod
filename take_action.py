@@ -142,18 +142,18 @@ def add_random_point(
 
     return new_point, length
 
-def translate_descendants(
+def translate_subtrees(
     translation_vector: Iterable[float],
     dendrite: int,
-    descendants: Dict[int, List[int]],
+    subtrees: Dict[int, List[int]],
     dendrites: Dict[int, List[List[Any]]],
 ) -> Dict[int, List[List[Any]]]:
-    """Translate descendant dendrites by ``translation_vector``."""
+    """Translate subtree dendrites by ``translation_vector``."""
     # Needed when shortening or removing upstream segments
 
     x, y, z = translation_vector
 
-    for child in descendants[dendrite]:
+    for child in subtrees[dendrite]:
         for i in range(len(dendrites[child])):
             dendrites[child][i][2] -= x
             dendrites[child][i][3] -= y
@@ -240,13 +240,13 @@ def shrink(
     target_dendrites,
     action,
     amount,
-    hm_choice,
+    extent_unit,
     dend_segments,
     dist,
     soma_index,
     points,
     parental_points,
-    descendants,
+    subtrees,
     all_terminal,
 ):
         """Return SWC lines with the selected dendrites shortened."""
@@ -282,10 +282,10 @@ def shrink(
                 segment_list=[]
                 cumulative_distance=step[dend]
 
-                if hm_choice=='percent':
+                if extent_unit=='percent':
                         new_dist[dend]=dist[dend]*((100-float(amount))/100)
 
-                if hm_choice=='micrometers':
+                if extent_unit=='micrometers':
                         new_dist[dend]=dist[dend]-float(amount)
 
                 if len(dend_segments[dend])>1:
@@ -366,8 +366,8 @@ def shrink(
 
                         vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
                         translation_vec = tuple(vec)
-                        dend_segments = translate_descendants(
-                            translation_vec, dend, descendants, dend_segments
+                        dend_segments = translate_subtrees(
+                            translation_vec, dend, subtrees, dend_segments
                         )
 
         segment_list=[]
@@ -385,7 +385,7 @@ def shrink(
 
         return newfile
 
-'''def shrink(target_dendrites, action, amount, hm_choice, dend_segments, dist, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
+'''def shrink(target_dendrites, action, amount, extent_unit, dend_segments, dist, soma_index, points, parental_points): #returns the new lines of the .hoc file with the selected dendrites shrinked
 
         amount=int(amount)
 
@@ -433,10 +433,10 @@ def shrink(
 
                 cumulative_distance+=distance(x,xp,y,yp,z,zp)
 
-                if hm_choice=='percent':
+                if extent_unit=='percent':
                         new_dist[dend]=dist[dend]*((100-amount)/100)
 
-                if hm_choice=='micrometers':
+                if extent_unit=='micrometers':
                         new_dist[dend]=dist[dend]-amount
 
                 segment_list=[]
@@ -565,7 +565,7 @@ def remove(
     soma_index,
     points,
     parental_points,
-    descendants,
+    subtrees,
     all_terminal,
 ):
         """Return SWC lines with the selected dendrites removed."""
@@ -577,7 +577,7 @@ def remove(
 
         for dend in target_dendrites:
                 if dend not in all_terminal:
-                        for d in descendants[dend]:
+                        for d in subtrees[dend]:
                                 if d not in target_dendrites:
                                         target_dendrites.append(d)
 
@@ -606,14 +606,14 @@ def extend(
     target_dendrites,
     action,
     amount,
-    hm_choice,
+    extent_unit,
     dend_segments,
     dist,
     max_index,
     soma_index,
     points,
     parental_points,
-    descendants,
+    subtrees,
     all_terminal,
 ):
         """Return SWC lines with the selected dendrites extended."""
@@ -660,10 +660,10 @@ def extend(
                         else:
                                 run_length+=1
 
-                if hm_choice=='percent':
+                if extent_unit=='percent':
                         new_dist[dend]=dist[dend]*float(amount)/100
 
-                if hm_choice=='micrometers':
+                if extent_unit=='micrometers':
                         new_dist[dend]=float(amount)
 
                 if len(dend_segments[dend])==1:
@@ -714,8 +714,8 @@ def extend(
 
                         vec=[initial_position[2]-final_position[2], initial_position[3]-final_position[3], initial_position[4]-final_position[4]]
                         translation_vec = tuple(vec)
-                        dend_segments = translate_descendants(
-                            translation_vec, dend, descendants, dend_segments
+                        dend_segments = translate_subtrees(
+                            translation_vec, dend, subtrees, dend_segments
                         )
 
                         dend_segments[change_these[0]][0][6]=dend_segments[dend][-1][0]
@@ -739,7 +739,7 @@ def branch(
     target_dendrites,
     action,
     amount,
-    hm_choice,
+    extent_unit,
     dend_segments,
     dist,
     max_index,
@@ -777,10 +777,10 @@ def branch(
                 new_point_a=[new_dend_a, point2[1], new_point[0][0], new_point[0][1], new_point[0][2], point2[5], dend_segments[dend][-1][0]]
                 new_point_b=[new_dend_b, point2[1], new_point[1][0], new_point[1][1], new_point[1][2], point2[5], dend_segments[dend][-1][0]]
 
-                if hm_choice=='percent':
+                if extent_unit=='percent':
                         new_dist[new_dend_a]=dist[dend]*amount/100
 
-                if hm_choice=='micrometers':
+                if extent_unit=='micrometers':
                         new_dist[new_dend_a]=amount
 
                 point1=new_point_a
@@ -800,10 +800,10 @@ def branch(
                 add_these_lines[new_dend_a].insert(0, new_point_a)
                 dend_segments[new_dend_a]=dend_segments[dend]+add_these_lines[new_dend_a]
 
-                if hm_choice=='percent':
+                if extent_unit=='percent':
                         new_dist[new_dend_b]=dist[dend]*amount/100
 
-                if hm_choice=='micrometers':
+                if extent_unit=='micrometers':
                         new_dist[new_dend_b]=amount
 
                 point1=new_point_b
@@ -911,14 +911,14 @@ def _build_actions(
     target_dendrites: Iterable[int],
     action: str,
     amount: Any,
-    hm_choice: str,
+    extent_unit: str,
     dend_segments: Dict[int, List[List[Any]]],
     dist: Dict[int, float],
     max_index: int,
     soma_index: List[List[Any]],
     points: Dict[int, List[Any]],
     parental_points: Dict[int, int],
-    descendants: Dict[int, List[int]],
+    subtrees: Dict[int, List[int]],
     all_terminal: List[int],
     dendrite_list: List[int],
 ) -> Tuple[Dict[str, ActionFunc], BranchFunc]:
@@ -931,13 +931,13 @@ def _build_actions(
                 target_dendrites,
                 action,
                 amount,
-                hm_choice,
+                extent_unit,
                 dend_segments,
                 dist,
                 soma_index,
                 points,
                 parental_points,
-                descendants,
+                subtrees,
                 all_terminal,
             ),
             "remove": lambda: remove(
@@ -947,21 +947,21 @@ def _build_actions(
                 soma_index,
                 points,
                 parental_points,
-                descendants,
+                subtrees,
                 all_terminal,
             ),
             "extend": lambda: extend(
                 target_dendrites,
                 action,
                 amount,
-                hm_choice,
+                extent_unit,
                 dend_segments,
                 dist,
                 max_index,
                 soma_index,
                 points,
                 parental_points,
-                descendants,
+                subtrees,
                 all_terminal,
             ),
             "scale": lambda: scale(target_dendrites, soma_index, dend_segments, amount),
@@ -970,7 +970,7 @@ def _build_actions(
             target_dendrites,
             action,
             amount,
-            hm_choice,
+            extent_unit,
             dend_segments,
             dist,
             max_index,
@@ -984,7 +984,7 @@ def execute_action(
     target_dendrites: Iterable[int],
     action: str,
     amount: Any,
-    hm_choice: str,
+    extent_unit: str,
     dend_segments: Dict[int, List[List[Any]]],
     dist: Dict[int, float],
     max_index: int,
@@ -993,7 +993,7 @@ def execute_action(
     soma_index: List[List[Any]],
     points: Dict[int, List[Any]],
     parental_points: Dict[int, int],
-    descendants: Dict[int, List[int]],
+    subtrees: Dict[int, List[int]],
     all_terminal: List[int],
 ) -> Tuple[List[str], List[int], List[List[Any]]]:
     """Execute a remodeling action and optionally change diameters."""
@@ -1007,14 +1007,14 @@ def execute_action(
             target_dendrites,
             action,
             amount,
-            hm_choice,
+            extent_unit,
             dend_segments,
             dist,
             max_index,
             soma_index,
             points,
             parental_points,
-            descendants,
+            subtrees,
             all_terminal,
             dendrite_list,
         )
