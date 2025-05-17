@@ -18,7 +18,7 @@ def _sorted_dendrites(dendrites: Iterable[int], branch_order: Dict[int, int]) ->
 
 def _renumber_dendrite(
     dend_id: int,
-    dend_coords: Dict[int, List[List[float]]],
+    dendrite_samples: Dict[int, List[List[float]]],
     branch_order: Dict[int, int],
     connectivity: Dict[int, int],
     start_index: int,
@@ -30,7 +30,7 @@ def _renumber_dendrite(
     ----------
     dend_id : int
         Identifier of the dendrite to renumber.
-    dend_coords : Dict[int, List[List[float]]]
+    dendrite_samples : Dict[int, List[List[float]]]
         Mapping from dendrite id to its list of samples.
     branch_order : Dict[int, int]
         Branch order of every dendrite.
@@ -49,7 +49,7 @@ def _renumber_dendrite(
     # Walk through the dendrite and assign new sequential indices
 
     order = branch_order[dend_id]
-    dend = dend_coords[dend_id]
+    dend = dendrite_samples[dend_id]
 
     previous = None
     for i, point in enumerate(dend):
@@ -61,7 +61,7 @@ def _renumber_dendrite(
                 point[6] = 1
             else:
                 parent_dend = connectivity[original_idx]
-                parent_point = dend_coords[parent_dend][-1]
+                parent_point = dendrite_samples[parent_dend][-1]
                 point[6] = parent_point[0]
         else:
             point[6] = previous
@@ -75,7 +75,7 @@ def _renumber_dendrite(
 
 def index_reassign(
     dendrite_list: Iterable[int],  # unused parameter maintained for compatibility
-    dend_coords: Dict[int, List[List[float]]],
+    dendrite_samples: Dict[int, List[List[float]]],
     branch_order_map: Dict[int, int],
     connectivity_map: Dict[int, int],
     axon: Iterable[int],
@@ -110,7 +110,7 @@ def index_reassign(
     for dend_group in groups:
         for dend_id in _sorted_dendrites(dend_group, branch_order_map):
             next_index = _renumber_dendrite(
-                dend_id, dend_coords, branch_order_map, connectivity_map, next_index, samples
+                dend_id, dendrite_samples, branch_order_map, connectivity_map, next_index, samples
             )
 
     # Convert to SWC text lines

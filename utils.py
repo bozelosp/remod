@@ -52,11 +52,11 @@ def weighted_sample(population: Sequence, weights: Sequence[float], k: int):
 def sample_random_dendrites(
     options: Sequence[int],
     label: str,
-    dend_coords: dict[int, Sequence],
+    dendrite_samples: dict[int, Sequence],
     ratio: float,
 ) -> tuple[list[int], str]:
     """Return a random selection of dendrites respecting ``ratio``."""
-    valid = [d for d in options if len(dend_coords[d]) >= 3]
+    valid = [d for d in options if len(dendrite_samples[d]) >= 3]
     num = int(round_to(len(valid) * ratio, 1))
     num = max(0, min(num, len(valid)))
     selection = random.sample(valid, num)
