@@ -33,7 +33,7 @@ from utils import (
 from random_sampling import *
 from statistics_swc import *
 from take_action import execute_action
-from print_file import print_newfile
+from print_file import write_swc
 from warn import *
 from graph import *
 from index_reassignment import *
@@ -1016,7 +1016,7 @@ def edit_main(argv=None):
         
         newfile=comment_lines + newfile
         check_indices(newfile) #check if indices are continuous from 0 and u
-        print_newfile(directory, file_name, newfile, edit)
+        write_swc(directory, file_name, newfile, comment=edit)
         
         fname = directory / 'downloads' / 'files' / (file_name.replace('.swc','') + '_new.swc')
         (swc_lines, points, comment_lines, parents, branch_points, axon_bpoints, basal_bpoints, apical_bpoints, else_bpoints, soma_index, max_index, dendrite_list, descendants, dend_indices, dend_names, axon, basal, apical, elsep, dend_add3d, path, all_terminal, basal_terminal, apical_terminal, dist, area, branch_order, con, parental_points)=read_file(fname)
