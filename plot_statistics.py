@@ -7,8 +7,10 @@ This script combines the original `plot_data` CLI with the helper functions prev
 from __future__ import annotations
 
 from pathlib import Path
+from itertools import zip_longest
 from typing import Sequence
 import sys
+import os
 
 import numpy as np
 import matplotlib
@@ -16,7 +18,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from core_utils import parse_plot_args, ensure_dir
+from core_utils import parse_plot_args, parse_merge_args, ensure_dir
 from file_io import (
     read_value,
     read_values,
@@ -24,6 +26,11 @@ from file_io import (
     read_table_data,
     read_compare_values,
     read_bulk_files,
+    list_text_files,
+    read_lines,
+    read_sanitised_lines,
+    zero_pad,
+    zero_line,
 )
 
 
@@ -205,6 +212,8 @@ __all__ = [
     "plot_the_data",
     "plot_average_data",
     "plot_compare_data",
+    "merge_simple",
+    "merge_smart",
 ]
 
 COMPARE_OTHER = [
@@ -443,9 +452,67 @@ def plot_compare_data(directory: str) -> None:
         )
 
 
+def merge_simple(base_directory: Path) -> None:
+    """Replicate :mod:`merge.py` using ``before`` and ``after`` directories."""
+    before_dir = base_directory / "before"
+    after_dir = base_directory / "after"
+    before_files = {p.name: p for p in list_text_files(before_dir)}
+    after_files = {p.name: p for p in list_text_files(after_dir)}
+    common_files = sorted(before_files.keys() & after_files.keys())
+
+    for name in common_files:
+        before_lines = read_lines(before_files[name])
+        after_lines = read_lines(after_files[name])
+        with (base_directory / name).open("w", encoding="utf-8") as out:
+            for b, a in zip_longest(before_lines, after_lines):
+                if b is None:
+                    b = zero_line(a)
+                if a is None:
+                    a = zero_line(b)
+                print(b, a, file=out)
+
+
+def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
+    """Replicate :mod:`smart_merge.py` and plot comparison results."""
+    before_files = [p for p in list_text_files(before_dir) if "average" in p.name]
+    after_files = [p for p in list_text_files(after_dir) if "average" in p.name]
+    common = {p.name for p in before_files} & {p.name for p in after_files}
+
+    for name in sorted(common):
+        before_lines = read_sanitised_lines(before_dir / name)
+        after_lines = read_sanitised_lines(after_dir / name)
+        max_len = max(len(before_lines), len(after_lines))
+        out_path = output_dir / name.replace("average", "comparison/compare")
+        ensure_dir(out_path)
+        with out_path.open("w", encoding="utf-8") as out:
+            for i in range(max_len):
+                b = (
+                    before_lines[i]
+                    if i < len(before_lines)
+                    else zero_pad(after_lines[i])
+                )
+                a = (
+                    after_lines[i]
+                    if i < len(after_lines)
+                    else zero_pad(before_lines[i])
+                )
+                print(b, a, file=out)
+
+    comparison_dir = output_dir / "comparison"
+    plot_compare_data(os.fspath(comparison_dir) + os.sep)
+
+
 
 def main(arguments: list[str] | None = None) -> int:
     """Run the CLI with *arguments* if given."""
+    if arguments and arguments[0] in {"simple", "smart"}:
+        args = parse_merge_args(arguments)
+        if args.command == "simple":
+            merge_simple(args.directory)
+        else:
+            merge_smart(args.before_dir, args.after_dir, args.output_dir)
+        return 0
+
     options = parse_plot_args(arguments)
 
     directory = str(options.directory)

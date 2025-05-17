@@ -10,8 +10,8 @@
 - Remodel morphologies via `remod_cli.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and radii can be adjusted.
 - Node indices are renumbered automatically after editing.
 - Visualise original and modified trees with `neuron_export.py` for individual or overlay plots.
-- Generate summary graphs with `plot_statistics.py` and combine results from
-  multiple runs using `merge_statistics.py`.
+- Generate summary graphs and merge results from multiple runs with
+`plot_statistics.py` using the `simple` or `smart` commands.
 
 ## Installation
 
@@ -59,16 +59,14 @@ The typical pipeline is:
 2. **Modify** – `remod_cli.py edit` applies the chosen remodeling actions and saves edited files under `downloads/files/`.
 3. **Reassign indices** – node indices are automatically renumbered after modifications.
 4. **Visualise and plot** – generate 3‑D views and overlays with `neuron_export.py` and create summary plots with `plot_statistics.py`.
-5. **Combine statistics** – use `merge_statistics.py` to merge and compare
-   results from different runs. The `simple` command merges raw statistics
-   whereas `smart` combines averages and generates comparison plots.
+5. **Combine statistics** – use `plot_statistics.py` with the `simple` or `smart` command to merge and compare results from different runs.
 
 ## More tools
 
 - `swc_parser.py` also provides `index_reassign` to renumber nodes after editing.
 - `core_utils.py` provides weighted dendrite sampling utilities and warning helpers once kept in `warn.py`.
 - `remodeling_actions.py` implements the individual remodeling operations.
-- `merge_statistics.py` combines results from separate runs and can plot comparisons.
+- Merging functionality is integrated into `plot_statistics.py`.
 - `plot_statistics.py` now includes the plotting helpers previously found in `plotting_helpers.py`.
 
 Run any script with the `--help` flag for a description of its command line options.
