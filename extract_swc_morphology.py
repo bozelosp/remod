@@ -10,6 +10,7 @@ from utils import distance
 
 def read_swc_lines(file_path: str) -> List[str]:
     """Return all lines from *file_path* without trailing newlines."""
+    # The raw lines are returned verbatim so no information is lost
     with open(file_path) as f:
         return [line.rstrip("\n") for line in f]
 
@@ -182,6 +183,7 @@ def paths_to_soma(
     soma_index: Iterable[List[float]],
 ) -> Dict[int, List[int]]:
     """Return the pathway from each dendrite to the soma."""
+    # Walk up the tree from each dendrite until hitting the soma root
 
     soma_set = {s[0] for s in soma_index}
     path: Dict[int, List[int]] = {}

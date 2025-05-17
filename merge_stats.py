@@ -72,6 +72,7 @@ def zero_pad(line: str) -> str:
 
 def merge_smart(before_dir: Path, after_dir: Path, output_dir: Path) -> None:
     """Replicate :mod:`smart_merge.py` and plot comparison results."""
+    # Combines averaged statistics from two runs and generates plots
     # Merges averaged statistics and produces comparison plots
     before_files = [p for p in list_text_files(before_dir) if "average" in p.name]
     after_files = [p for p in list_text_files(after_dir) if "average" in p.name]
