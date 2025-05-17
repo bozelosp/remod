@@ -6,6 +6,7 @@ import random
 from collections.abc import Sequence
 from pathlib import Path
 from statistics import mean, pstdev
+import argparse
 
 
 
@@ -89,3 +90,24 @@ def remove_empty_keys(data):
     """Return ``data`` without keys that have empty lists."""
     # Useful when collecting only non-empty measurements
     return {k: v for k, v in data.items() if v}
+
+
+def parse_plot_args(args: list[str] | None = None):
+    """Return parsed CLI options for :mod:`plot_data`-style scripts."""
+    parser = argparse.ArgumentParser(
+        description="Generate summary plots from statistics files."
+    )
+    parser.add_argument(
+        "directory",
+        type=Path,
+        help="Path to the directory containing statistics files.",
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--average", action="store_true", help="Plot averaged statistics.")
+    mode.add_argument(
+        "--compare", action="store_true", help="Plot comparison statistics between groups."
+    )
+    ns = parser.parse_args(args)
+    if not ns.directory.is_dir():
+        parser.error(f"{ns.directory} is not a valid directory")
+    return ns

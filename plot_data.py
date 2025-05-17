@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Sequence
-import argparse
 import sys
 
 import numpy as np
@@ -17,8 +16,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from utils import read_value, read_values
+from utils import parse_plot_args
 from file_utils import (
+    read_value,
+    read_values,
     read_single_value,
     read_table_data,
     read_compare_values,
@@ -372,39 +373,11 @@ def plot_compare_data(directory: str) -> None:
 
         )
 
-def parse_arguments(arguments: list[str] | None = None) -> argparse.Namespace:
-    """Return parsed command-line options."""
-    # Provides a small CLI for selecting which plot mode to run
-    argument_parser = argparse.ArgumentParser(
-        description="Generate summary plots from statistics files.",
-    )
-    argument_parser.add_argument(
-        "directory",
-        type=Path,
-        help="Path to the directory containing statistics files.",
-    )
-    mode = argument_parser.add_mutually_exclusive_group()
-    mode.add_argument(
-        "--average",
-        action="store_true",
-        help="Plot averaged statistics.",
-    )
-    mode.add_argument(
-        "--compare",
-        action="store_true",
-        help="Plot comparison statistics between groups.",
-    )
-    parsed_arguments = argument_parser.parse_args(arguments)
-
-    if not parsed_arguments.directory.is_dir():
-        argument_parser.error(f"{parsed_arguments.directory} is not a valid directory")
-
-    return parsed_arguments
 
 
 def main(arguments: list[str] | None = None) -> int:
     """Run the CLI with *arguments* if given."""
-    options = parse_arguments(arguments)
+    options = parse_plot_args(arguments)
 
     directory = str(options.directory)
     if options.compare:
