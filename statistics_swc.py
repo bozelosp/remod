@@ -35,20 +35,20 @@ def median_diameter(dendrite_list, dend_add3d):
 def print_branch_order(dendrite_list, branch_order):
         """Return a sorted list of (dendrite, branch_order) tuples."""
 
-        bo_dict = {d: branch_order[d] for d in dendrite_list}
-        return sorted(bo_dict.items(), key=lambda x: x[0])
+        branch_order_dict = {d: branch_order[d] for d in dendrite_list}
+        return sorted(branch_order_dict.items(), key=lambda x: x[0])
 
-def bo_frequency(dendrite_list, branch_order):
+def branch_order_frequency(dendrite_list, branch_order):
         """Return the frequency of each branch order."""
 
         orders = [branch_order[d] for d in dendrite_list]
         counter = Counter(orders)
-        bo_max = max(counter) if counter else 0
-        bo_freq = {i: counter.get(i, 0) for i in range(1, bo_max + 1)}
+        branch_order_max = max(counter) if counter else 0
+        branch_order_freq = {i: counter.get(i, 0) for i in range(1, branch_order_max + 1)}
 
-        return bo_freq, bo_max
+        return branch_order_freq, branch_order_max
 
-def bo_dlength(dendrite_list, branch_order, bo_max, dist):
+def branch_order_dlength(dendrite_list, branch_order, branch_order_max, dist):
         """Return average dendrite length per branch order."""
 
         acc = defaultdict(list)
@@ -57,7 +57,7 @@ def bo_dlength(dendrite_list, branch_order, bo_max, dist):
 
         return {k: sum(v)/len(v) for k, v in acc.items() if v}
 
-def bo_plength(dendrite_list, branch_order, bo_max, plength):
+def branch_order_plength(dendrite_list, branch_order, branch_order_max, plength):
         """Return average path length per branch order."""
 
         acc = defaultdict(list)

@@ -1,34 +1,34 @@
 from statistics_swc import *
 
-def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal, apical, elsep, soma_index, bo_max, action):
+def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal, apical, elsep, soma_index, branch_order_max, action):
 
 
         if action == 'branch':
-                bo_max+=1
+                branch_order_max+=1
 
-        bo_sorted_axon_dends=[]
-        for i in range(1,bo_max+1):
+        branch_order_sorted_axon_dends=[]
+        for i in range(1,branch_order_max+1):
                 for dend in axon:
                         if branch_order_map[dend]==i:
-                                bo_sorted_axon_dends.append(dend)
+                                branch_order_sorted_axon_dends.append(dend)
 
-        bo_sorted_basal_dends=[]
-        for i in range(1,bo_max+1):
+        branch_order_sorted_basal_dends=[]
+        for i in range(1,branch_order_max+1):
                 for dend in basal:
                         if branch_order_map[dend]==i:
-                                bo_sorted_basal_dends.append(dend)
+                                branch_order_sorted_basal_dends.append(dend)
 
-        bo_sorted_apical_dends=[]
-        for i in range(1,bo_max+1):
+        branch_order_sorted_apical_dends=[]
+        for i in range(1,branch_order_max+1):
                 for dend in apical:
                         if branch_order_map[dend]==i:
-                                bo_sorted_apical_dends.append(dend)
+                                branch_order_sorted_apical_dends.append(dend)
 
-        bo_sorted_elsep_dends=[]
-        for i in range(1,bo_max+1):
+        branch_order_sorted_elsep_dends=[]
+        for i in range(1,branch_order_max+1):
                 for dend in elsep:
                         if branch_order_map[dend]==i:
-                                bo_sorted_elsep_dends.append(dend)
+                                branch_order_sorted_elsep_dends.append(dend)
 
         segment_list=[]
 
@@ -58,7 +58,7 @@ def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal
                         index+=1
                         segment_list.append(soma_index[i])
 
-        for dend in bo_sorted_axon_dends:
+        for dend in branch_order_sorted_axon_dends:
 
                 for i in range(len(dend_add3d[dend])):
 
@@ -100,7 +100,7 @@ def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-        for dend in bo_sorted_basal_dends:
+        for dend in branch_order_sorted_basal_dends:
 
                 for i in range(len(dend_add3d[dend])):
 
@@ -142,7 +142,7 @@ def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-        for dend in bo_sorted_apical_dends:
+        for dend in branch_order_sorted_apical_dends:
 
                 for i in range(len(dend_add3d[dend])):
 
@@ -184,7 +184,7 @@ def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal
                                         index+=1
                                         segment_list.append(dend_add3d[dend][i])
 
-        for dend in bo_sorted_elsep_dends:
+        for dend in branch_order_sorted_elsep_dends:
 
                 for i in range(len(dend_add3d[dend])):
 
