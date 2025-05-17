@@ -4,12 +4,14 @@
 
 ## Features
 
-- Parse SWC files and compute branch counts, branch order distributions, path and total lengths, surface areas and Sholl measurements.
+- Parse SWC files and compute forkpoint counts, branch order distributions,
+  path and total lengths, surface areas and Sholl measurements.
 - Automatically store aggregated statistics in `downloads/statistics/`.
 - Remodel morphologies via `remod_cli.py edit` to remove, shrink, extend, branch or scale dendrites.  Dendrites can be chosen manually or randomly and radii can be adjusted.
 - Node indices are renumbered automatically after editing.
 - Visualise original and modified trees with `neuron_export.py` or overlay plots from `overlay_graph.py`.
-- Generate summary graphs with `plot_statistics.py` and combine results from multiple runs using `merge_statistics.py`.
+- Generate summary graphs with `plot_statistics.py` and combine results from
+  multiple runs using `merge_statistics.py`.
 
 ## Installation
 
@@ -30,7 +32,8 @@ Using a virtual environment is recommended but not mandatory.
    python remod_cli.py analyze /path/to/swc 0-2.swc
    ```
 
-   Results such as total dendritic length, branch order frequency and Sholl intersections are saved in `downloads/statistics/`.
+   Results such as total dendritic length, forkpoint counts, branch order
+   frequency and Sholl intersections are saved in `downloads/statistics/`.
 3. **Remodel a morphology** – use `remod_cli.py edit` to apply structural changes.  The example below removes 50% of all terminal dendrites from `0-2.swc` and writes the modified neuron to `downloads/files/0-2_new.swc`:
 
    ```bash
@@ -56,7 +59,9 @@ The typical pipeline is:
 2. **Modify** – `remod_cli.py edit` applies the chosen remodeling actions and saves edited files under `downloads/files/`.
 3. **Reassign indices** – node indices are automatically renumbered after modifications.
 4. **Visualise and plot** – generate 3‑D views with `neuron_export.py` or `overlay_graph.py` and create summary plots with `plot_statistics.py`.
-5. **Combine statistics** – `merge_statistics.py` merges and compares statistics from different runs.
+5. **Combine statistics** – use `merge_statistics.py` to merge and compare
+   results from different runs. The `simple` command merges raw statistics
+   whereas `smart` combines averages and generates comparison plots.
 
 ## More tools
 
