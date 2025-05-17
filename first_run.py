@@ -68,7 +68,7 @@ if (len(sys.argv)==3):
 
         directory=str(sys.argv[1])
         file_names=str(sys.argv[2]).split(',')
-        file_names=[x for x in file_names if x is not '']
+        file_names=[x for x in file_names if x != '']
 
         parsed_files=[]
 
