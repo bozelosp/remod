@@ -15,13 +15,13 @@ def length_distribution(): #parses the length distribution
 	frequency=[]
 	cd=os.getcwd()
 	fname=cd+'/length_distribution.txt'
-	for line in open(fname):
-
-		line=line.rstrip('\n')
-		if re.search(r'(\S+)\s-\s(\S+)', line):
-			regex=re.search(r'(\S+)\s-\s(\S+)', line)
-			length.append(float(regex.group(1)))
-			frequency.append(float(regex.group(2)))
+        with open(fname) as f:
+                for line in f:
+                        line=line.rstrip('\n')
+                        if re.search(r'(\S+)\s-\s(\S+)', line):
+                                regex=re.search(r'(\S+)\s-\s(\S+)', line)
+                                length.append(float(regex.group(1)))
+                                frequency.append(float(regex.group(2)))
 
 	l_length=[]
 	l_length.append(0)

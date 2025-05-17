@@ -8,9 +8,10 @@ from math import cos, sin, pi, sqrt, radians, degrees
 
 def swc_line(fname):
 
-	swc_lines=[]
-	for line in open(fname):
-		swc_lines.append(line.rstrip('\n'))
+        swc_lines=[]
+        with open(fname) as f:
+                for line in f:
+                        swc_lines.append(line.rstrip('\n'))
 
 	return swc_lines
 
