@@ -8,6 +8,26 @@ from numpy import linalg as LA
 import numpy as np
 from utils import distance
 
+
+def _soma_coords(soma_index):
+    """Return the xyz coordinates of the soma root as a numpy array."""
+    soma = next(i for i in soma_index if i[6] == -1)
+    return np.array([soma[2], soma[3], soma[4]])
+
+
+def _coords(points, indices):
+    """Return a numpy array of xyz coordinates for ``indices``."""
+    return np.array([[points[i][2], points[i][3], points[i][4]] for i in indices])
+
+
+def _mean_by_branch_order(dendrite_list, branch_order, values):
+    """Return the mean of ``values`` grouped by branch order."""
+    acc = defaultdict(list)
+    for dend in dendrite_list:
+        acc[branch_order[dend]].append(values[dend])
+
+    return {k: sum(v) / len(v) for k, v in acc.items() if v}
+
 def total_length(dendrite_list, dist):  # soma_included
         """Return the total length of *dendrite_list* using ``dist`` mapping."""
 
@@ -51,34 +71,22 @@ def branch_order_frequency(dendrite_list, branch_order):
 def branch_order_dlength(dendrite_list, branch_order, branch_order_max, dist):
         """Return average dendrite length per branch order."""
 
-        acc = defaultdict(list)
-        for dend in dendrite_list:
-                acc[branch_order[dend]].append(dist[dend])
-
-        return {k: sum(v)/len(v) for k, v in acc.items() if v}
+        return _mean_by_branch_order(dendrite_list, branch_order, dist)
 
 def branch_order_plength(dendrite_list, branch_order, branch_order_max, plength):
         """Return average path length per branch order."""
 
-        acc = defaultdict(list)
-        for dend in dendrite_list:
-                acc[branch_order[dend]].append(plength[dend])
-
-        return {k: sum(v)/len(v) for k, v in acc.items() if v}
+        return _mean_by_branch_order(dendrite_list, branch_order, plength)
 
 def sholl_intersections(points, parental_points, soma_index, radius, parameter):
         """Compute Sholl intersection counts for the given radius."""
 
-        soma = next(i for i in soma_index if i[6] == -1)
-        soma_coords = np.array([soma[2], soma[3], soma[4]])
+        soma_coords = _soma_coords(soma_index)
 
         values = np.arange(0, 10000, radius)
         ids = [i for i in points if points[i][1] in parameter]
-        pts = np.array([[points[i][2], points[i][3], points[i][4]] for i in ids])
-        parents = np.array(
-            [[points[parental_points[i]][2], points[parental_points[i]][3], points[parental_points[i]][4]]
-             for i in ids]
-        )
+        pts = _coords(points, ids)
+        parents = _coords(points, [parental_points[i] for i in ids])
 
         dist1 = np.linalg.norm(pts - soma_coords, axis=1)
         dist2 = np.linalg.norm(parents - soma_coords, axis=1)
@@ -93,11 +101,10 @@ def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 def sholl_bp(branch_points, points, soma_index, radius):
         """Compute number of branch points crossing each Sholl shell."""
 
-        soma = next(i for i in soma_index if i[6] == -1)
-        soma_coords = np.array([soma[2], soma[3], soma[4]])
+        soma_coords = _soma_coords(soma_index)
 
         values = np.arange(0, 10000, radius)
-        pts = np.array([[points[i][2], points[i][3], points[i][4]] for i in branch_points])
+        pts = _coords(points, branch_points)
         dist = np.linalg.norm(pts - soma_coords, axis=1)
 
         sholl_list = {}
@@ -121,16 +128,12 @@ def remove_trailing_zeros(sholl_list, values, radius):
 def sholl_length(points, parental_points, soma_index, radius, parameter):
         """Compute total dendrite length inside successive Sholl shells."""
 
-        soma = next(i for i in soma_index if i[6] == -1)
-        soma_coords = np.array([soma[2], soma[3], soma[4]])
+        soma_coords = _soma_coords(soma_index)
 
         values = np.arange(0, 10000, radius)
         ids = [i for i in points if points[i][1] in parameter]
-        pts = np.array([[points[i][2], points[i][3], points[i][4]] for i in ids])
-        parents = np.array(
-            [[points[parental_points[i]][2], points[parental_points[i]][3], points[parental_points[i]][4]]
-             for i in ids]
-        )
+        pts = _coords(points, ids)
+        parents = _coords(points, [parental_points[i] for i in ids])
 
         lengths = np.linalg.norm(pts - parents, axis=1)
         dist1 = np.linalg.norm(pts - soma_coords, axis=1)
