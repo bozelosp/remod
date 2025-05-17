@@ -1041,3 +1041,20 @@ def execute_action(
         )
 
     return new_lines, dendrite_roots, sample_list
+
+
+class RemodelActions:
+    """Container class for the remodeling action helpers."""
+
+    parse_length_distribution = staticmethod(parse_length_distribution)
+    select_length = staticmethod(select_length)
+    create_points = staticmethod(create_points)
+    add_random_point = staticmethod(add_random_point)
+    translate_descendants = staticmethod(translate_descendants)
+    allocate_new_dendrites = staticmethod(allocate_new_dendrites)
+    extend_dendrite = staticmethod(extend_dendrite)
+    shrink = staticmethod(shrink)
+    remove = staticmethod(remove)
+    extend = staticmethod(extend)
+    radius_change = staticmethod(radius_change)
+    execute_action = staticmethod(execute_action)

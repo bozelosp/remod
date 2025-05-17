@@ -216,6 +216,16 @@ __all__ = [
     "merge_smart",
 ]
 
+
+class StatisticsPlotter:
+    """Class-based wrapper around the plotting utilities."""
+
+    plot_the_data = staticmethod(plot_the_data)
+    plot_average_data = staticmethod(plot_average_data)
+    plot_compare_data = staticmethod(plot_compare_data)
+    merge_simple = staticmethod(merge_simple)
+    merge_smart = staticmethod(merge_smart)
+
 COMPARE_OTHER = [
     (
         "compare_total_number_of_branchpoints.svg",

@@ -83,5 +83,12 @@ The typical pipeline is:
 - `plot_statistics.py` now includes the plotting helpers previously found in `plotting_helpers.py`.
 - `swc_parser.py` exposes an `SWCParser` class wrapping the old `parse_swc_file` function.
 - `logger_utils.py` features a small `MarkdownLogger` for writing logs.
+- `core_utils.py` collects CLI parsers in the `CLIParsers` class.
+- Common file helpers live under `FileIO` in `file_io.py`.
+- Morphometric functions are grouped inside `MorphologyStats`.
+- `json_stats.py` exports a `StatisticsComputer` for JSON output.
+- Plotting helpers are available via the `StatisticsPlotter` class.
+- The main entry points reside in `RemodCLI` within `remod_cli.py`.
+- Remodeling actions are accessible through the `RemodelActions` class.
 
 Run any script with the `--help` flag for a description of its command line options.

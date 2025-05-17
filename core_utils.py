@@ -254,3 +254,13 @@ __all__ = [
     "shrink_warning",
     "check_indices",
 ]
+
+
+class CLIParsers:
+    """Class-based accessors for the CLI parsing helpers."""
+
+    parse_plot_args = staticmethod(parse_plot_args)
+    parse_analyze_args = staticmethod(parse_analyze_args)
+    parse_edit_args = staticmethod(parse_edit_args)
+    parse_merge_args = staticmethod(parse_merge_args)
+
