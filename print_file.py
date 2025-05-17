@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
 def print_newfile_tmp(directory, file_name, newfile, edit):
 
-        new_name=os.path.join(directory, file_name.replace('.swc','') + '_new_tmp.swc')
+        directory = Path(directory)
+        new_name = directory / (file_name.replace('.swc','') + '_new_tmp.swc')
 
         with open(new_name, 'w') as f:
                 print(('\n').join(newfile), file=f)
@@ -10,13 +12,12 @@ def print_newfile_tmp(directory, file_name, newfile, edit):
 
 def print_newfile(directory, file_name, newfile, edit):
 
-        directory=os.path.join(str(directory), 'downloads', 'files')
+        directory = Path(directory) / 'downloads' / 'files'
 
-        if not os.path.exists(directory):
-                os.makedirs(directory)
+        if not directory.exists():
+                directory.mkdir(parents=True)
 
-        new_name=os.path.join(directory, file_name)#.replace('.swc','') + '_new.swc'
-        new_name=os.path.join(directory, file_name.replace('.swc','') + '_new.swc')
+        new_name = directory / (file_name.replace('.swc','') + '_new.swc')
 
         with open(new_name, 'w') as f:
                 print(edit, file=f)

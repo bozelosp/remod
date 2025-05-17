@@ -3,6 +3,7 @@ from random import randint
 import copy
 import sys
 import os
+from pathlib import Path
 
 import numpy as np
 from random import uniform, randrange
@@ -13,8 +14,8 @@ def length_distribution(): #parses the length distribution
 
         length=[]
         frequency=[]
-        current_directory=os.getcwd()
-        fname=current_directory+'/length_distribution.txt'
+        current_directory = Path.cwd()
+        fname = current_directory / 'length_distribution.txt'
         with open(fname) as f:
                 for line in f:
                         line=line.rstrip('\n')
