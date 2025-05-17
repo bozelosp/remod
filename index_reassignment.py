@@ -227,8 +227,8 @@ def index_reassign(dendrite_list, dend_add3d, branch_order_map, con, axon, basal
                                         segment_list.append(dend_add3d[dend][i])
 
         newfile=[]
-        for k in segment_list:
-                m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                newfile.append(m)
+        for segment in segment_list:
+                line=' %d %d %.2f %.2f %.2f %.2f %d' % (segment[0], segment[1], segment[2], segment[3], segment[4], segment[5], segment[6])
+                newfile.append(line)
 
         return newfile

@@ -34,10 +34,10 @@ def length_distribution(): #parses the length distribution
 
 def length_selection(cumulative_length_index): #returns a randomly chosen length value based on the distribution
 
-        random=randint(0, cumulative_length_index[-1]);
+        random_value=randint(0, cumulative_length_index[-1]);
 
         for i in range(len(cumulative_length_index)):
-                if random>cumulative_length_index[i] and random<cumulative_length_index[i+1]:
+                if random_value>cumulative_length_index[i] and random_value<cumulative_length_index[i+1]:
                         return length[i]
                         break
 
@@ -352,7 +352,7 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
                         num_seg_1=len(dend_add3d[dend])
 
                         diam=[]
-                        k=1
+                        run_length=1
 
                         diam.append([0, dend_add3d[dend][0][5]])
                         for i in range(len(dend_add3d[dend])-1):
@@ -366,9 +366,9 @@ def shrink(who, action, amount, hm_choice, dend_add3d, dist, soma_index, points,
 
                                 if diameter!=diam_next:
                                         diam.append([i+1, diam_next])
-                                        k=1
+                                        run_length=1
                                 else:
-                                        k+=1
+                                        run_length+=1
 
                 cumulative_distance=0
 
@@ -568,24 +568,24 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
 
                 num_seg_1=len(dend_add3d[dend])
 
-                d=[]
-                k=1
+                diameter_bins=[]
+                run_length=1
 
-                d.append([0, dend_add3d[dend][0][5]])
+                diameter_bins.append([0, dend_add3d[dend][0][5]])
                 for i in range(len(dend_add3d[dend])-1):
 
                         diam=dend_add3d[dend][i][5]
                         diam_next=dend_add3d[dend][i+1][5]
 
                         if i==len(dend_add3d[dend])-2:
-                                d.append([i+1, diam_next])
+                                diameter_bins.append([i+1, diam_next])
                                 break                   
 
                         if diam!=diam_next:
-                                d.append([i+1, diam_next])
-                                k=1
+                                diameter_bins.append([i+1, diam_next])
+                                run_length=1
                         else:
-                                k+=1
+                                run_length+=1
 
                 if hm_choice=='percent':
                         new_dist[dend]=dist[dend]*float(amount)/100
@@ -609,9 +609,9 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
                 ratio=float(num_seg_2)/num_seg_1
 
                 new_ns=[]
-                for k in d:
+                for bin_start in diameter_bins:
 
-                        new_num_seg=int(round_to((k[0]*ratio),1))
+                        new_num_seg=int(round_to((bin_start[0]*ratio),1))
                         new_ns.append(new_num_seg)
 
                 new_ns.append(num_seg_2)
@@ -621,11 +621,11 @@ def extend(who, action, amount, hm_choice, dend_add3d, dist, max_index, soma_ind
                 for j in range(len(dend_add3d[dend])):
 
                         if j>=new_ns[n] and j<new_ns[n+1]:
-                                my_diam=d[n][1]
+                                my_diam=diameter_bins[n][1]
                                 dend_add3d[dend][j][5]=my_diam
                         else:
                                 n+=1
-                                my_diam=d[n][1]
+                                my_diam=diameter_bins[n][1]
                                 dend_add3d[dend][j][5]=my_diam
 
                 if dend not in all_terminal:
