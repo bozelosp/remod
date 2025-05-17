@@ -263,7 +263,7 @@ def _alternate_labels(labels: Sequence[str]) -> list[str]:
 
 def _configure_figure_size() -> None:
     """Apply the default figure size."""
-
+    # Matplotlib inherits this size for all plots in this session
     from pylab import rcParams
 
     rcParams["figure.figsize"] = FIG_SIZE
@@ -271,11 +271,13 @@ def _configure_figure_size() -> None:
 
 def _read_bulk_files(directory: Path, files: Sequence[str], reader):
     """Return ``reader`` applied to each file in ``directory``."""
+    # Used by several plotting routines to load multiple data files at once
 
     return [reader(directory / name) for name in files]
 
 
 def _plot_counts(directory: Path, with_error: bool) -> None:
+    # Plot bar charts showing total dendrite counts for each region
     reader = read_values if with_error else read_single_value
     counts = _read_bulk_files(directory, COUNT_FILES, reader)
     terminals = _read_bulk_files(directory, TERMINAL_FILES, reader)
@@ -297,6 +299,7 @@ def _plot_counts(directory: Path, with_error: bool) -> None:
 
 
 def _plot_totals(directory: Path, with_error: bool) -> None:
+    # Plot bar charts for aggregated totals across dendrite regions
     reader = read_values if with_error else read_single_value
     for out_name, ylabel, files in TOTAL_SPECS:
         vals = _read_bulk_files(directory, files, reader)
@@ -320,6 +323,7 @@ def _plot_from_specs(
     x_label: str,
 ) -> None:
     """Render bar plots described by ``specs`` inside ``directory``."""
+    # ``specs`` drives which files are read and how the plots are labelled
     for spec in specs:
         filename, out_name, ylabel, *rest = spec
         alt = rest[0] if rest else False
@@ -342,10 +346,12 @@ def _plot_from_specs(
 
 
 def _plot_series(directory: Path, with_error: bool) -> None:
+    # Plot dendrite counts or lengths grouped by branch order
     _plot_from_specs(directory, SERIES_SPECS, with_error, "Branch Order")
 
 
 def _plot_sholl(directory: Path, with_error: bool) -> None:
+    # Plot measurements across concentric shells around the soma
     _plot_from_specs(
         directory,
         SHOLL_SPECS,
@@ -355,6 +361,7 @@ def _plot_sholl(directory: Path, with_error: bool) -> None:
 
 
 def plot_the_data(directory: str) -> None:
+    # Generate standard plots for a single set of statistics
     directory_path = Path(directory)
     _configure_figure_size()
 
@@ -365,6 +372,7 @@ def plot_the_data(directory: str) -> None:
 
 
 def plot_average_data(directory: str) -> None:
+    # Generate plots where each value has an associated error bar
     directory_path = Path(directory)
     _configure_figure_size()
 
@@ -375,6 +383,7 @@ def plot_average_data(directory: str) -> None:
 
 
 def plot_compare_data(directory: str) -> None:
+    # Generate side-by-side plots comparing two groups of statistics
     directory_path = Path(directory)
     _configure_figure_size()
 
@@ -461,6 +470,7 @@ def plot_compare_data(directory: str) -> None:
 
 def parse_arguments(arguments: list[str] | None = None) -> argparse.Namespace:
     """Return parsed command-line options."""
+    # Provides a small CLI for selecting which plot mode to run
     argument_parser = argparse.ArgumentParser(
         description="Generate summary plots from statistics files.",
     )

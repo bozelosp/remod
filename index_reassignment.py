@@ -87,6 +87,7 @@ def index_reassign(
     action: str,
 ) -> List[str]:
     """Return SWC lines with continuous indices for all segments."""
+    # Reindexes all morphology points after structural edits
     # Handles soma first then each dendrite group in order
 
     if action == "branch":

@@ -8,6 +8,7 @@ def weighted_sample(population, weights, k):
     return random.sample(WeightedPopulation(population, weights), k)
 
 class WeightedPopulation(Sequence):
+    # Sequence-like container that supports weighted random sampling
     def __init__(self, population, weights):
         # Precompute cumulative weights for efficient sampling
         assert len(population) == len(weights) > 0
