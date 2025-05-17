@@ -6,7 +6,29 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 from file_utils import write_plot
-from plot_segments import build_plot_from_lines, PlotEntry
+
+# ``plot_segments`` originally provided :func:`build_plot_from_lines` and the
+# ``PlotEntry`` alias.  They are now defined here to avoid a separate module.
+PlotEntry = list[Sequence[float]]
+
+
+def build_plot_from_lines(lines: Iterable[str]) -> list[PlotEntry]:
+    """Return plot segments for ``lines`` of an SWC file."""
+
+    from extract_swc_morphology import parse_swc_lines
+    from utils import round_to
+
+    _, points = parse_swc_lines(lines)
+    plot: list[PlotEntry] = []
+    for idx, vals in points.items():
+        parent = int(vals[6])
+        if parent == -1 or parent not in points:
+            continue
+        x = [round_to(float(vals[2]), 0.01), round_to(float(points[parent][2]), 0.01)]
+        y = [round_to(float(vals[3]), 0.01), round_to(float(points[parent][3]), 0.01)]
+        z = [round_to(float(vals[4]), 0.01), round_to(float(points[parent][4]), 0.01)]
+        plot.append([x, y, z, float(vals[5])])
+    return plot
 
 
 def graph(
