@@ -430,7 +430,7 @@ def _renumber_dendrite(
 
         previous = start_index
         start_index += 1
-    samples.append(point)
+        samples.append(point)
 
     return start_index
 
