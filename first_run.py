@@ -35,41 +35,39 @@ def remove_empty_keys(d):
     return d
 
 def average_list(values):
-        my_sum = 0
-        arr = np.array(values)
+        if not values:
+                return 0, 0
+
+        arr = np.asarray(values)
         average = np.mean(arr)
-        #average=sum(values)/float(number_of_files)
-        arr = np.array(values)
         st_error = np.std(arr)
         return round_to(average, 0.01), round_to(st_error, 0.01)
 
 def average_dict(d):
-        for i in d:
-                yours_sum = 0
-                values = []
-                for k in d[i]:
-                        yours_sum += k
-                        values.append(k)
-                arr = np.array(values)
+        for i, values in d.items():
+                if not values:
+                        d[i] = [0, 0]
+                        continue
+
+                arr = np.asarray(values)
                 average = np.mean(arr)
-                #average=yours_sum/float(number_of_files)
                 st_error = np.std(arr)
                 d[i] = [round_to(average, 0.01), round_to(st_error, 0.01)]
+
         return d
 
 def median_dict(d):
-        for i in d:
-                yours_sum = 0
-                values = []
-                for k in d[i]:
-                        yours_sum += k
-                        values.append(k)
-                arr = np.array(values)
+        for i, values in d.items():
+                if not values:
+                        d[i] = [0, 0, 0]
+                        continue
+
+                arr = np.asarray(values)
                 med = np.median(arr)
                 p25 = np.percentile(arr, 25)
                 p75 = np.percentile(arr, 75)
-                #average=yours_sum/float(number_of_files)
                 d[i] = [round_to(med, 0.01), round_to(p25, 0.01), round_to(p75, 0.01)]
+
         return d
 
 # example usage: python first_run.py /path/to/swc/ 0-2.swc
