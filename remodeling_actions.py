@@ -60,7 +60,9 @@ def create_points(
     rotation_angle = radians(angle)
 
     axis_origin = [0, 0, 1]
-    if end_point[0] == end_point[0] and end_point[1] == start_point[1]:
+    # use Y as the rotation axis when the segment lies along X
+    # and Y directions to avoid numerical issues
+    if end_point[0] == start_point[0] and end_point[1] == start_point[1]:
         axis_origin = [0, 1, 0]
 
     start_matrix = np.matrix([float(start_point[0]), float(start_point[1]), float(start_point[2])])
