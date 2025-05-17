@@ -16,377 +16,377 @@ from utils import distance
 
 def total_length(dendrite_list, dist): #soma_included
 
-	t_length=0
-	for dend in dendrite_list:
-		t_length+=dist[dend]
-	return t_length
+        t_length=0
+        for dend in dendrite_list:
+                t_length+=dist[dend]
+        return t_length
 
 def total_area(dendrite_list, area): #soma_included
 
-	t_area=0
-	for dend in dendrite_list:
-		t_area+=area[dend]
+        t_area=0
+        for dend in dendrite_list:
+                t_area+=area[dend]
 
-	return t_area
+        return t_area
 
 def path_length(dendrite_list, path, dist):
-	plength=dict()
-	for dend in dendrite_list:
-		d=0
-		for i in path[dend]:
-			d+=dist[i]
-		plength[dend]=d
-	return plength
+        plength=dict()
+        for dend in dendrite_list:
+                d=0
+                for i in path[dend]:
+                        d+=dist[i]
+                plength[dend]=d
+        return plength
 
 def median_diameter(dendrite_list, dend_add3d):
 
-	med_diam=dict()
-	for dend in dendrite_list:
-		m=len(dend_add3d[dend])/2
-		med_diam[dend]=float(dend_add3d[dend][m][5])*2
-	return med_diam
+        med_diam=dict()
+        for dend in dendrite_list:
+                m=len(dend_add3d[dend])/2
+                med_diam[dend]=float(dend_add3d[dend][m][5])*2
+        return med_diam
 
 def print_branch_order(dendrite_list, bo):
 
-	bo_dict=dict()
+        bo_dict=dict()
 
-	for i in dendrite_list:
-		bo_dict[i]=bo[i]
+        for i in dendrite_list:
+                bo_dict[i]=bo[i]
 
-	return sorted(list(bo_dict.items()), key=lambda x: x[0])
+        return sorted(list(bo_dict.items()), key=lambda x: x[0])
 
 def bo_frequency(dendrite_list, bo):
 
-	orders=[]
-	for dend in dendrite_list:
-		orders.append(bo[dend])
+        orders=[]
+        for dend in dendrite_list:
+                orders.append(bo[dend])
 
-	bo_min=1 # min(orders)
-	bo_max=max(orders)
+        bo_min=1 # min(orders)
+        bo_max=max(orders)
 
-	bo_freq={}
+        bo_freq={}
 
-	for i in range(bo_min, bo_max+1):
-		k=0
-		for order in orders:
-			if order==i:
-				k+=1
-		bo_freq[i]=k
+        for i in range(bo_min, bo_max+1):
+                k=0
+                for order in orders:
+                        if order==i:
+                                k+=1
+                bo_freq[i]=k
 
-	return bo_freq, bo_max
+        return bo_freq, bo_max
 
 def bo_dlength(dendrite_list, bo, bo_max, dist):
 
-	bo_dlen={}
-	for i in range(1, bo_max+1):
-		k=0
-		add_length=0
+        bo_dlen={}
+        for i in range(1, bo_max+1):
+                k=0
+                add_length=0
 
-		for dend in dendrite_list:
-			if i==bo[dend]:
-				k+=1
-				add_length+=dist[dend]
-	
-		if k!=0:
-			bo_dlen[i]=add_length/k
+                for dend in dendrite_list:
+                        if i==bo[dend]:
+                                k+=1
+                                add_length+=dist[dend]
+        
+                if k!=0:
+                        bo_dlen[i]=add_length/k
 
-	return bo_dlen
+        return bo_dlen
 
 def bo_plength(dendrite_list, bo, bo_max, plength):
 
-	bo_plen={}
-	for i in range(1, bo_max+1):
+        bo_plen={}
+        for i in range(1, bo_max+1):
 
-		k=0
-		add_length=0
+                k=0
+                add_length=0
 
-		for dend in dendrite_list:
-			if i==bo[dend]:
-				k+=1
-				add_length+=plength[dend]
-	
-		if k!=0:
-			bo_plen[i]=add_length/k
+                for dend in dendrite_list:
+                        if i==bo[dend]:
+                                k+=1
+                                add_length+=plength[dend]
+        
+                if k!=0:
+                        bo_plen[i]=add_length/k
 
-	return bo_plen
+        return bo_plen
 
 def sholl_intersections(points, parental_points, soma_index, radius, parameter):
 
-	sholl_list=dict()
+        sholl_list=dict()
 
-	for i in soma_index:
-		if i[6]==-1:
-			xr=i[2]
-			yr=i[3]
-			zr=i[4]
-	
-	values=[]
-	for val in np.arange(0, 10000, radius):
-		values.append(val)
+        for i in soma_index:
+                if i[6]==-1:
+                        xr=i[2]
+                        yr=i[3]
+                        zr=i[4]
+        
+        values=[]
+        for val in np.arange(0, 10000, radius):
+                values.append(val)
 
-	for u in range(len(values)-1):
+        for u in range(len(values)-1):
 
-		previous_dist=values[u]
-		next_dist=values[u+1]
+                previous_dist=values[u]
+                next_dist=values[u+1]
 
-		n_intersections=0
+                n_intersections=0
 
-		for i in points:
+                for i in points:
 
-			if points[i][1] in parameter:
+                        if points[i][1] in parameter:
 
-				x1=points[i][2]
-				y1=points[i][3]
-				z1=points[i][4]
+                                x1=points[i][2]
+                                y1=points[i][3]
+                                z1=points[i][4]
 
-				mydist1=distance(xr,x1,yr,y1,zr,z1)
+                                mydist1=distance(xr,x1,yr,y1,zr,z1)
 
-				p=parental_points[i]
-				
-				x2=points[p][2]
-				y2=points[p][3]
-				z2=points[p][4]
+                                p=parental_points[i]
+                                
+                                x2=points[p][2]
+                                y2=points[p][3]
+                                z2=points[p][4]
 
-				mydist2=distance(xr,x2,yr,y2,zr,z2)
+                                mydist2=distance(xr,x2,yr,y2,zr,z2)
 
-				if mydist1>next_dist and mydist2<next_dist:
+                                if mydist1>next_dist and mydist2<next_dist:
 
-					n_intersections+=1
+                                        n_intersections+=1
 
-		sholl_list[next_dist]=n_intersections
+                sholl_list[next_dist]=n_intersections
 
-	return sholl_list
+        return sholl_list
 
 def sholl_bp(bpoints, points, soma_index, radius):
 
-	sholl_list=dict()
+        sholl_list=dict()
 
-	for i in soma_index:
-		if i[6]==-1:
-			xr=i[2]
-			yr=i[3]
-			zr=i[4]
+        for i in soma_index:
+                if i[6]==-1:
+                        xr=i[2]
+                        yr=i[3]
+                        zr=i[4]
 
-	values=[]
-	for val in np.arange(0, 10000, radius):
-		values.append(val)
+        values=[]
+        for val in np.arange(0, 10000, radius):
+                values.append(val)
 
-	for val in range(len(values)-1):
+        for val in range(len(values)-1):
 
-		oc=0
+                oc=0
 
-		previous_dist=values[val]
-		next_dist=values[val+1]
+                previous_dist=values[val]
+                next_dist=values[val+1]
 
-		for i in bpoints:
+                for i in bpoints:
 
-			x=points[i][2]
-			y=points[i][3]
-			z=points[i][4]
+                        x=points[i][2]
+                        y=points[i][3]
+                        z=points[i][4]
 
-			mydist=distance(xr,x,yr,y,zr,z)
+                        mydist=distance(xr,x,yr,y,zr,z)
 
-			if mydist>previous_dist and mydist<next_dist:
+                        if mydist>previous_dist and mydist<next_dist:
 
-				oc+=1
+                                oc+=1
 
-		sholl_list[next_dist]=oc
+                sholl_list[next_dist]=oc
 
-	#sholl_list=remove_trailing_zeros(sholl_list, values, radius)
+        #sholl_list=remove_trailing_zeros(sholl_list, values, radius)
 
-	return sholl_list
+        return sholl_list
 
 def remove_trailing_zeros(sholl_list, values, radius):
 
-	k=len(sholl_list)
-	x=0
+        k=len(sholl_list)
+        x=0
 
-	for i in values[:-1]:
-		if sholl_list[i+radius]==0:
-			x+=1
-		else:
-			x=0
+        for i in values[:-1]:
+                if sholl_list[i+radius]==0:
+                        x+=1
+                else:
+                        x=0
 
-	new_sholl_dict=dict()
+        new_sholl_dict=dict()
 
-	for i in range(k-x):
-		new_sholl_dict[values[i]+radius]=sholl_list[values[i]+radius]
-		
-	return new_sholl_dict
+        for i in range(k-x):
+                new_sholl_dict[values[i]+radius]=sholl_list[values[i]+radius]
+                
+        return new_sholl_dict
 
 
 def sholl_length(points, parental_points, soma_index, radius, parameter):
-	
-	sholl_list=dict()
+        
+        sholl_list=dict()
 
-	for i in soma_index:
-		if i[6]==-1:
-			xr=i[2]
-			yr=i[3]
-			zr=i[4]
-	
-	values=[]
-	for val in np.arange(0, 10000, radius):
-		values.append(val)
+        for i in soma_index:
+                if i[6]==-1:
+                        xr=i[2]
+                        yr=i[3]
+                        zr=i[4]
+        
+        values=[]
+        for val in np.arange(0, 10000, radius):
+                values.append(val)
 
-	for u in range(len(values)-1):
+        for u in range(len(values)-1):
 
-		previous_dist=values[u]
-		next_dist=values[u+1]
+                previous_dist=values[u]
+                next_dist=values[u+1]
 
-		sum_length=0
+                sum_length=0
 
-		for i in points:
+                for i in points:
 
-			if points[i][1] in parameter:
+                        if points[i][1] in parameter:
 
-				x=points[i][2]
-				y=points[i][3]
-				z=points[i][4]
+                                x=points[i][2]
+                                y=points[i][3]
+                                z=points[i][4]
 
-				mydist=distance(xr,x,yr,y,zr,z)
+                                mydist=distance(xr,x,yr,y,zr,z)
 
-				if mydist>previous_dist and mydist<next_dist:
+                                if mydist>previous_dist and mydist<next_dist:
 
-					p=parental_points[i]
-					
-					xp=points[p][2]
-					yp=points[p][3]
-					zp=points[p][4]
+                                        p=parental_points[i]
+                                        
+                                        xp=points[p][2]
+                                        yp=points[p][3]
+                                        zp=points[p][4]
 
-					sum_length+=distance(x,xp,y,yp,z,zp)
+                                        sum_length+=distance(x,xp,y,yp,z,zp)
 
-		sholl_list[next_dist]=sum_length
+                sholl_list[next_dist]=sum_length
 
-	#sholl_list=remove_trailing_zeros(sholl_list, values, radius)
+        #sholl_list=remove_trailing_zeros(sholl_list, values, radius)
 
-	return sholl_list
+        return sholl_list
 
 def dist_angle_analysis(dendrite_list, dend_add3d, soma_root, principal_axis):
 
-	dist_angle=[]
+        dist_angle=[]
 
-	for dend in dendrite_list:
+        for dend in dendrite_list:
 
-		point_list=[]
+                point_list=[]
 
-		for i in range(len(dend_add3d[dend])):
+                for i in range(len(dend_add3d[dend])):
 
-			x=dend_add3d[dend][i][2]
-			y=dend_add3d[dend][i][3]
-			z=dend_add3d[dend][i][4]
+                        x=dend_add3d[dend][i][2]
+                        y=dend_add3d[dend][i][3]
+                        z=dend_add3d[dend][i][4]
 
-			point=[x, y, z]
+                        point=[x, y, z]
 
-			point_list.append([principal_axis, soma_root, point])
+                        point_list.append([principal_axis, soma_root, point])
 
-		for i in point_list:
+                for i in point_list:
 
-			a=array(i[0], float)
-			b=array(i[1], float)
-			c=array(i[2], float)
+                        a=array(i[0], float)
+                        b=array(i[1], float)
+                        c=array(i[2], float)
 
-			ba = a-b
-			bc = c-b
+                        ba = a-b
+                        bc = c-b
 
-			quot_a = ba/LA.norm(ba)
-			quot_b = bc/LA.norm(bc)
+                        quot_a = ba/LA.norm(ba)
+                        quot_b = bc/LA.norm(bc)
 
-			dotp = dot(quot_a.T,quot_b)
-			degree = 180 - acos(dotp)*57.295779513082
-			dist = sqrt((x-soma_root[0])**2 + (y-soma_root[1])**2 + (z-soma_root[2])**2)
+                        dotp = dot(quot_a.T,quot_b)
+                        degree = 180 - acos(dotp)*57.295779513082
+                        dist = sqrt((x-soma_root[0])**2 + (y-soma_root[1])**2 + (z-soma_root[2])**2)
 
-			dist_angle.append([dist, degree])
+                        dist_angle.append([dist, degree])
 
-	return dist_angle
+        return dist_angle
 
 def dist_angle_frequency(dist_angle, radius):
 
-	dist_freq={}
-	angle_f={}
+        dist_freq={}
+        angle_f={}
 
-	previous_val=0
-	for val in np.arange(0, 1000, radius):
+        previous_val=0
+        for val in np.arange(0, 1000, radius):
 
-		angles_freq={}
+                angles_freq={}
 
-		angles=[]
-		
-		count_dist=0
-		for i in range(len(dist_angle)):
+                angles=[]
+                
+                count_dist=0
+                for i in range(len(dist_angle)):
 
-			if dist_angle[i][0]>previous_val and dist_angle[i][0]<val:
-				count_dist+=1
-				angles.append(dist_angle[i][1])
+                        if dist_angle[i][0]>previous_val and dist_angle[i][0]<val:
+                                count_dist+=1
+                                angles.append(dist_angle[i][1])
 
-		previous_a=0
+                previous_a=0
 
-		for a in np.arange(5, 185, 5):
+                for a in np.arange(5, 185, 5):
 
-			count_angle=0
-			for i in range(len(angles)):
+                        count_angle=0
+                        for i in range(len(angles)):
 
-				if angles[i]>previous_a and angles[i]<a:
-					count_angle+=1
+                                if angles[i]>previous_a and angles[i]<a:
+                                        count_angle+=1
 
-			angles_freq[a]=count_angle
-	
-			previous_a=a
+                        angles_freq[a]=count_angle
+        
+                        previous_a=a
 
 
-		dist_freq[val]=count_dist
-		angle_f[val]=angles_freq
+                dist_freq[val]=count_dist
+                angle_f[val]=angles_freq
 
-		previous_val=val
+                previous_val=val
 
-	return dist_freq, angle_f
+        return dist_freq, angle_f
 
 def axis(apical, dend_add3d, soma_index): #weighted linear regression
 
-	def calc_mean(l,d,sum_d):
-		ld=[]
-		for i in range(len(l)):
-			ld.append(l[i]*(d[i]/sum_d))
-		l_mean=np.mean(ld)
+        def calc_mean(l,d,sum_d):
+                ld=[]
+                for i in range(len(l)):
+                        ld.append(l[i]*(d[i]/sum_d))
+                l_mean=np.mean(ld)
 
-		ld_weighted=[]
+                ld_weighted=[]
 
-		for i in ld:
-			ld_weighted.append(i-l_mean)
+                for i in ld:
+                        ld_weighted.append(i-l_mean)
 
-		return ld_weighted
+                return ld_weighted
 
-	x=y=z=d=[]
+        x=y=z=d=[]
 
-	x_soma=soma_index[0][2]
-	y_soma=soma_index[0][3]
-	z_soma=soma_index[0][4]
+        x_soma=soma_index[0][2]
+        y_soma=soma_index[0][3]
+        z_soma=soma_index[0][4]
 
-	for dend in apical:
+        for dend in apical:
 
-		for i in dend_add3d[dend]:
+                for i in dend_add3d[dend]:
 
-			x.append(i[2]-x_soma)
-			y.append(i[3]-y_soma)
-			z.append(i[4]-z_soma)
-			d.append(i[5])
+                        x.append(i[2]-x_soma)
+                        y.append(i[3]-y_soma)
+                        z.append(i[4]-z_soma)
+                        d.append(i[5])
 
-	sum_d=np.sum(d)
-	
-	x_weighted=calc_mean(x,d,sum_d)
-	y_weighted=calc_mean(y,d,sum_d)
-	z_weighted=calc_mean(z,d,sum_d)
+        sum_d=np.sum(d)
+        
+        x_weighted=calc_mean(x,d,sum_d)
+        y_weighted=calc_mean(y,d,sum_d)
+        z_weighted=calc_mean(z,d,sum_d)
 
 
-	xyz_matrix=[]
+        xyz_matrix=[]
 
-	for i in range(len(x_weighted)):
+        for i in range(len(x_weighted)):
 
-		xyz_matrix.append([x_weighted[i], y_weighted[i], z_weighted[i]])
+                xyz_matrix.append([x_weighted[i], y_weighted[i], z_weighted[i]])
 
-	(u,s,v)=np.linalg.svd(xyz_matrix)
+        (u,s,v)=np.linalg.svd(xyz_matrix)
 
-	principal_axis=[v[0,0]+x_soma, v[1,0]+y_soma, v[2,0]+z_soma]
-	soma_root=[x_soma, y_soma, z_soma]
-	
-	return principal_axis, soma_root
+        principal_axis=[v[0,0]+x_soma, v[1,0]+y_soma, v[2,0]+z_soma]
+        soma_root=[x_soma, y_soma, z_soma]
+        
+        return principal_axis, soma_root
