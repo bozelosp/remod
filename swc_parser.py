@@ -323,6 +323,16 @@ def toward_soma_map(dendrite_roots: Iterable[int], soma_paths: Dict[int, List[in
         toward_soma[dend] = soma_paths[dend][1] if len(soma_paths[dend]) > 1 else 1
     return toward_soma
 
+
+class SWCParser:
+    """Class wrapper around :func:`parse_swc_file`."""
+
+    def __init__(self, file_path: str) -> None:
+        self.file_path = file_path
+
+    def parse(self):
+        return parse_swc_file(self.file_path)
+
 def parse_swc_file(file_path: str):
     """Parse ``file_path`` and return all extracted morphology information."""
     # Combines all helper functions into a convenient one-call parser
