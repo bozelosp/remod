@@ -1,5 +1,6 @@
 import re
 from math import cos, sin, pi, sqrt, radians, degrees
+from utils import distance
 
 fname='hi.txt'
 
@@ -21,10 +22,6 @@ for line in lines:
 
 		mylist.append([x,y,z])
 
-def distance(x1,x2,y1,y2,z1,z2): #returns the euclidean distance between two 3d points
-
-	dist = sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-	return dist
 
 dist_sum=[]
 

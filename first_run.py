@@ -3,6 +3,7 @@ from neuron_visualization import *
 from statistics_swc import *
 from random_sampling import *
 from actions_swc import *
+from utils import round_to
 import sys
 import numpy as np
 import os
@@ -22,10 +23,6 @@ def remove_empty_keys(d):
     	if list(l) == [0] * len(l):
     		del d[k]
     return d
-
-def round_to(x, rounder): # return the nearest number multiplied by 'rounder'
-
-	return round(x/rounder)*rounder
 
 def average_list(l):
 	my_sum=0
