@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use REMOD, cite the article in preferred-citation."
+title: REMOD
+type: software
+authors:
+  - family-names: Bozelos
+    given-names: Panagiotis
+  - family-names: Stefanou
+    given-names: Stefanos S.
+  - family-names: Bouloukakis
+    given-names: Georgios
+  - family-names: Melachrinos
+    given-names: Constantinos
+  - family-names: Poirazi
+    given-names: Panayiota
+repository-code: "https://github.com/bozelosp/remod"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Bozelos
+      given-names: Panagiotis
+    - family-names: Stefanou
+      given-names: Stefanos S.
+    - family-names: Bouloukakis
+      given-names: Georgios
+    - family-names: Melachrinos
+      given-names: Constantinos
+    - family-names: Poirazi
+      given-names: Panayiota
+  title: "REMOD: A Tool for Analyzing and Remodeling the Dendritic Architecture of Neural Cells"
+  journal: Frontiers in Neuroanatomy
+  volume: 9
+  start: 156
+  year: 2015
+  doi: "10.3389/fnana.2015.00156"
+  url: "https://doi.org/10.3389/fnana.2015.00156"

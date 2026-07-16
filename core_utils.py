@@ -1,268 +1,191 @@
+"""Shared geometry, selection, and command-line argument helpers."""
+
 from __future__ import annotations
 
 import argparse
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from math import floor, hypot, isfinite
 from pathlib import Path
-from statistics import mean, pstdev
-import re
-import numpy as np
+import random
 
 
+def distance(x1, x2, y1, y2, z1, z2) -> float:
+    """Return the Euclidean distance between two three-dimensional points."""
 
-def distance(x1, x2, y1, y2, z1, z2):
-    """Return the Euclidean distance between two 3D points."""
-    diff = np.array([x2 - x1, y2 - y1, z2 - z1], dtype=float)
-    return float(np.linalg.norm(diff))
-
-
-def round_to(x, rounder):
-    """Return the nearest multiple of ``rounder``."""
-    # Avoids floating point rounding issues when formatting output
-    return round(x / rounder) * rounder
-
-
-
-def weighted_sample(population: Sequence, weights: Sequence[float], k: int):
-    """Return ``k`` unique items from ``population`` weighted by ``weights``."""
-
-    if k <= 0 or not population:
-        return []
-    probs = np.array(weights, dtype=float)
-    probs = probs / probs.sum()
-    rng = np.random.default_rng()
-    idx = rng.choice(len(population), size=min(k, len(population)), replace=False, p=probs)
-    return [population[i] for i in idx]
+    value = hypot(
+        float(x2) - float(x1),
+        float(y2) - float(y1),
+        float(z2) - float(z1),
+    )
+    if not isfinite(value):
+        raise ValueError("coordinate magnitude exceeds finite numeric range")
+    return value
 
 
 def sample_random_dendrites(
     options: Sequence[int],
     label: str,
-    dendrite_samples: dict[int, Sequence],
+    dendrite_samples: Mapping[int, Sequence],
     ratio: float,
+    rng: random.Random | None = None,
 ) -> tuple[list[int], str]:
-    """Return a random selection of dendrites respecting ``ratio``."""
-    valid = np.array([d for d in options if len(dendrite_samples[d]) >= 3])
-    num = int(round_to(len(valid) * ratio, 1))
-    num = max(0, min(num, len(valid)))
-    if num:
-        selection = np.random.default_rng().choice(valid, size=num, replace=False).tolist()
-    else:
-        selection = []
-    which = f"random {label} ({ratio * 100}% ) "
-    return selection, which
+    """Uniformly sample a ratio of valid segments without replacement.
 
+    The sample size is rounded to the nearest integer, with half values rounded
+    upward.  Passing a :class:`random.Random` instance makes selection
+    repeatable.
+    """
 
-def ensure_dir(path: Path | str) -> None:
-    """Create ``path`` if it is a directory else its parent directory."""
-    p = Path(path)
-    target = p if not p.suffix else p.parent
-    target.mkdir(parents=True, exist_ok=True)
-
-
-
-
-def average_list(values):
-    """Return the mean and standard deviation of ``values``."""
-    # Avoid statistics errors on empty sequences
-    if not values:
-        return 0.0, 0.0
-    return mean(values), pstdev(values)
-
-
-def average_dict(data):
-    """Replace lists in ``data`` with (mean, stdev) pairs and return it."""
-    # Mutates the dict in place for convenience
-    for key, values in data.items():
-        data[key] = average_list(values)
-    return data
-
-
-def remove_empty_keys(data):
-    """Return ``data`` without keys that have empty lists."""
-    # Useful when collecting only non-empty measurements
-    return {k: v for k, v in data.items() if v}
-
-
-def parse_plot_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`plot_statistics`-style scripts."""
-    parser = argparse.ArgumentParser(
-        description="Generate summary plots from statistics files."
-    )
-    parser.add_argument(
-        "directory",
-        type=Path,
-        help="Path to the directory containing statistics files.",
-    )
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--average", action="store_true", help="Plot averaged statistics.")
-    mode.add_argument(
-        "--compare", action="store_true", help="Plot comparison statistics between groups."
-    )
-    ns = parser.parse_args(args)
-    if not ns.directory.is_dir():
-        parser.error(f"{ns.directory} is not a valid directory")
-    return ns
+    if not isfinite(ratio) or not 0 <= ratio <= 1:
+        raise ValueError("random selection ratio must be between 0 and 1")
+    valid = sorted({int(root) for root in options if int(root) in dendrite_samples})
+    count = floor(len(valid) * ratio + 0.5)
+    count = max(0, min(count, len(valid)))
+    selection = sorted((rng or random).sample(valid, count)) if count else []
+    return selection, f"random {label} ({ratio * 100:g}%)"
 
 
 def parse_analyze_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`remod_cli` analyze commands."""
+    """Parse arguments for the ``remod_cli.py analyze`` command."""
+
     parser = argparse.ArgumentParser(
-        description="Compute morphometric statistics for SWC files.",
+        description="Compute morphometric statistics for SWC files."
     )
+    parser.add_argument("directory", type=Path, help="Directory containing SWC files")
+    parser.add_argument("files", help="Comma-separated SWC file names")
     parser.add_argument(
-        "directory",
-        type=Path,
-        help="Directory containing SWC files.",
+        "--sholl-step",
+        type=float,
+        default=20.0,
+        help="Radial Sholl step in micrometers (default: 20)",
     )
-    parser.add_argument(
-        "files",
-        help="Comma separated list of SWC file names.",
-    )
-    ns = parser.parse_args(args)
-    if not ns.directory.is_dir():
-        parser.error(f"{ns.directory} is not a valid directory")
-    return ns
+    options = parser.parse_args(args)
+    if not options.directory.is_dir():
+        parser.error(f"{options.directory} is not a directory")
+    if not isfinite(options.sholl_step) or options.sholl_step <= 0:
+        parser.error("--sholl-step must be a positive finite number")
+    return options
 
 
 def parse_edit_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`remod_cli` edit commands."""
+    """Parse and validate arguments for ``remod_cli.py edit``."""
+
     parser = argparse.ArgumentParser(
-        description="Apply remodeling actions to a SWC file.",
-    )
-    parser.add_argument("--directory", required=True, type=Path,
-                        help="Base directory for the SWC file")
-    parser.add_argument("--file-name", required=True, help="SWC filename")
-    parser.add_argument("--who", required=True, help="Target dendrite selection")
-    parser.add_argument("--random-ratio", type=float, default=0.0,
-                        help="Ratio for random selection (percent)")
-    parser.add_argument(
-        "--manual-dendrites",
-        dest="manual_dendrites",
-        default="none",
-        help="Comma separated manual dendrite ids",
-    )
-    parser.add_argument("--action", required=True, help="Remodeling action")
-    parser.add_argument(
-        "--hm-choice",
-        dest="extent_unit",
-        required=True,
-        help="percent or micrometers for extent",
+        description="Apply one remodeling operation to an SWC file."
     )
     parser.add_argument(
-        "--amount",
-        type=float,
-        default=None,
-        help="Extent of the action",
-    )
-    parser.add_argument(
-        "--var-choice",
-        dest="radius_unit",
-        required=True,
-        help="percent or micrometers for radius change",
-    )
-    parser.add_argument(
-        "--radius-change",
-        type=float,
-        default=None,
-        help="Extent of radius change",
-    )
-    ns = parser.parse_args(args)
-    if not ns.directory.is_dir():
-        parser.error(f"{ns.directory} is not a valid directory")
-    return ns
-
-
-def parse_merge_args(args: list[str] | None = None):
-    """Return parsed CLI options for :mod:`merge_statistics` commands."""
-    parser = argparse.ArgumentParser(
-        description="Merge statistic files from different runs",
-    )
-    sub = parser.add_subparsers(dest="command", required=True)
-
-    p_simple = sub.add_parser(
-        "simple",
-        help="Combine raw statistics using before/ and after/ subdirectories",
-    )
-    p_simple.add_argument(
         "--directory",
         required=True,
         type=Path,
-        help="Base directory containing before/ and after/ folders",
+        help="Directory containing the SWC file",
     )
-
-    p_smart = sub.add_parser(
-        "smart",
-        help="Merge average statistics and generate plots",
+    parser.add_argument("--file-name", required=True, help="Relative SWC file name")
+    parser.add_argument(
+        "--who",
+        required=True,
+        choices=[
+            "all_dendrites",
+            "all_terminal",
+            "all_apical",
+            "apical_terminal",
+            "all_basal",
+            "basal_terminal",
+            "random_all",
+            "random_apical",
+            "random_basal",
+            "manual",
+        ],
+        help="Segment selector",
     )
-    p_smart.add_argument("--before-dir", required=True, type=Path,
-                         help="Directory with files before editing")
-    p_smart.add_argument("--after-dir", required=True, type=Path,
-                         help="Directory with files after editing")
-    p_smart.add_argument("--output-dir", required=True, type=Path,
-                         help="Destination directory for merged files")
+    parser.add_argument(
+        "--random-ratio",
+        type=float,
+        default=0.0,
+        help="Percentage of eligible terminal segments selected at random",
+    )
+    parser.add_argument(
+        "--manual-dendrites",
+        default="none",
+        help="Comma-separated segment-root sample IDs for --who manual",
+    )
+    parser.add_argument(
+        "--action",
+        required=True,
+        choices=["none", "shrink", "remove", "extend", "branch", "scale"],
+        help="Structural action; use none for a radius-only edit",
+    )
+    parser.add_argument(
+        "--extent-unit",
+        "--hm-choice",
+        dest="extent_unit",
+        default="percent",
+        choices=["percent", "micrometers"],
+        help="Unit for --amount (default: percent)",
+    )
+    parser.add_argument("--amount", type=float, help="Structural action amount")
+    parser.add_argument(
+        "--radius-unit",
+        "--var-choice",
+        dest="radius_unit",
+        default="percent",
+        choices=["percent", "micrometers"],
+        help="Unit for --radius-change (default: percent)",
+    )
+    parser.add_argument("--radius-change", type=float, help="Radius adjustment")
+    parser.add_argument(
+        "--seed", type=int, help="Seed for random selection and generated geometry"
+    )
+    options = parser.parse_args(args)
 
-    return parser.parse_args(args)
+    if not options.directory.is_dir():
+        parser.error(f"{options.directory} is not a directory")
+    file_name = Path(options.file_name)
+    if file_name.name != options.file_name or file_name.suffix.lower() != ".swc":
+        parser.error("--file-name must be a relative SWC file name")
+    source = options.directory / options.file_name
+    if not source.is_file():
+        parser.error(f"{source} is not a file")
 
+    if not isfinite(options.random_ratio) or not 0 <= options.random_ratio <= 100:
+        parser.error("--random-ratio must be between 0 and 100")
+    random_selector = options.who.startswith("random_")
+    if random_selector and options.random_ratio <= 0:
+        parser.error("a random selector requires --random-ratio greater than 0")
+    if not random_selector and options.random_ratio != 0:
+        parser.error("--random-ratio is used only with a random selector")
+    if options.who != "manual" and options.manual_dendrites.lower() != "none":
+        parser.error("--manual-dendrites is used only with --who manual")
 
-def shrink_warning(who, dist, amount):
-    """Return dendrites shorter than ``amount`` and a status flag."""
-    not_applicable = []
-    status = False
-    for dend in who:
-        if dist[dend] < int(amount):
-            not_applicable.append(dend)
-            status = True
-    return status, not_applicable
+    requires_amount = options.action not in {"none", "remove"}
+    if requires_amount and options.amount is None:
+        parser.error(f"--amount is required for action {options.action}")
+    if options.action in {"none", "remove"} and options.amount is not None:
+        parser.error(f"--amount is not used by action {options.action}")
+    if options.amount is not None and (
+        not isfinite(options.amount) or options.amount <= 0
+    ):
+        parser.error("--amount must be a positive finite number")
+    if (
+        options.action == "shrink"
+        and options.extent_unit == "percent"
+        and options.amount >= 100
+    ):
+        parser.error("percentage shrink must be less than 100")
+    if options.action == "scale" and options.extent_unit != "percent":
+        parser.error("scale accepts only a percentage factor")
 
-
-def check_indices(new_lines):
-    """Print a warning if sample numbers are not continuous."""
-    ilist = []
-    for line in new_lines:
-        if line.startswith("#"):
-            continue
-        index = re.search(r"(\d+) (\d+) (.*?) (.*?) (.*?) (.*?) (-?\d+)", line)
-        if index:
-            i = int(index.group(1))
-            ilist.append([i, line])
-
-    status = True
-    for i in range(len(ilist) - 1):
-        if ilist[i + 1][0] - ilist[i][0] != 1:
-            print(
-                "Error! Non-continuity of sample numbers found at:",
-                ilist[i][0],
-                ilist[i][1],
-            )
-            status = False
-
-    if status:
-        return
+    if options.action == "none" and options.radius_change is None:
+        parser.error("action none requires --radius-change")
+    if options.action == "remove" and options.radius_change is not None:
+        parser.error("--radius-change cannot be combined with remove")
+    if options.radius_change is not None and not isfinite(options.radius_change):
+        parser.error("--radius-change must be finite")
+    return options
 
 
 __all__ = [
     "distance",
-    "round_to",
-    "weighted_sample",
-    "sample_random_dendrites",
-    "ensure_dir",
-    "average_list",
-    "average_dict",
-    "remove_empty_keys",
-    "parse_plot_args",
     "parse_analyze_args",
     "parse_edit_args",
-    "parse_merge_args",
-    "shrink_warning",
-    "check_indices",
+    "sample_random_dendrites",
 ]
-
-
-class CLIParsers:
-    """Class-based accessors for the CLI parsing helpers."""
-
-    parse_plot_args = staticmethod(parse_plot_args)
-    parse_analyze_args = staticmethod(parse_analyze_args)
-    parse_edit_args = staticmethod(parse_edit_args)
-    parse_merge_args = staticmethod(parse_merge_args)
-

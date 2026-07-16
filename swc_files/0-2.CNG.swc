@@ -1,11 +1,8 @@
-# SWC to SWC conversion from L-Measure. Sridevi Polavaram: spolavar@gmu.edu
-# Original fileName:/cng_repository/Soumya/LM_Automated_Testing_Enviornment/Test_Lm3.7.2_10062011_SG_Linux_NMOConv6/TestResults/LoadTest/test_4/0-2.CNG.swc
-#
-# Original file 0-2.ASC.swc edited by Duncan Donohue using StdSwc version 1.31 on 12/19/07.
-# Irregularities and fixes documented in 0-2.ASC.swc.std.  See StdSwc1.31.doc for more information.
-#
-# Neurolucida to SWC conversion from L-Measure. R. Scorcioni: rscorcio@gmu.edu
-# Original fileName:C:\Documents and Settings\Duncan Donohue\Desktop\Smith Data\asc\0-2.ASC
+# NeuroMorpho.Org Smith archive: NMO_01999 (neuron 0-2).
+# Conversion and standardization: Sridevi Polavaram, R. Scorcioni, Duncan Donohue.
+# Tools recorded in the source header: L-Measure, StdSwc 1.31, Neurolucida conversion.
+# Reconstruction reference: https://doi.org/10.1002/syn.20467
+# NeuroMorpho.Org metadata: https://neuromorpho.org/api/neuron/id/1999
 #
  1 1 -31.96 -17.39 -3.5 7.35611 -1
  2 1 -31.96 -10.04 -3.5 7.35611 1

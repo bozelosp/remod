@@ -1,229 +1,316 @@
-"""Helpers for parsing and analysing SWC morphology files.
+"""Parse, validate, segment, and renumber SWC morphologies.
 
-The module also provides :func:`index_reassign` for renumbering samples after
-editing a morphology.
+REMOD treats a dendritic segment as the samples between two topological events:
+the soma, a branch point, or a terminal tip.  The first sample after the soma or
+a branch point is the segment identifier used by the remodeling interface.
 """
 
+from __future__ import annotations
+
 from math import pi
-from typing import Dict, Iterable, List, Tuple, Set
+from numbers import Integral, Real
 from pathlib import Path
+from typing import Dict, Iterable, List, Sequence, Set, Tuple
 
 import numpy as np
 
 from core_utils import distance
 from file_io import read_lines
 
+Sample = List[float]
+SampleMap = Dict[int, Sample]
 
-def read_swc_lines(file_path: str) -> List[str]:
-    """Return all lines from *file_path* without trailing newlines."""
-    # Use the helper from :mod:`file_io` for consistency
+
+def read_swc_lines(file_path: str | Path) -> List[str]:
+    """Return the lines in an SWC file without trailing newline characters."""
+
     return read_lines(Path(file_path))
 
-def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], Dict[int, List[float]]]:
-    """Split comment lines from SWC sample data.
 
-    Parameters
-    ----------
-    swc_lines:
-        Iterable containing the lines of an SWC file.
+def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], SampleMap]:
+    """Parse comments and the seven standard SWC columns.
 
-    Returns
-    -------
-    tuple
-        ``(comment_lines, samples)`` where ``samples`` maps a sample number to
-        ``[i, t, x, y, z, radius, parent]``.
+    Blank lines are ignored.  Malformed data rows and duplicate sample IDs are
+    rejected instead of being silently discarded.
     """
 
-    # Maintain original comments separately from numeric data
-    comment_lines: List[str] = []
-    samples: Dict[int, List[float]] = {}
-
-    for line in swc_lines:
+    comments: List[str] = []
+    samples: SampleMap = {}
+    for line_number, raw_line in enumerate(swc_lines, start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
         if line.startswith("#"):
-            comment_lines.append(line)
+            comments.append(raw_line.rstrip("\n"))
             continue
 
-        parts = line.split()
-        if len(parts) < 7:
-            continue
-
+        fields = line.split()
+        if len(fields) != 7:
+            raise ValueError(
+                f"line {line_number}: expected 7 SWC columns, got {len(fields)}"
+            )
         try:
-            i = int(parts[0])
-            t = int(parts[1])
-            x = float(parts[2])
-            y = float(parts[3])
-            z = float(parts[4])
-            radius = float(parts[5])
-            parent = int(parts[6])
-        except ValueError:
-            # Skip malformed lines
-            continue
+            sample_id = int(fields[0])
+            sample_type = int(fields[1])
+            x, y, z, radius = map(float, fields[2:6])
+            parent_id = int(fields[6])
+        except ValueError as exc:
+            raise ValueError(f"line {line_number}: invalid SWC value") from exc
 
-        samples[i] = [i, t, x, y, z, radius, parent]
+        if sample_id <= 0:
+            raise ValueError(f"line {line_number}: sample ID must be positive")
+        if sample_id in samples:
+            raise ValueError(f"line {line_number}: duplicate sample ID {sample_id}")
+        if not np.isfinite([x, y, z, radius]).all():
+            raise ValueError(
+                f"line {line_number}: coordinates and radius must be finite"
+            )
+        if radius <= 0:
+            raise ValueError(f"line {line_number}: radius must be positive")
+        samples[sample_id] = [
+            sample_id,
+            sample_type,
+            x,
+            y,
+            z,
+            radius,
+            parent_id,
+        ]
 
-    return comment_lines, samples
+    if not samples:
+        raise ValueError("SWC file contains no samples")
+    return comments, samples
 
-def max_sample_id(samples: Dict[int, List[float]]) -> int:
-    """Return the highest sample number present in ``samples``."""
-    # Useful when generating new identifiers
+
+def _children_map(samples: SampleMap) -> Dict[int, List[int]]:
+    children: Dict[int, List[int]] = {sample_id: [] for sample_id in samples}
+    for sample_id, sample in samples.items():
+        parent_id = int(sample[6])
+        if parent_id in children:
+            children[parent_id].append(sample_id)
+    for child_ids in children.values():
+        child_ids.sort()
+    return children
+
+
+def validate_samples(samples: SampleMap) -> None:
+    """Validate SWC rows, parent references, roots, and acyclicity."""
+
+    if not samples:
+        raise ValueError("SWC morphology contains no samples")
+    for key, sample in samples.items():
+        if len(sample) != 7:
+            raise ValueError(f"sample {key} does not contain seven SWC values")
+        if isinstance(sample[0], bool) or not isinstance(sample[0], Integral):
+            raise ValueError(f"sample {key} has a non-integer sample ID")
+        sample_id = int(sample[0])
+        if sample_id <= 0 or sample_id != key:
+            raise ValueError(
+                f"sample map key {key} does not match sample ID {sample_id}"
+            )
+        if isinstance(sample[1], bool) or not isinstance(sample[1], Integral):
+            raise ValueError(f"sample {sample_id} has a non-integer SWC type")
+        if isinstance(sample[6], bool) or not isinstance(sample[6], Integral):
+            raise ValueError(f"sample {sample_id} has a non-integer parent ID")
+        numeric_values = sample[2:6]
+        if any(
+            isinstance(value, bool) or not isinstance(value, Real)
+            for value in numeric_values
+        ):
+            raise ValueError(
+                f"sample {sample_id} has a non-numeric coordinate or radius"
+            )
+        if not np.isfinite(numeric_values).all():
+            raise ValueError(
+                f"sample {sample_id} has a non-finite coordinate or radius"
+            )
+        if float(sample[5]) <= 0:
+            raise ValueError(f"sample {sample_id} radius must be positive")
+
+    roots = []
+    for sample_id, sample in samples.items():
+        parent_id = int(sample[6])
+        if parent_id == -1:
+            roots.append(sample_id)
+        elif parent_id == sample_id:
+            raise ValueError(f"sample {sample_id} cannot be its own parent")
+        elif parent_id not in samples:
+            raise ValueError(f"sample {sample_id} refers to missing parent {parent_id}")
+
+    if not roots:
+        raise ValueError("SWC morphology has no root sample")
+    if len(roots) != 1:
+        raise ValueError(
+            f"SWC morphology must contain exactly one root sample, found {len(roots)}"
+        )
+    non_soma_roots = [root for root in roots if int(samples[root][1]) != 1]
+    if non_soma_roots:
+        raise ValueError(f"non-soma root sample(s): {non_soma_roots}")
+
+    for start in samples:
+        current = start
+        seen: Set[int] = set()
+        while current != -1:
+            if current in seen:
+                raise ValueError(
+                    f"cycle detected while tracing sample {start} to the soma"
+                )
+            seen.add(current)
+            current = int(samples[current][6])
+
+
+def max_sample_id(samples: SampleMap) -> int:
+    """Return the largest sample ID."""
+
     return max(samples)
 
-def find_branch_points(samples: Dict[int, List[float]]):
-    """Return branch point information from ``samples``."""
-    # Count how many children each node has to detect branches
 
-    soma_samples = [p for p in samples.values() if p[1] == 1]
+def find_branch_points(samples: SampleMap):
+    """Return true branch-point sample IDs grouped by SWC type."""
 
-    child_count: Dict[int, int] = {}
-    for p in samples.values():
-        parent = int(p[6])
-        if p[1] not in [10]:
-            child_count[parent] = child_count.get(parent, 0) + 1
-
-    branch_points = [i for i, count in child_count.items() if count > 1]
-
-    axon_branches = [i for i in branch_points if samples[i][1] == 2]
-    basal_branches = [i for i in branch_points if samples[i][1] == 3]
-    apical_branches = [i for i in branch_points if samples[i][1] == 4]
-    soma_branches = [i for i in branch_points if samples[i][1] == 1]
-
-    # only dendritic branch points are returned in ``branch_points``
-    dendritic_branches = sorted(set(basal_branches + apical_branches))
-
+    children = _children_map(samples)
+    branch_points = [
+        sample_id
+        for sample_id, child_ids in children.items()
+        if len([child for child in child_ids if int(samples[child][1]) != 1]) > 1
+    ]
+    branch_points.sort()
+    axon = [sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 2]
+    basal = [
+        sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 3
+    ]
+    apical = [
+        sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 4
+    ]
+    soma = [sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 1]
+    dendritic = basal + apical
     return (
-        dendritic_branches,
-        axon_branches,
-        basal_branches,
-        apical_branches,
-        soma_branches,
-        soma_samples,
+        dendritic,
+        axon,
+        basal,
+        apical,
+        soma,
+        [sample for sample in samples.values() if int(sample[1]) == 1],
     )
 
-def parent_map(samples: Dict[int, List[float]]) -> Dict[int, int]:
-    """Return a mapping from sample number to its parent sample."""
-    # Enables quick lookup of each segment's parent
-    return {int(i): int(val[6]) for i, val in samples.items()}
 
-def sort_dendrites(branch_points: Iterable[int]) -> List[int]:
-    """Return a sorted list of dendrite starting indices."""
-    # Sorting ensures deterministic traversal order
-    return sorted(branch_points)
+def parent_map(samples: SampleMap) -> Dict[int, int]:
+    """Return a sample-to-parent mapping."""
+
+    return {sample_id: int(sample[6]) for sample_id, sample in samples.items()}
+
+
+def segment_roots(samples: SampleMap) -> List[int]:
+    """Return the first sample ID of every non-soma neurite segment."""
+
+    children = _children_map(samples)
+    roots: List[int] = []
+    for sample_id, sample in samples.items():
+        if int(sample[1]) == 1:
+            continue
+        parent_id = int(sample[6])
+        parent = samples[parent_id]
+        non_soma_siblings = [
+            child for child in children[parent_id] if int(samples[child][1]) != 1
+        ]
+        if (
+            int(parent[1]) == 1
+            or len(non_soma_siblings) != 1
+            or int(parent[1]) != int(sample[1])
+        ):
+            roots.append(sample_id)
+    return sorted(roots)
+
 
 def collect_dendrite_sample_ids(
-    dendrite_roots: Iterable[int],
-    samples: Dict[int, List[float]],
+    dendrite_roots: Iterable[int], samples: SampleMap
 ) -> Dict[int, List[int]]:
-    """Return lists of sample numbers for each dendrite starting at ``dendrite_roots``."""
-    # Walk down from each starting segment until a branch is encountered
+    """Map each segment root to its ordered samples."""
 
-    # build parent -> children mapping once
-    child_map: Dict[int, List[int]] = {}
-    for idx, vals in samples.items():
-        parent = int(vals[6])
-        child_map.setdefault(parent, []).append(idx)
-
-    sample_id_map: Dict[int, List[int]] = {}
-    for start in dendrite_roots:
-        dendrite = [start]
-        current = start
+    roots = set(dendrite_roots)
+    children = _children_map(samples)
+    result: Dict[int, List[int]] = {}
+    for root in sorted(roots):
+        segment = [root]
+        current = root
         while True:
-            next_children = child_map.get(current, [])
-            if len(next_children) != 1:
+            neurite_children = [
+                child for child in children[current] if int(samples[child][1]) != 1
+            ]
+            if len(neurite_children) != 1 or neurite_children[0] in roots:
                 break
-            nxt = next_children[0]
-            if (current in dendrite_roots and current > start) or (
-                nxt in dendrite_roots and nxt > start
-            ):
-                break
-            dendrite.append(nxt)
-            current = nxt
+            current = neurite_children[0]
+            segment.append(current)
+        result[root] = segment
+    return result
 
-        sample_id_map[start] = dendrite
 
-    return sample_id_map
+def classify_dendrites(dendrite_roots: Iterable[int], samples: SampleMap):
+    """Group segment roots by SWC neurite type."""
 
-def classify_dendrites(dendrite_roots: Iterable[int], samples: Dict[int, List[float]]):
-    """Classify dendrites by type and assign readable names."""
-
-    dend_names: Dict[int, str] = {}
-    axon: List[int] = []
-    basal: List[int] = []
-    apical: List[int] = []
-    undefined_dendrites: List[int] = []
-
-    undefined_index = axon_index = basal_index = apical_index = 0
-
-    for idx in dendrite_roots:
-        p_type = samples[idx][1]
-        if p_type == 2:
-            dend_names[idx] = f"axon[{axon_index}]"
-            axon.append(idx)
-            axon_index += 1
-        elif p_type == 3:
-            dend_names[idx] = f"dend[{basal_index}]"
-            basal.append(idx)
-            basal_index += 1
-        elif p_type == 4:
-            dend_names[idx] = f"apic[{apical_index}]"
-            apical.append(idx)
-            apical_index += 1
+    names: Dict[int, str] = {}
+    groups = {2: [], 3: [], 4: []}
+    undefined: List[int] = []
+    prefixes = {2: "axon", 3: "dend", 4: "apic"}
+    for root in sorted(dendrite_roots):
+        sample_type = int(samples[root][1])
+        if sample_type in groups:
+            group = groups[sample_type]
+            names[root] = f"{prefixes[sample_type]}[{len(group)}]"
+            group.append(root)
         else:
-            dend_names[idx] = f"undef[{undefined_index}]"
-            undefined_dendrites.append(idx)
-            undefined_index += 1
+            names[root] = f"undef[{len(undefined)}]"
+            undefined.append(root)
+    return names, groups[2], groups[3], groups[4], undefined
 
-    return dend_names, axon, basal, apical, undefined_dendrites
 
 def collect_dendrite_samples(
     dendrite_roots: Iterable[int],
     sample_id_map: Dict[int, List[int]],
-    samples: Dict[int, List[float]],
-) -> Dict[int, List[List[float]]]:
-    """Collect full sample records for every dendrite."""
-    # Samples are returned in traversal order for later analysis
+    samples: SampleMap,
+) -> Dict[int, List[Sample]]:
+    """Return copies of the sample rows in each segment."""
 
-    dendrite_records: Dict[int, List[List[float]]] = {}
-    for idx in dendrite_roots:
-        pts = [samples[k][:7] for k in sample_id_map[idx]]
-        dendrite_records[idx] = pts
-    return dendrite_records
+    return {
+        root: [samples[sample_id][:] for sample_id in sample_id_map[root]]
+        for root in dendrite_roots
+    }
+
 
 def paths_to_soma(
     dendrite_roots: Iterable[int],
-    samples: Dict[int, List[float]],
+    samples: SampleMap,
     sample_id_map: Dict[int, List[int]],
-    soma_samples: Iterable[List[float]],
+    soma_samples: Iterable[Sample],
 ) -> Dict[int, List[int]]:
-    """Return the pathway from each dendrite to the soma."""
-    # Walk up the sample tree, recording only dendrite roots.  Intermediate
-    # sample IDs do not have entries in the per-dendrite statistics mappings.
+    """Return segment-root paths ordered from each segment toward the soma."""
 
-    soma_set = {s[0] for s in soma_samples}
-    root_set = set(dendrite_roots)
-    soma_paths: Dict[int, List[int]] = {}
-
-    for dend in root_set:
-        current = dend
-        pathway = [current]
-        visited = {current}
-        while True:
-            parent = int(samples[current][6])
-            if parent in soma_set or parent == -1:
-                break
-            if parent not in samples:
+    roots = set(dendrite_roots)
+    sample_to_segment = {
+        sample_id: root
+        for root, sample_ids in sample_id_map.items()
+        for sample_id in sample_ids
+    }
+    soma_ids = {int(sample[0]) for sample in soma_samples}
+    paths: Dict[int, List[int]] = {}
+    for root in sorted(roots):
+        path = [root]
+        parent_id = int(samples[root][6])
+        while parent_id not in soma_ids and parent_id != -1:
+            parent_segment = sample_to_segment.get(parent_id)
+            if parent_segment is None:
                 raise ValueError(
-                    f"sample {current} refers to missing parent {parent}"
+                    f"sample {root} cannot be connected to a segment through parent {parent_id}"
                 )
-            if parent in visited:
-                raise ValueError(f"cycle detected while tracing sample {dend} to soma")
-            visited.add(parent)
-            current = parent
-            if current in root_set:
-                pathway.append(current)
+            if parent_segment in path:
+                raise ValueError(
+                    f"cycle detected while tracing segment {root} to the soma"
+                )
+            path.append(parent_segment)
+            parent_id = int(samples[parent_segment][6])
+        paths[root] = path
+    return paths
 
-        soma_paths[dend] = pathway
-
-    return soma_paths
 
 def terminal_dendrites(
     dendrite_roots: Iterable[int],
@@ -231,159 +318,197 @@ def terminal_dendrites(
     basal: Iterable[int],
     apical: Iterable[int],
 ) -> Tuple[List[int], List[int], List[int]]:
-    """Return the terminal dendrites grouped by type."""
-    # A dendrite is terminal if it appears only once in any soma path
+    """Return terminal dendritic segments grouped by region."""
 
-    appearances = {d: 0 for d in dendrite_roots}
-    for chain in soma_paths.values():
-        for node in chain:
-            if node in appearances:
-                appearances[node] += 1
+    roots = list(dendrite_roots)
+    nonterminal = {segment for path in soma_paths.values() for segment in path[1:]}
+    terminals = [root for root in roots if root not in nonterminal]
+    basal_set, apical_set = set(basal), set(apical)
+    dendritic = [root for root in terminals if root in basal_set or root in apical_set]
+    return (
+        dendritic,
+        [root for root in dendritic if root in basal_set],
+        [root for root in dendritic if root in apical_set],
+    )
 
-    all_terminal = [d for d, c in appearances.items() if c == 1 and d != 1]
-    basal_terminal = [x for x in all_terminal if x in set(basal)]
-    apical_terminal = [x for x in all_terminal if x in set(apical)]
-
-    return all_terminal, basal_terminal, apical_terminal
 
 def build_descendant_map(
     dendrite_roots: Iterable[int],
     all_terminal: Iterable[int],
     soma_paths: Dict[int, List[int]],
 ) -> Dict[int, List[int]]:
-    """Return all descendant dendrites for each non-terminal dendrite."""
+    """Return all downstream segments for each segment root."""
 
+    roots = list(dendrite_roots)
     descendants: Dict[int, List[int]] = {}
-    terminal_set = set(all_terminal)
-    for dend in dendrite_roots:
-        if dend in terminal_set:
-            continue
-        result: Set[int] = set()
-        for seq in soma_paths.values():
-            if dend in seq:
-                start = seq.index(dend)
-                result.update(seq[start:])
-        result.discard(dend)
-        descendants[dend] = list(result)
-
+    for root in roots:
+        downstream: Set[int] = set()
+        for path in soma_paths.values():
+            if root in path:
+                downstream.update(path[: path.index(root)])
+        descendants[root] = sorted(downstream)
     return descendants
 
-def soma_centroid(soma_samples: Iterable[List[float]]) -> List[float]:
-    """Return the centroid of the soma samples."""
-    # Calculates the average position of all soma points
-
-    x = [p[2] for p in soma_samples]
-    y = [p[3] for p in soma_samples]
-    z = [p[4] for p in soma_samples]
-    return [float(np.mean(x)), float(np.mean(y)), float(np.mean(z))]
 
 def dendrite_lengths(
-    coords_map: Dict[int, List[List[float]]],
+    coords_map: Dict[int, List[Sample]],
     dendrite_roots: Iterable[int],
     parents: Dict[int, int],
-    samples: Dict[int, List[float]],
+    samples: SampleMap,
 ) -> Dict[int, float]:
-    """Compute the length of each dendrite."""
-    # Distances are measured between consecutive segments
+    """Return centerline length for each segment."""
 
-    lengths_map: Dict[int, float] = {}
-    for idx in dendrite_roots:
-        dend = coords_map[idx]
-        segs = [samples[parents[dend[0][0]]]] + dend
-        lengths = [
+    result: Dict[int, float] = {}
+    for root in dendrite_roots:
+        segment = coords_map[root]
+        parent = samples[parents[int(segment[0][0])]]
+        points = [parent, *segment]
+        result[root] = sum(
             distance(a[2], b[2], a[3], b[3], a[4], b[4])
-            for a, b in zip(segs[:-1], segs[1:])
-        ]
-        lengths_map[idx] = sum(lengths)
+            for a, b in zip(points, points[1:])
+        )
+        if not np.isfinite(result[root]):
+            raise ValueError(f"segment {root} length is not finite")
+    return result
 
-    return lengths_map
 
 def dendrite_areas(
-    coords_map: Dict[int, List[List[float]]],
+    coords_map: Dict[int, List[Sample]],
     dendrite_roots: Iterable[int],
     parents: Dict[int, int],
-    samples: Dict[int, List[float]],
+    samples: SampleMap,
 ) -> Dict[int, float]:
-    """Approximate surface area for each dendrite."""
-    # Uses a cylinder approximation for every segment
+    """Return lateral surface area using distal-radius cylinders."""
 
-    surface_area_map: Dict[int, float] = {}
-    for idx in dendrite_roots:
-        dend = coords_map[idx]
-        segs = [samples[parents[dend[0][0]]]] + dend
-        contributions = []
-        for a, b in zip(segs[:-1], segs[1:]):
-            radius = b[5]
-            di = distance(a[2], b[2], a[3], b[3], a[4], b[4])
-            contributions.append(2 * pi * radius * di)
-        surface_area_map[idx] = sum(contributions)
-
-    return surface_area_map
-
-def compute_branch_order(dendrite_roots: Iterable[int], soma_paths: Dict[int, List[int]]) -> Dict[int, int]:
-    """Return the branch order (path length) for each dendrite."""
-    # Branch order corresponds to the hop count to the soma
-    return {d: len(soma_paths[d]) for d in dendrite_roots}
-
-def toward_soma_map(dendrite_roots: Iterable[int], soma_paths: Dict[int, List[int]]) -> Dict[int, int]:
-    """Return the next dendrite towards the soma for each dendrite."""
-    # Records the first segment encountered when walking toward the soma
-    toward_soma: Dict[int, int] = {}
-    for dend in dendrite_roots:
-        toward_soma[dend] = soma_paths[dend][1] if len(soma_paths[dend]) > 1 else 1
-    return toward_soma
+    result: Dict[int, float] = {}
+    for root in dendrite_roots:
+        segment = coords_map[root]
+        points = [samples[parents[int(segment[0][0])]], *segment]
+        area = 0.0
+        for proximal, distal in zip(points, points[1:]):
+            length = distance(
+                proximal[2], distal[2], proximal[3], distal[3], proximal[4], distal[4]
+            )
+            if length == 0:
+                continue
+            radius = float(distal[5])
+            area += 2.0 * pi * radius * length
+        if not np.isfinite(area):
+            raise ValueError(f"segment {root} surface area is not finite")
+        result[root] = area
+    return result
 
 
-class SWCParser:
-    """Class wrapper around :func:`parse_swc_file`."""
+def dendrite_volumes(
+    coords_map: Dict[int, List[Sample]],
+    dendrite_roots: Iterable[int],
+    parents: Dict[int, int],
+    samples: SampleMap,
+) -> Dict[int, float]:
+    """Return volume using distal-radius cylinders."""
 
-    def __init__(self, file_path: str) -> None:
-        self.file_path = file_path
+    result: Dict[int, float] = {}
+    for root in dendrite_roots:
+        segment = coords_map[root]
+        points = [samples[parents[int(segment[0][0])]], *segment]
+        volume = 0.0
+        for proximal, distal in zip(points, points[1:]):
+            length = distance(
+                proximal[2], distal[2], proximal[3], distal[3], proximal[4], distal[4]
+            )
+            if length == 0:
+                continue
+            radius = float(distal[5])
+            volume += pi * radius * radius * length
+        if not np.isfinite(volume):
+            raise ValueError(f"segment {root} volume is not finite")
+        result[root] = volume
+    return result
 
-    def parse(self):
-        return parse_swc_file(self.file_path)
 
-def parse_swc_file(file_path: str):
-    """Parse ``file_path`` and return all extracted morphology information."""
-    # Combines all helper functions into a convenient one-call parser
+def compute_branch_order(
+    dendrite_roots: Iterable[int], samples: SampleMap
+) -> Dict[int, int]:
+    """Return one-based centrifugal order from true bifurcations.
+
+    A change in SWC type starts a new reporting segment but does not increase
+    branch order unless the path also crosses a sample with multiple neurite
+    children.
+    """
+
+    children = _children_map(samples)
+    result: Dict[int, int] = {}
+    for root in dendrite_roots:
+        order = 1
+        parent_id = int(samples[root][6])
+        while parent_id != -1:
+            parent = samples[parent_id]
+            neurite_children = [
+                child for child in children[parent_id] if int(samples[child][1]) != 1
+            ]
+            if int(parent[1]) != 1 and len(neurite_children) > 1:
+                order += 1
+            parent_id = int(parent[6])
+        result[root] = order
+    return result
+
+
+def toward_soma_map(
+    dendrite_roots: Iterable[int], soma_paths: Dict[int, List[int]]
+) -> Dict[int, int]:
+    """Return the adjacent segment toward the soma, or ``-1`` for primary segments."""
+
+    return {
+        root: soma_paths[root][1] if len(soma_paths[root]) > 1 else -1
+        for root in dendrite_roots
+    }
+
+
+def parse_swc_file(file_path: str | Path):
+    """Parse and derive the morphology structures used by REMOD.
+
+    The tuple return shape is retained for compatibility with the original
+    command-line implementation.
+    """
 
     swc_lines = read_swc_lines(file_path)
     comment_lines, samples = parse_swc_lines(swc_lines)
+    validate_samples(samples)
     (
         branch_points,
-        axon_branches,
-        basal_branches,
-        apical_branches,
-        soma_branches,
+        axon_branch_points,
+        basal_branch_points,
+        apical_branch_points,
+        soma_branch_points,
         soma_samples,
     ) = find_branch_points(samples)
     parents = parent_map(samples)
-    dendrite_roots = sort_dendrites(branch_points)
-    sample_id_map = collect_dendrite_sample_ids(dendrite_roots, samples)
-    dend_names, axon, basal, apical, undefined_dendrites = classify_dendrites(dendrite_roots, samples)
-    dendrite_records = collect_dendrite_samples(dendrite_roots, sample_id_map, samples)
-    soma_paths = paths_to_soma(dendrite_roots, samples, sample_id_map, soma_samples)
-    all_terminal, basal_terminal, apical_terminal = terminal_dendrites(dendrite_roots, soma_paths, basal, apical)
-    descendants = build_descendant_map(dendrite_roots, all_terminal, soma_paths)
-    lengths = dendrite_lengths(dendrite_records, dendrite_roots, parents, samples)
-    surface_areas = dendrite_areas(dendrite_records, dendrite_roots, parents, samples)
-    max_sample_number = max_sample_id(samples)
-    branch_order_map = compute_branch_order(dendrite_roots, soma_paths)
-    connectivity_map = toward_soma_map(dendrite_roots, soma_paths)
+    all_roots = segment_roots(samples)
+    sample_id_map = collect_dendrite_sample_ids(all_roots, samples)
+    dend_names, axon, basal, apical, undefined = classify_dendrites(all_roots, samples)
+    dendrite_records = collect_dendrite_samples(all_roots, sample_id_map, samples)
+    soma_paths = paths_to_soma(all_roots, samples, sample_id_map, soma_samples)
+    all_terminal, basal_terminal, apical_terminal = terminal_dendrites(
+        all_roots, soma_paths, basal, apical
+    )
+    descendants = build_descendant_map(all_roots, all_terminal, soma_paths)
+    lengths = dendrite_lengths(dendrite_records, all_roots, parents, samples)
+    surface_areas = dendrite_areas(dendrite_records, all_roots, parents, samples)
+    branch_order_map = compute_branch_order(all_roots, samples)
+    connectivity_map = toward_soma_map(all_roots, soma_paths)
     dendrite_roots = basal + apical
-    branch_points = basal_branches + apical_branches
 
     return (
         swc_lines,
         samples,
         comment_lines,
         branch_points,
-        axon_branches,
-        basal_branches,
-        apical_branches,
-        soma_branches,
+        axon_branch_points,
+        basal_branch_points,
+        apical_branch_points,
+        soma_branch_points,
         soma_samples,
-        max_sample_number,
+        max_sample_id(samples),
         dendrite_roots,
         descendants,
         sample_id_map,
@@ -391,7 +516,7 @@ def parse_swc_file(file_path: str):
         axon,
         basal,
         apical,
-        undefined_dendrites,
+        undefined,
         dendrite_records,
         soma_paths,
         all_terminal,
@@ -405,89 +530,90 @@ def parse_swc_file(file_path: str):
     )
 
 
-def _sorted_dendrites(dendrites: Iterable[int], branch_order: Dict[int, int]) -> List[int]:
-    """Return *dendrites* sorted by their branch order."""
-    return sorted(dendrites, key=lambda d: branch_order[d])
+def _format_number(value: float) -> str:
+    return f"{float(value):.15g}"
 
 
-def _renumber_dendrite(
-    dend_id: int,
-    dendrite_samples: Dict[int, List[List[float]]],
-    branch_order: Dict[int, int],
-    connectivity: Dict[int, int],
-    start_index: int,
-    samples: List[List[float]],
-) -> int:
-    """Renumber all samples of a single dendrite."""
+def format_swc_samples(samples: Sequence[Sample]) -> List[str]:
+    """Format sample rows without discarding sub-micrometer precision."""
 
-    order = branch_order[dend_id]
-    dend = dendrite_samples[dend_id]
-
-    previous = None
-    for i, point in enumerate(dend):
-        original_idx = point[0]
-        point[0] = start_index
-
-        if i == 0:
-            if order == 1:
-                point[6] = 1
-            else:
-                parent_dend = connectivity[original_idx]
-                parent_point = dendrite_samples[parent_dend][-1]
-                point[6] = parent_point[0]
-        else:
-            point[6] = previous
-
-        previous = start_index
-        start_index += 1
-        samples.append(point)
-
-    return start_index
-
-
-def index_reassign(
-    dendrite_list: Iterable[int],  # unused parameter kept for backwards compat
-    dendrite_samples: Dict[int, List[List[float]]],
-    branch_order_map: Dict[int, int],
-    connectivity_map: Dict[int, int],
-    axon: Iterable[int],
-    basal: Iterable[int],
-    apical: Iterable[int],
-    undefined_dendrites: Iterable[int],
-    soma_samples: List[List[float]],
-    branch_order_max: int,
-    action: str,
-) -> List[str]:
-    """Return SWC lines with continuous sample numbers for all samples."""
-
-    if action == "branch":
-        branch_order_max += 1
-
-    samples: List[List[float]] = []
-    next_index = 1
-
-    previous = None
-    for i, soma_pt in enumerate(soma_samples):
-        soma_pt[0] = next_index
-        soma_pt[6] = -1 if i == 0 else previous
-        previous = next_index
-        next_index += 1
-        samples.append(soma_pt)
-
-    groups = (axon, basal, apical, undefined_dendrites)
-    for dend_group in groups:
-        for dend_id in _sorted_dendrites(dend_group, branch_order_map):
-            next_index = _renumber_dendrite(
-                dend_id,
-                dendrite_samples,
-                branch_order_map,
-                connectivity_map,
-                next_index,
-                samples,
-            )
-
-    new_lines = [
-        f" {s[0]} {int(s[1])} {s[2]:.2f} {s[3]:.2f} {s[4]:.2f} {s[5]:.2f} {int(s[6])}"
-        for s in samples
+    return [
+        " ".join(
+            [
+                str(int(sample[0])),
+                str(int(sample[1])),
+                _format_number(sample[2]),
+                _format_number(sample[3]),
+                _format_number(sample[4]),
+                _format_number(sample[5]),
+                str(int(sample[6])),
+            ]
+        )
+        for sample in samples
     ]
-    return new_lines
+
+
+def renumber_samples(samples: SampleMap | Iterable[Sample]) -> List[Sample]:
+    """Return copies renumbered in deterministic parent-before-child order.
+
+    SWC identifiers need not be contiguous on input.  Edited output is made
+    contiguous so downstream readers that rely on ordered identifiers can read
+    it without changing the morphology's topology.
+    """
+
+    rows = samples.values() if isinstance(samples, dict) else samples
+    by_id: Dict[int, Sample] = {}
+    for sample in rows:
+        row = list(sample)
+        sample_id = int(row[0])
+        if sample_id in by_id:
+            raise ValueError(f"duplicate sample ID {sample_id}")
+        by_id[sample_id] = row
+
+    if not by_id:
+        raise ValueError("cannot renumber an empty morphology")
+    validate_samples(by_id)
+
+    ordered: List[Sample] = []
+    pending = dict(by_id)
+    emitted: Set[int] = set()
+    while pending:
+        ready = sorted(
+            sample_id
+            for sample_id, sample in pending.items()
+            if int(sample[6]) == -1 or int(sample[6]) in emitted
+        )
+        if not ready:
+            raise ValueError(
+                "cannot renumber morphology with missing parents or a cycle"
+            )
+        for sample_id in ready:
+            ordered.append(pending.pop(sample_id))
+            emitted.add(sample_id)
+
+    mapping = {int(sample[0]): index for index, sample in enumerate(ordered, start=1)}
+    renumbered: List[Sample] = []
+    for sample in ordered:
+        old_parent = int(sample[6])
+        row = sample[:]
+        row[0] = mapping[int(sample[0])]
+        row[6] = -1 if old_parent == -1 else mapping[old_parent]
+        renumbered.append(row)
+    validate_samples({int(sample[0]): sample for sample in renumbered})
+    return renumbered
+
+
+__all__ = [
+    "collect_dendrite_sample_ids",
+    "compute_branch_order",
+    "dendrite_areas",
+    "dendrite_lengths",
+    "dendrite_volumes",
+    "find_branch_points",
+    "format_swc_samples",
+    "parse_swc_file",
+    "parse_swc_lines",
+    "renumber_samples",
+    "segment_roots",
+    "validate_samples",
+]

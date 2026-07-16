@@ -1,44 +1,92 @@
 #!/usr/bin/env python3
-"""Compute morphometric statistics and output a single JSON file."""
+"""Calculate REMOD morphometrics and emit JSON."""
 
 from __future__ import annotations
 
+import argparse
 import json
+from numbers import Real
 from pathlib import Path
-from typing import Iterable, Dict
-from swc_parser import parse_swc_file
+
+import numpy as np
+
 from morphology_statistics import (
-    total_length,
-    total_area,
-    branch_order_frequency,
     branch_order_dlength,
+    branch_order_frequency,
     branch_order_path_length,
+    diameter_taper,
+    median_radius,
     path_length,
-    sholl_length,
     sholl_branch_points,
     sholl_intersections,
+    sholl_length,
+    total_area,
+    total_length,
+    total_volume,
 )
+from swc_parser import dendrite_volumes, parse_swc_file
+
+DEFAULT_SHOLL_STEP = 20.0
 
 
-RADIUS = 20
+def _require_finite(value, location: str = "statistics") -> None:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            _require_finite(item, f"{location}.{key}")
+    elif isinstance(value, (list, tuple)):
+        for index, item in enumerate(value):
+            _require_finite(item, f"{location}[{index}]")
+    elif isinstance(value, Real) and not np.isfinite(float(value)):
+        raise ValueError(f"{location} is not finite")
 
 
-def _branch_order_subset(dends: Iterable[int], soma_paths: Dict[int, list[int]]) -> Dict[int, int]:
-    """Return branch order for ``dends`` using ``soma_paths``."""
-    return {d: len(soma_paths[d]) for d in dends}
+def _mean_taper(roots, taper, key: str) -> float:
+    values = [taper[root][key] for root in roots]
+    return float(np.mean(values)) if values else 0.0
 
 
-def compute_statistics(swc_path: Path) -> dict:
-    """Return morphometric statistics for ``swc_path``."""
+def _mean_for_roots(roots, values) -> float:
+    selected = [float(values[root]) for root in roots]
+    return float(np.mean(selected)) if selected else 0.0
+
+
+def _max_for_roots(roots, values) -> float:
+    selected = [float(values[root]) for root in roots]
+    return max(selected, default=0.0)
+
+
+def _region_statistics(roots, branch_order, lengths, soma_paths) -> dict:
+    frequency, maximum = branch_order_frequency(roots, branch_order)
+    segment_lengths = branch_order_dlength(roots, branch_order, maximum, lengths)
+    paths = path_length(roots, soma_paths, lengths)
+    path_lengths = branch_order_path_length(roots, branch_order, maximum, paths)
+    return {
+        "frequency": frequency,
+        "segment_length": segment_lengths,
+        "path_length": path_lengths,
+    }
+
+
+def compute_statistics(
+    swc_path: Path | str, sholl_step: float = DEFAULT_SHOLL_STEP
+) -> dict:
+    """Return the implemented REMOD morphometrics for one SWC file."""
+
+    swc_path = Path(swc_path)
+    if not swc_path.is_file():
+        raise FileNotFoundError(swc_path)
+    if not np.isfinite(sholl_step) or sholl_step <= 0:
+        raise ValueError("Sholl step must be positive")
+
     (
         _swc_lines,
         samples,
         _comments,
         branch_points,
-        axon_branches,
-        basal_branches,
-        apical_branches,
-        _soma_branches,
+        _axon_branch_points,
+        basal_branch_points,
+        apical_branch_points,
+        _soma_branch_points,
         soma_samples,
         _max_sample_number,
         dendrite_roots,
@@ -48,7 +96,7 @@ def compute_statistics(swc_path: Path) -> dict:
         _axon,
         basal,
         apical,
-        _undefined_dendrites,
+        _undefined,
         dendrite_records,
         soma_paths,
         all_terminal,
@@ -59,96 +107,158 @@ def compute_statistics(swc_path: Path) -> dict:
         branch_order_map,
         _connectivity_map,
         parents,
-    ) = parse_swc_file(str(swc_path))
+    ) = parse_swc_file(swc_path)
 
-    results: dict[str, object] = {}
-    results["number_of_all_dendrites"] = len(dendrite_roots)
-    results["number_of_all_terminal_dendrites"] = len(all_terminal)
-    results["number_of_basal_dendrites"] = len(basal)
-    results["number_of_basal_terminal_dendrites"] = len(basal_terminal)
-    results["number_of_apical_dendrites"] = len(apical)
-    results["number_of_apical_terminal_dendrites"] = len(apical_terminal)
+    volumes = dendrite_volumes(dendrite_records, dendrite_roots, parents, samples)
+    taper = diameter_taper(dendrite_roots, dendrite_records, lengths)
+    path_lengths = path_length(dendrite_roots, soma_paths, lengths)
+    median_diameters = {
+        root: 2.0 * radius
+        for root, radius in median_radius(dendrite_roots, dendrite_records).items()
+    }
 
-    results["all_total_length"] = total_length(dendrite_roots, lengths)
-    results["basal_total_length"] = total_length(basal, lengths)
-    results["apical_total_length"] = total_length(apical, lengths)
+    results: dict[str, object] = {
+        "number_of_all_dendrites": len(dendrite_roots),
+        "number_of_all_terminal_dendrites": len(all_terminal),
+        "number_of_basal_dendrites": len(basal),
+        "number_of_basal_terminal_dendrites": len(basal_terminal),
+        "number_of_apical_dendrites": len(apical),
+        "number_of_apical_terminal_dendrites": len(apical_terminal),
+        "number_of_all_branchpoints": len(branch_points),
+        "number_of_basal_branchpoints": len(basal_branch_points),
+        "number_of_apical_branchpoints": len(apical_branch_points),
+        "all_total_length": total_length(dendrite_roots, lengths),
+        "basal_total_length": total_length(basal, lengths),
+        "apical_total_length": total_length(apical, lengths),
+        "all_total_area": total_area(dendrite_roots, surface_areas),
+        "basal_total_area": total_area(basal, surface_areas),
+        "apical_total_area": total_area(apical, surface_areas),
+        "all_total_volume": total_volume(dendrite_roots, volumes),
+        "basal_total_volume": total_volume(basal, volumes),
+        "apical_total_volume": total_volume(apical, volumes),
+        "all_mean_path_length": _mean_for_roots(dendrite_roots, path_lengths),
+        "basal_mean_path_length": _mean_for_roots(basal, path_lengths),
+        "apical_mean_path_length": _mean_for_roots(apical, path_lengths),
+        "all_max_path_length": _max_for_roots(dendrite_roots, path_lengths),
+        "basal_max_path_length": _max_for_roots(basal, path_lengths),
+        "apical_max_path_length": _max_for_roots(apical, path_lengths),
+        "all_mean_median_diameter": _mean_for_roots(dendrite_roots, median_diameters),
+        "basal_mean_median_diameter": _mean_for_roots(basal, median_diameters),
+        "apical_mean_median_diameter": _mean_for_roots(apical, median_diameters),
+        "all_mean_diameter_taper_fraction": _mean_taper(
+            dendrite_roots, taper, "fraction"
+        ),
+        "basal_mean_diameter_taper_fraction": _mean_taper(basal, taper, "fraction"),
+        "apical_mean_diameter_taper_fraction": _mean_taper(apical, taper, "fraction"),
+        "all_mean_diameter_taper_per_length": _mean_taper(
+            dendrite_roots, taper, "per_length"
+        ),
+        "basal_mean_diameter_taper_per_length": _mean_taper(basal, taper, "per_length"),
+        "apical_mean_diameter_taper_per_length": _mean_taper(
+            apical, taper, "per_length"
+        ),
+        "diameter_taper_by_dendrite": taper,
+        "path_length_by_dendrite": path_lengths,
+        "median_diameter_by_dendrite": median_diameters,
+    }
 
-    results["all_total_area"] = total_area(dendrite_roots, surface_areas)
-    results["basal_total_area"] = total_area(basal, surface_areas)
-    results["apical_total_area"] = total_area(apical, surface_areas)
+    regions = {
+        "all": dendrite_roots,
+        "basal": basal,
+        "apical": apical,
+    }
+    for name, roots in regions.items():
+        grouped = _region_statistics(roots, branch_order_map, lengths, soma_paths)
+        results[f"number_of_{name}_dendrites_per_branch_order"] = grouped["frequency"]
+        results[f"{name}_dendritic_length_per_branch_order"] = grouped["segment_length"]
+        results[f"{name}_path_length_per_branch_order"] = grouped["path_length"]
 
-    soma_ids = {s[0] for s in soma_samples}
-    results["number_of_all_branchpoints"] = len({parents[x] for x in branch_points if parents[x] not in soma_ids})
-    results["number_of_basal_branchpoints"] = len({parents[x] for x in basal_branches if parents[x] not in soma_ids})
-    results["number_of_apical_branchpoints"] = len({parents[x] for x in apical_branches if parents[x] not in soma_ids})
-
-    branch_freq, branch_max = branch_order_frequency(dendrite_roots, branch_order_map)
-    results["number_of_all_dendrites_per_branch_order"] = branch_freq
-    dlengths = branch_order_dlength(dendrite_roots, branch_order_map, branch_max, lengths)
-    results["all_dendritic_length_per_branch_order"] = dlengths
-    plengths = path_length(dendrite_roots, soma_paths, lengths)
-    pathlens = branch_order_path_length(dendrite_roots, branch_order_map, branch_max, plengths)
-    results["all_path_length_per_branch_order"] = pathlens
-
-    if basal:
-        order_basal = _branch_order_subset(basal, soma_paths)
-        freq, max_b = branch_order_frequency(basal, order_basal)
-        results["number_of_basal_dendrites_per_branch_order"] = freq
-        dlen = branch_order_dlength(basal, order_basal, max_b, lengths)
-        results["basal_dendritic_length_per_branch_order"] = dlen
-        plen = path_length(basal, soma_paths, lengths)
-        results["basal_path_length_per_branch_order"] = branch_order_path_length(basal, order_basal, max_b, plen)
-
-    if apical:
-        order_apical = _branch_order_subset(apical, soma_paths)
-        freq, max_a = branch_order_frequency(apical, order_apical)
-        results["number_of_apical_dendrites_per_branch_order"] = freq
-        dlen = branch_order_dlength(apical, order_apical, max_a, lengths)
-        results["apical_dendritic_length_per_branch_order"] = dlen
-        plen = path_length(apical, soma_paths, lengths)
-        results["apical_path_length_per_branch_order"] = branch_order_path_length(apical, order_apical, max_a, plen)
-
-    results["sholl_all_length"] = sholl_length(samples, parents, soma_samples, RADIUS, [3, 4])
-    results["sholl_basal_length"] = sholl_length(samples, parents, soma_samples, RADIUS, [3])
-    results["sholl_apical_length"] = sholl_length(samples, parents, soma_samples, RADIUS, [4])
-
-    results["sholl_all_branchpoints"] = sholl_branch_points(branch_points, samples, soma_samples, RADIUS)
-    results["sholl_basal_branchpoints"] = sholl_branch_points(basal_branches, samples, soma_samples, RADIUS)
-    results["sholl_apical_branchpoints"] = sholl_branch_points(apical_branches, samples, soma_samples, RADIUS)
-
-    results["sholl_all_intersections"] = sholl_intersections(samples, parents, soma_samples, RADIUS, [3, 4])
-    results["sholl_basal_intersections"] = sholl_intersections(samples, parents, soma_samples, RADIUS, [3])
-    results["sholl_apical_intersections"] = sholl_intersections(samples, parents, soma_samples, RADIUS, [4])
-
+    step = float(sholl_step)
+    results["sholl_step"] = step
+    sholl_lengths = {
+        "all": sholl_length(samples, parents, soma_samples, step, {3, 4}),
+        "basal": sholl_length(samples, parents, soma_samples, step, {3}),
+        "apical": sholl_length(samples, parents, soma_samples, step, {4}),
+    }
+    branchpoint_ids = {
+        "all": branch_points,
+        "basal": basal_branch_points,
+        "apical": apical_branch_points,
+    }
+    for name in regions:
+        results[f"sholl_{name}_length"] = sholl_lengths[name]
+        observed = sholl_branch_points(
+            branchpoint_ids[name], samples, soma_samples, step
+        )
+        results[f"sholl_{name}_branchpoints"] = {
+            bound: observed.get(bound, 0) for bound in sholl_lengths[name]
+        }
+    results["sholl_all_intersections"] = sholl_intersections(
+        samples, parents, soma_samples, step, {3, 4}
+    )
+    results["sholl_basal_intersections"] = sholl_intersections(
+        samples, parents, soma_samples, step, {3}
+    )
+    results["sholl_apical_intersections"] = sholl_intersections(
+        samples, parents, soma_samples, step, {4}
+    )
+    _require_finite(results)
     return results
 
 
-def main(argv: list[str] | None = None) -> None:
-    import argparse
+def _parse_file_names(value: str) -> list[str]:
+    names = sorted({name.strip() for name in value.split(",") if name.strip()})
+    if not names:
+        raise argparse.ArgumentTypeError("at least one SWC file is required")
+    invalid = [
+        name
+        for name in names
+        if Path(name).name != name or Path(name).suffix.lower() != ".swc"
+    ]
+    if invalid:
+        raise argparse.ArgumentTypeError(
+            f"expected relative SWC file name(s), got: {invalid}"
+        )
+    return names
 
-    parser = argparse.ArgumentParser(description="Output morphometric statistics as JSON")
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Calculate morphometric statistics and output JSON."
+    )
     parser.add_argument("directory", type=Path, help="Directory containing SWC files")
-    parser.add_argument("files", help="Comma separated list of SWC file names")
-    parser.add_argument("--output", type=Path, help="Optional path to output JSON file")
+    parser.add_argument(
+        "files", type=_parse_file_names, help="Comma-separated SWC names"
+    )
+    parser.add_argument(
+        "--sholl-step",
+        type=float,
+        default=DEFAULT_SHOLL_STEP,
+        help="Radial Sholl step in micrometers (default: 20)",
+    )
+    parser.add_argument("--output", type=Path, help="Optional JSON output path")
     args = parser.parse_args(argv)
 
-    file_names = [f for f in args.files.split(",") if f]
-    results = {name: compute_statistics(args.directory / name) for name in file_names}
+    if not args.directory.is_dir():
+        parser.error(f"{args.directory} is not a directory")
+    if not np.isfinite(args.sholl_step) or args.sholl_step <= 0:
+        parser.error("--sholl-step must be positive")
 
-    data = json.dumps(results, indent=2)
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(data, encoding="utf-8")
-    else:
-        print(data)
+    try:
+        results = {
+            name: compute_statistics(args.directory / name, args.sholl_step)
+            for name in args.files
+        }
+        data = json.dumps(results, allow_nan=False, indent=2, sort_keys=True)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(data + "\n", encoding="utf-8")
+        else:
+            print(data)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
-
-
-class StatisticsComputer:
-    """Class wrapper around :func:`compute_statistics` and :func:`main`."""
-
-    compute_statistics = staticmethod(compute_statistics)
-    main = staticmethod(main)
+    raise SystemExit(main())

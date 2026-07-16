@@ -1,50 +1,85 @@
-"""Combined remodeling actions and dispatcher."""
+"""Geometry-preserving dendritic remodeling actions."""
 
+from __future__ import annotations
+
+import random
 import re
-from random import randint, randrange
+from math import cos, hypot, pi, sin
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
 import numpy as np
-from math import cos, sin, radians
-from core_utils import distance, round_to
+
+from core_utils import distance
 from file_io import read_lines
+from swc_parser import format_swc_samples, validate_samples
+
+Sample = List[Any]
+SegmentMap = Dict[int, List[Sample]]
+DEFAULT_DISTRIBUTION = Path(__file__).with_name("length_distribution.txt")
+MAX_GROWTH_POINTS = 100_000
+
 
 def parse_length_distribution(
-    path: Path = Path("length_distribution.txt"),
-) -> Tuple[List[float], List[int]]:
-    """Return lengths and cumulative indices parsed from ``path``."""
-    # Distribution file defines how far extensions should grow
+    path: Path = DEFAULT_DISTRIBUTION,
+) -> Tuple[List[float], List[float]]:
+    """Parse positive segment lengths and frequency weights."""
 
     lengths: List[float] = []
-    frequencies: List[float] = []
-
-    if not path.exists():
+    weights: List[float] = []
+    if not path.is_file():
         raise FileNotFoundError(path)
+    for line_number, line in enumerate(read_lines(path), start=1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        match = re.fullmatch(r"\s*(\S+)\s+-\s+(\S+)\s*", line)
+        if not match:
+            raise ValueError(f"{path}:{line_number}: invalid distribution row")
+        length, weight = map(float, match.groups())
+        if length <= 0 or weight < 0 or not np.isfinite([length, weight]).all():
+            raise ValueError(f"{path}:{line_number}: invalid length or frequency")
+        lengths.append(length)
+        weights.append(weight)
+    if not lengths or sum(weights) <= 0:
+        raise ValueError(f"{path}: distribution contains no positive weight")
 
-    for line in read_lines(path):
-        match = re.search(r"(\S+)\s-\s(\S+)", line.strip())
-        if match:
-            lengths.append(float(match.group(1)))
-            frequencies.append(float(match.group(2)))
+    return lengths, weights
 
-    cumulative_indices: List[int] = [0]
-    current_limit = 0
-    for frequency in frequencies:
-        current_limit += int(frequency * 1_000_000)
-        cumulative_indices.append(current_limit)
 
-    return lengths, cumulative_indices
+def select_length(
+    lengths: Sequence[float],
+    weights: Sequence[float],
+    rng: random.Random | None = None,
+) -> float:
+    """Sample one empirical segment length by frequency."""
 
-def select_length(lengths: List[float], cumulative_indices: List[int]) -> float:
-    """Return a random length based on ``cumulative_indices``."""
-    # Uses weighted sampling so frequent lengths occur more often
+    if len(weights) != len(lengths) or not lengths:
+        raise ValueError("distribution weights do not match lengths")
+    if (
+        not np.isfinite(weights).all()
+        or any(weight < 0 for weight in weights)
+        or sum(weights) <= 0
+    ):
+        raise ValueError("distribution weights must have finite positive mass")
+    generator = rng or random
+    return float(generator.choices(lengths, weights=weights, k=1)[0])
 
-    random_value = randrange(cumulative_indices[-1])
-    for index in range(len(cumulative_indices) - 1):
-        if cumulative_indices[index] <= random_value < cumulative_indices[index + 1]:
-            return lengths[index]
-    return lengths[-1]
+
+def _unit(vector: np.ndarray, label: str) -> np.ndarray:
+    norm = hypot(*vector.tolist())
+    if not np.isfinite(norm):
+        raise ValueError(f"{label} magnitude exceeds finite numeric range")
+    if norm == 0.0:
+        raise ValueError(f"cannot remodel a zero-length {label}")
+    return vector / norm
+
+
+def _rotate(vector: np.ndarray, axis: np.ndarray, angle: float) -> np.ndarray:
+    return (
+        vector * cos(angle)
+        + np.cross(axis, vector) * sin(angle)
+        + axis * float(np.dot(axis, vector)) * (1.0 - cos(angle))
+    )
 
 
 def create_points(
@@ -53,941 +88,428 @@ def create_points(
     start_point: Iterable[float],
     end_point: Iterable[float],
     branch_option: int,
+    rng: random.Random | None = None,
 ) -> List[List[float]]:
-    """Return one or two new NEURON ``pt3dadd`` samples."""
-    # ``branch_option`` controls whether branching occurs
+    """Create one or two points on a cone around the parent direction."""
 
-    rotation_angle = radians(angle)
-
-    axis_origin = [0, 0, 1]
-    # use Y as the rotation axis when the segment lies along X
-    # and Y directions to avoid numerical issues
-    if end_point[0] == start_point[0] and end_point[1] == start_point[1]:
-        axis_origin = [0, 1, 0]
-
-    start_matrix = np.matrix([float(start_point[0]), float(start_point[1]), float(start_point[2])])
-    end_matrix = np.matrix([float(end_point[0]), float(end_point[1]), float(end_point[2])])
-
-    axis = end_matrix - start_matrix
-    axis = axis / np.linalg.norm(axis)
-
-    perp_vector = np.cross(axis, axis_origin)
-    perp_vector = perp_vector / np.linalg.norm(perp_vector)
-
-    xt, yt, zt = perp_vector[0, 0], perp_vector[0, 1], perp_vector[0, 2]
-
-    rotation_matrix_one = np.matrix(
-        [
-            [cos(rotation_angle) + (xt ** 2) * (1 - cos(rotation_angle)), xt * yt * (1 - cos(rotation_angle)) - zt * sin(rotation_angle), xt * zt * (1 - cos(rotation_angle)) + yt * sin(rotation_angle)],
-            [yt * xt * (1 - cos(rotation_angle)) + zt * sin(rotation_angle), cos(rotation_angle) + (yt ** 2) * (1 - cos(rotation_angle)), yt * zt * (1 - cos(rotation_angle)) - xt * sin(rotation_angle)],
-            [zt * xt * (1 - cos(rotation_angle)) - yt * sin(rotation_angle), zt * yt * (1 - cos(rotation_angle)) + xt * sin(rotation_angle), cos(rotation_angle) + (zt ** 2) * (1 - cos(rotation_angle))],
-        ],
-        float,
+    if not np.isfinite(length) or length <= 0:
+        raise ValueError("new segment length must be positive")
+    if not np.isfinite(angle):
+        raise ValueError("branch angle must be finite")
+    if branch_option not in {1, 2}:
+        raise ValueError("branch_option must be 1 or 2")
+    generator = rng or random
+    start = np.asarray(list(start_point), dtype=float)
+    end = np.asarray(list(end_point), dtype=float)
+    if start.shape != (3,) or end.shape != (3,):
+        raise ValueError("start and end points must be three-dimensional")
+    axis = _unit(end - start, "parent segment")
+    reference = np.asarray(
+        min(np.eye(3), key=lambda candidate: abs(float(np.dot(candidate, axis)))),
+        dtype=float,
     )
-
-    xa, ya, za = axis[0, 0], axis[0, 1], axis[0, 2]
-
-    rotation_angle = radians(randrange(360))
-    rotation_matrix_two = np.matrix(
-        [
-            [cos(rotation_angle) + (xa ** 2) * (1 - cos(rotation_angle)), xa * ya * (1 - cos(rotation_angle)) - za * sin(rotation_angle), xa * za * (1 - cos(rotation_angle)) + ya * sin(rotation_angle)],
-            [ya * xa * (1 - cos(rotation_angle)) + za * sin(rotation_angle), cos(rotation_angle) + (ya ** 2) * (1 - cos(rotation_angle)), ya * za * (1 - cos(rotation_angle)) - xa * sin(rotation_angle)],
-            [za * xa * (1 - cos(rotation_angle)) - ya * sin(rotation_angle), za * ya * (1 - cos(rotation_angle)) + xa * sin(rotation_angle), cos(rotation_angle) + (za ** 2) * (1 - cos(rotation_angle))],
-        ],
-        float,
-    )
-
-    factor = axis.T * length
-    vector_step_one = rotation_matrix_one * factor
-    vector_step_two = rotation_matrix_two * vector_step_one
-    vector_step_two = vector_step_two.T
-    v1 = vector_step_two + end_matrix
-
-    new_current_point = [v1[0, 0], v1[0, 1], v1[0, 2]]
-    new_points = [new_current_point]
-
+    perpendicular = _unit(np.cross(axis, reference), "perpendicular axis")
+    deflection = np.deg2rad(float(angle))
+    tilted = cos(deflection) * axis + sin(deflection) * perpendicular
+    azimuth = generator.random() * 2.0 * pi
+    first_direction = _rotate(tilted, axis, azimuth)
+    points = [(end + float(length) * first_direction).tolist()]
     if branch_option == 2:
-        rotation_angle += 3.1415
-        rotation_matrix_two_alt = np.matrix(
-            [
-                [cos(rotation_angle) + (xa ** 2) * (1 - cos(rotation_angle)), xa * ya * (1 - cos(rotation_angle)) - za * sin(rotation_angle), xa * za * (1 - cos(rotation_angle)) + ya * sin(rotation_angle)],
-                [ya * xa * (1 - cos(rotation_angle)) + za * sin(rotation_angle), cos(rotation_angle) + (ya ** 2) * (1 - cos(rotation_angle)), ya * za * (1 - cos(rotation_angle)) - xa * sin(rotation_angle)],
-                [za * xa * (1 - cos(rotation_angle)) - ya * sin(rotation_angle), za * ya * (1 - cos(rotation_angle)) + xa * sin(rotation_angle), cos(rotation_angle) + (za ** 2) * (1 - cos(rotation_angle))],
-            ],
-            float,
-        )
-        vector_step_three = rotation_matrix_two_alt * vector_step_one
-        vector_step_three = vector_step_three.T
-        v2 = vector_step_three + end_matrix
-        new_parent_point = [v2[0, 0], v2[0, 1], v2[0, 2]]
-        new_points.append(new_parent_point)
+        second_direction = _rotate(tilted, axis, azimuth + pi)
+        points.append((end + float(length) * second_direction).tolist())
+    for point in points:
+        if distance(end[0], point[0], end[1], point[1], end[2], point[2]) == 0.0:
+            raise ValueError(
+                "requested growth is below coordinate precision at the selected tip"
+            )
+    return points
 
-    return new_points
-
-def add_random_point(
-    current_point: List[Any],
-    parent_point: List[Any],
-    branch_option: int,
-    lengths: List[float],
-    cumulative_indices: List[int],
-) -> Tuple[List[List[float]], float]:
-    """Return one or two new samples and their length."""
-    # Builds upon ``create_points`` with a randomised length
-
-    end_point = [current_point[2], current_point[3], current_point[4]]
-    start_point = [parent_point[2], parent_point[3], parent_point[4]]
-
-    length = select_length(lengths, cumulative_indices)
-    angle = 5
-
-    new_point = create_points(length, angle, start_point, end_point, branch_option)
-
-    return new_point, length
 
 def translate_descendants(
     translation_vector: Iterable[float],
     dendrite: int,
     descendants: Dict[int, List[int]],
-    dendrite_samples: Dict[int, List[List[Any]]],
-) -> Dict[int, List[List[Any]]]:
-    """Translate descendant dendrites by ``translation_vector``."""
-    # Needed when shortening or removing upstream segments
+    dendrite_samples: SegmentMap,
+) -> SegmentMap:
+    """Rigidly translate all downstream samples once."""
 
-    x, y, z = translation_vector
-
-    for child in descendants[dendrite]:
-        for i in range(len(dendrite_samples[child])):
-            dendrite_samples[child][i][2] -= x
-            dendrite_samples[child][i][3] -= y
-            dendrite_samples[child][i][4] -= z
-
+    vector = np.asarray(list(translation_vector), dtype=float)
+    moved: set[int] = set()
+    for child in descendants.get(dendrite, []):
+        for sample in dendrite_samples.get(child, []):
+            sample_id = int(sample[0])
+            if sample_id in moved:
+                continue
+            sample[2:5] = (np.asarray(sample[2:5], dtype=float) + vector).tolist()
+            moved.add(sample_id)
     return dendrite_samples
 
 
-def allocate_new_dendrites(max_sample_id: int) -> Tuple[int, int, int]:
-    """Return two new dendrite IDs for branching."""
-    # Allocates sequential ids for child dendrites
+def _sample_lookup(soma_samples: Sequence[Sample], dendrite_samples: SegmentMap):
+    lookup = {int(sample[0]): sample for sample in soma_samples}
+    for segment in dendrite_samples.values():
+        for sample in segment:
+            lookup[int(sample[0])] = sample
+    return lookup
 
-    dendrite_a = max_sample_id + 1
-    dendrite_b = max_sample_id + 2
-    return dendrite_a, dendrite_b, dendrite_b
+
+def _next_sample_id(
+    soma_samples: Sequence[Sample], dendrite_samples: SegmentMap
+) -> int:
+    return max(_sample_lookup(soma_samples, dendrite_samples), default=0) + 1
 
 
-def extend_dendrite(
-    dendrite_id: int,
-    target_distance: Dict[int, float],
-    current_point: List[Any],
-    parent_point: List[Any],
-    max_sample_id: int,
-    enable_branching: int,
-) -> Tuple[int, List[List[Any]]]:
-    """Grow the dendrite and return its new segments."""
-    # Repeatedly adds samples until the desired distance is reached
+def _direction_parent(segment: Sequence[Sample], lookup: Dict[int, Sample]) -> Sample:
+    """Return the nearest proximal sample that defines a non-zero tip direction."""
 
-    new_lines: List[List[Any]] = []
-    cumulative_distance = 0.0
+    tip = np.asarray(segment[-1][2:5], dtype=float)
+    candidates = [lookup[int(segment[0][6])], *segment[:-1]]
+    for candidate in reversed(candidates):
+        offset = tip - np.asarray(candidate[2:5], dtype=float)
+        if hypot(*offset.tolist()) > 0.0:
+            return candidate
+    raise ValueError("cannot grow from a segment without a defined direction")
 
-    original_parent_point = parent_point
 
-    next_index = max_sample_id
+def _growth_distance(length: float, amount: Any, extent_unit: str) -> float:
+    if amount is None:
+        raise ValueError("an action amount is required")
+    value = float(amount)
+    if not np.isfinite(value) or value <= 0:
+        raise ValueError("action amount must be positive")
+    if extent_unit == "percent":
+        result = float(length) * (value / 100.0)
+    elif extent_unit == "micrometers":
+        result = value
+    else:
+        raise ValueError("extent unit must be 'percent' or 'micrometers'")
+    if not np.isfinite(result) or result <= 0:
+        raise ValueError("requested growth distance is not a positive finite value")
+    return result
 
-    while cumulative_distance < target_distance[dendrite_id]:
-        new_point, length = add_random_point(
-            current_point, parent_point, enable_branching, LENGTHS, CUMULATIVE_INDICES
+
+def _validate_growth_target(target_length: float) -> None:
+    if not np.isfinite(target_length) or target_length <= 0:
+        raise ValueError("requested growth distance is not a positive finite value")
+    if target_length > MAX_GROWTH_POINTS * max(LENGTHS):
+        raise ValueError(
+            f"requested growth would require more than {MAX_GROWTH_POINTS} samples"
         )
 
-        segment = [
-            next_index + 1,
-            parent_point[1],
-            new_point[0][0],
-            new_point[0][1],
-            new_point[0][2],
-            parent_point[5],
-            current_point[0],
+
+def _grow_path(
+    current: Sample,
+    parent: Sample,
+    target_length: float,
+    next_id: int,
+    rng: random.Random,
+) -> Tuple[List[Sample], int]:
+    _validate_growth_target(target_length)
+    rows: List[Sample] = []
+    remaining = float(target_length)
+    while remaining > 0.0:
+        if len(rows) >= MAX_GROWTH_POINTS:
+            raise ValueError(
+                f"requested growth would require more than {MAX_GROWTH_POINTS} samples"
+            )
+        sampled = select_length(LENGTHS, LENGTH_WEIGHTS, rng)
+        step = min(sampled, remaining)
+        point = create_points(step, 5.0, parent[2:5], current[2:5], 1, rng)[0]
+        actual_step = distance(
+            current[2], point[0], current[3], point[1], current[4], point[2]
+        )
+        if actual_step == 0.0:
+            raise ValueError(
+                "requested growth is below coordinate precision at the selected tip"
+            )
+        row: Sample = [
+            next_id,
+            int(current[1]),
+            *point,
+            float(current[5]),
+            int(current[0]),
         ]
-        new_lines.append(segment)
+        rows.append(row)
+        next_id += 1
+        parent, current = current, row
+        if step >= remaining:
+            remaining = 0.0
+        else:
+            updated = remaining - step
+            if updated >= remaining:
+                raise ValueError(
+                    "requested growth distance exceeds floating-point resolution"
+                )
+            remaining = updated
+    return rows, next_id
 
-        next_index += 1
-        parent_point = current_point
-        current_point = segment
-        cumulative_distance += length
 
-    diff = cumulative_distance - float(target_distance[dendrite_id])
+def _truncate_segment(
+    segment: Sequence[Sample], parent: Sample, target_length: float
+) -> List[Sample]:
+    if target_length <= 0.0:
+        raise ValueError("shrink would remove the entire segment; use remove instead")
+    old_tip = segment[-1]
+    previous = parent
+    kept: List[Sample] = []
+    accumulated = 0.0
+    for sample in segment:
+        edge = distance(
+            previous[2], sample[2], previous[3], sample[3], previous[4], sample[4]
+        )
+        if edge == 0.0:
+            kept.append(sample[:])
+            previous = sample
+            continue
+        if accumulated + edge < target_length:
+            kept.append(sample[:])
+            accumulated += edge
+            previous = sample
+            continue
+        fraction = min(1.0, max(0.0, (target_length - accumulated) / edge))
+        start = np.asarray(previous[2:5], dtype=float)
+        end = np.asarray(sample[2:5], dtype=float)
+        position = start + fraction * (end - start)
+        cut = old_tip[:]
+        cut[2:5] = position.tolist()
+        # Each edge is a cylinder whose radius is stored on its distal sample.
+        # A cut through that edge retains the same compartment radius; in
+        # particular, a primary dendrite must not interpolate from soma radius.
+        cut[5] = float(sample[5])
+        cut[6] = int(parent[0]) if not kept else int(kept[-1][0])
+        kept.append(cut)
+        return kept
+    return [sample[:] for sample in segment]
 
-    if len(new_lines) == 1:
-        x2, y2, z2 = original_parent_point[2], original_parent_point[3], original_parent_point[4]
-    else:
-        x2, y2, z2 = new_lines[-2][2], new_lines[-2][3], new_lines[-2][4]
-
-    x1, y1, z1 = new_lines[-1][2], new_lines[-1][3], new_lines[-1][4]
-
-    xn = x2 - x1
-    yn = y2 - y1
-    zn = z2 - z1
-
-    per = 1 - (length - diff) / length
-
-    xn = round_to((x1 + per * xn), 0.01)
-    yn = round_to((y1 + per * yn), 0.01)
-    zn = round_to((z1 + per * zn), 0.01)
-
-    new_point = [next_index, parent_point[1], xn, yn, zn, parent_point[5], current_point[6]]
-    new_lines[-1] = new_point
-
-    max_sample_id = next_index
-
-    return max_sample_id, new_lines
 
 def shrink(
-    target_dendrites,
-    action,
+    target_dendrites: Iterable[int],
     amount,
-    extent_unit,
-    dendrite_samples,
-    dist,
-    soma_samples,
-    samples,
-    parents,
-    descendants,
-    all_terminal,
-):
-        """Return SWC lines with the selected dendrites shortened."""
-        # Shorten dendrites by a fixed percent or absolute length
+    extent_unit: str,
+    dendrite_samples: SegmentMap,
+    lengths: Dict[int, float],
+    soma_samples: Sequence[Sample],
+    descendants: Dict[int, List[int]],
+) -> None:
+    """Shorten selected segments and rigidly translate downstream arbors."""
+
+    lookup = _sample_lookup(soma_samples, dendrite_samples)
+    for root in list(target_dendrites):
+        if root not in dendrite_samples:
+            raise ValueError(f"unknown dendrite {root}")
+        original_length = float(lengths[root])
+        reduction = _growth_distance(original_length, amount, extent_unit)
+        target_length = original_length - reduction
+        if target_length >= original_length:
+            raise ValueError(
+                "requested shrink is below coordinate precision for this segment"
+            )
+        old_tip = np.asarray(dendrite_samples[root][-1][2:5], dtype=float)
+        parent = lookup[int(dendrite_samples[root][0][6])]
+        dendrite_samples[root] = _truncate_segment(
+            dendrite_samples[root], parent, target_length
+        )
+        new_tip = np.asarray(dendrite_samples[root][-1][2:5], dtype=float)
+        translate_descendants(new_tip - old_tip, root, descendants, dendrite_samples)
+        lookup = _sample_lookup(soma_samples, dendrite_samples)
 
-        amount=int(amount)
-
-        new_dist=dict()
-
-        initial_distance=dict()
-
-        for dend in target_dendrites:
-        
-                current_point=dendrite_samples[dend][0]
-                next_point=samples[parents[current_point[0]]]
-
-                xp=current_point[2]
-                yp=current_point[3]
-                zp=current_point[4]
-
-                x=next_point[2]
-                y=next_point[3]
-                z=next_point[4]
-
-                initial_distance[dend]=distance(x,xp,y,yp,z,zp)
-
-        for dend in target_dendrites:
-
-                if dend not in all_terminal:
-
-                        initial_position=dendrite_samples[dend][-1]
-
-                sample_list=[]
-                cumulative_distance=initial_distance[dend]
-
-                if extent_unit=='percent':
-                        new_dist[dend]=dist[dend]*((100-float(amount))/100)
-
-                if extent_unit=='micrometers':
-                        new_dist[dend]=dist[dend]-float(amount)
-
-                if len(dendrite_samples[dend])>1:
-
-                        for i in range(len(dendrite_samples[dend])-1):
-
-                                current_point=dendrite_samples[dend][i]
-                                next_point=dendrite_samples[dend][i+1]
-
-                                xp=current_point[2]
-                                yp=current_point[3]
-                                zp=current_point[4]
-                                dp=current_point[5]
-
-                                point=[current_point[0], current_point[1], xp, yp, zp, dp, current_point[6]]
-                                sample_list.append(point)
-                                
-                                x=next_point[2]
-                                y=next_point[3]
-                                z=next_point[4]
-                                d=next_point[5]
-
-                                cumulative_distance+=distance(x,xp,y,yp,z,zp)
-
-                                if cumulative_distance>new_dist[dend]:
-
-                                        diff=cumulative_distance-float(new_dist[dend])
-                                
-                                        xn=x-xp
-                                        yn=y-yp 
-                                        zn=z-zp
-
-                                        per=1-diff/distance(x,xp,y,yp,z,zp)
-
-                                        xn='%.2f' % (round_to((xp+per*xn),0.01))
-                                        yn='%.2f' % (round_to((yp+per*yn),0.01))
-                                        zn='%.2f' % (round_to((zp+per*zn),0.01))
-
-                                        # 1202 3 -43.5 27 19 0.15 1201
-                                        sample_list[-1]=[current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]]
-                                        dendrite_samples[dend]=sample_list
-
-                                        break
-
-                else:
-
-                        current_point=dendrite_samples[dend][0]
-                        next_point=samples[parents[current_point[0]]]
-
-                        xp=current_point[2]
-                        yp=current_point[3]
-                        zp=current_point[4]
-                        dp=current_point[5]
-
-                        x=next_point[2]
-                        y=next_point[3]
-                        z=next_point[4]
-                        d=next_point[5]
-
-                        diff=dist[dend]-float(new_dist[dend])
-
-                        xn=x-xp
-                        yn=y-yp 
-                        zn=z-zp
-
-                        per=1-diff/distance(x,xp,y,yp,z,zp)
-
-                        xn='%.2f' % (round_to((xp+per*xn),0.01))
-                        yn='%.2f' % (round_to((yp+per*yn),0.01))
-                        zn='%.2f' % (round_to((zp+per*zn),0.01))
-
-                        sample_list.append([current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]])
-                        dendrite_samples[dend]=sample_list
-
-                if dend not in all_terminal:
-
-                        final_position=dendrite_samples[dend][-1]
-
-                        offset_vector=[
-                            initial_position[2]-final_position[2],
-                            initial_position[3]-final_position[3],
-                            initial_position[4]-final_position[4],
-                        ]
-                        translation_vector = tuple(offset_vector)
-                        dendrite_samples = translate_descendants(
-                            translation_vector, dend, descendants, dendrite_samples
-                        )
-
-        sample_list=[]
-
-        for i in dendrite_samples:
-                for k in dendrite_samples[i]:
-                        if k not in sample_list:
-                                sample_list.append(k)
-
-        sample_list.sort(key=lambda x: x[0])
-
-        new_lines=[]
-        for k in sample_list:
-                new_lines.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
-
-        return new_lines
-
-'''def shrink(target_dendrites, action, amount, extent_unit, dendrite_samples, dist, soma_samples, samples, parents): #returns the new lines of the .hoc file with the selected dendrites shrinked
-
-        amount=int(amount)
-
-        new_lines=[]
-
-        new_dist=dict()
-
-        for dend in target_dendrites:
-
-                if len(dendrite_samples[dend])>1:
-
-                        num_seg_1=len(dendrite_samples[dend])
-
-                        radius_steps=[]
-                        run_length=1
-
-                        radius_steps.append([0, dendrite_samples[dend][0][5]])
-                        for i in range(len(dendrite_samples[dend])-1):
-
-                                radius_curr=dendrite_samples[dend][i][5]
-                                radius_next=dendrite_samples[dend][i+1][5]
-
-                                if i==len(dendrite_samples[dend])-2:
-                                        radius_steps.append([i+1, radius_next])
-                                        break
-
-                                if radius_curr!=radius_next:
-                                        radius_steps.append([i+1, radius_next])
-                                        run_length=1
-                                else:
-                                        run_length+=1
-
-                cumulative_distance=0
-
-                current_point=dendrite_samples[dend][0]
-                next_point=samples[parents[current_point[0]]]
-
-                xp=current_point[2]
-                yp=current_point[3]
-                zp=current_point[4]
-
-                x=next_point[2]
-                y=next_point[3]
-                z=next_point[4]
-
-                cumulative_distance+=distance(x,xp,y,yp,z,zp)
-
-                if extent_unit=='percent':
-                        new_dist[dend]=dist[dend]*((100-amount)/100)
-
-                if extent_unit=='micrometers':
-                        new_dist[dend]=dist[dend]-amount
-
-                sample_list=[]
-
-                for i in range(len(dendrite_samples[dend])-1):
-
-                        current_point=dendrite_samples[dend][i]
-                        next_point=dendrite_samples[dend][i+1]
-
-                        xp=current_point[2]
-                        yp=current_point[3]
-                        zp=current_point[4]
-                        dp=current_point[5]
-
-                        point=[current_point[0], current_point[1], xp, yp, zp, dp, current_point[6]]
-                        sample_list.append(point)
-
-                        x=next_point[2]
-                        y=next_point[3]
-                        z=next_point[4]
-                        d=next_point[5]
-
-                        cumulative_distance+=distance(x,xp,y,yp,z,zp)
-
-                        if cumulative_distance>new_dist[dend]:
-
-                                diff=cumulative_distance-float(new_dist[dend])
-
-                                xn=x-xp
-                                yn=y-yp 
-                                zn=z-zp
-
-                                per=1-diff/distance(x,xp,y,yp,z,zp)
-
-                                xn='%.2f' % (round_to((xp+per*xn),0.01))
-                                yn='%.2f' % (round_to((yp+per*yn),0.01))
-                                zn='%.2f' % (round_to((zp+per*zn),0.01))
-
-                                # 1202 3 -43.5 27 19 0.15 1201
-                                sample_list[-1]=[current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]]
-                                
-                                dendrite_samples[dend]=sample_list   
-
-                                break
-
-                if len(dendrite_samples[dend])==1:
-
-                        current_point=dendrite_samples[dend][0]
-                        next_point=samples[parents[current_point[0]]]
-
-                        xp=current_point[2]
-                        yp=current_point[3]
-                        zp=current_point[4]
-                        dp=current_point[5]
-
-                        x=next_point[2]
-                        y=next_point[3]
-                        z=next_point[4]
-                        d=next_point[5]
-
-                        diff=dist[dend]-float(new_dist[dend])
-
-                        xn=x-xp
-                        yn=y-yp 
-                        zn=z-zp
-
-                        per=1-diff/distance(x,xp,y,yp,z,zp)
-
-                        xn='%.2f' % (round_to((xp+per*xn),0.01))
-                        yn='%.2f' % (round_to((yp+per*yn),0.01))
-                        zn='%.2f' % (round_to((zp+per*zn),0.01))
-
-                        # 1202 3 -43.5 27 19 0.15 1201
-                        sample_list.append([current_point[0], current_point[1], float(xn), float(yn), float(zn), float(dp), current_point[6]])
-                        dendrite_samples[dend]=sample_list   
-
-                if len(dendrite_samples[dend])>1:
-
-                        num_seg_2=len(dendrite_samples[dend])
-
-                        ratio=float(num_seg_2)/num_seg_1
-
-                        scaled_segments=[]
-                        for k in radius_steps:
-
-                                new_num_seg=int(round_to((k[0]*ratio),1))
-                                scaled_segments.append(new_num_seg)
-
-                        scaled_segments=scaled_segments[:-1]
-                        scaled_segments.append(num_seg_2)
-
-                        n=0
-                        for j in range(len(dendrite_samples[dend])):
-
-                                if j>=scaled_segments[n] and j<scaled_segments[n+1]:
-                                        radius_value=radius_steps[n][1]
-                                        dendrite_samples[dend][j][5]=radius_value
-                                else:
-                                        n+=1
-                                        radius_value=radius_steps[n][1]
-                                        dendrite_samples[dend][j][5]=radius_value
-
-        sample_list=[]
-
-        for i in soma_samples:
-                sample_list.append(i)
-
-        for i in dendrite_samples:
-                for k in dendrite_samples[i]:
-                        if k not in sample_list:
-                                sample_list.append(k)
-
-        sample_list.sort(key=lambda x: x[0])
-
-        newfile=[]
-        for k in sample_list:
-                newfile.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
-
-        return newfile'''
 
 def remove(
-    target_dendrites,
-    action,
-    dendrite_samples,
-    soma_samples,
-    samples,
-    parents,
-    descendants,
-    all_terminal,
-):
-        """Return SWC lines with the selected dendrites removed."""
-        # Completely delete chosen dendrites from the morphology
+    target_dendrites: Iterable[int],
+    dendrite_samples: SegmentMap,
+    descendants: Dict[int, List[int]],
+) -> None:
+    """Remove selected segments and their complete distal subtrees."""
 
-        new_lines=[]
+    remove_roots = set(target_dendrites)
+    for root in list(remove_roots):
+        if root not in dendrite_samples:
+            raise ValueError(f"unknown dendrite {root}")
+        remove_roots.update(descendants.get(root, []))
+    for root in remove_roots:
+        dendrite_samples.pop(root, None)
 
-        print(all_terminal)
 
-        for dend in target_dendrites:
-                if dend not in all_terminal:
-                        for d in descendants[dend]:
-                                if d not in target_dendrites:
-                                        target_dendrites.append(d)
+def _reconnect_after_extension(
+    root: int,
+    old_tip: Sample,
+    new_tip: Sample,
+    descendants: Dict[int, List[int]],
+    dendrite_samples: SegmentMap,
+) -> None:
+    translation = np.asarray(new_tip[2:5], dtype=float) - np.asarray(
+        old_tip[2:5], dtype=float
+    )
+    translate_descendants(translation, root, descendants, dendrite_samples)
+    old_tip_id = int(old_tip[0])
+    for child in descendants.get(root, []):
+        if (
+            dendrite_samples.get(child)
+            and int(dendrite_samples[child][0][6]) == old_tip_id
+        ):
+            dendrite_samples[child][0][6] = int(new_tip[0])
 
-        for dend in target_dendrites:
-
-                dendrite_samples[dend]=[]
-
-        sample_list=[]
-
-        for i in soma_samples:
-                sample_list.append(i)
-
-        for i in dendrite_samples:
-                for k in dendrite_samples[i]:
-                        if k not in sample_list:
-                                sample_list.append(k)
-        sample_list.sort(key=lambda x: x[0])
-
-        new_lines=[]
-        for k in sample_list:
-                new_lines.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
-
-        return new_lines
 
 def extend(
-    target_dendrites,
-    action,
+    target_dendrites: Iterable[int],
     amount,
-    extent_unit,
-    dendrite_samples,
-    dist,
-    max_sample_id,
-    soma_samples,
-    samples,
-    parents,
-    descendants,
-    all_terminal,
-):
-        """Return SWC lines with the selected dendrites extended."""
+    extent_unit: str,
+    dendrite_samples: SegmentMap,
+    lengths: Dict[int, float],
+    soma_samples: Sequence[Sample],
+    descendants: Dict[int, List[int]],
+    rng: random.Random | None = None,
+) -> None:
+    """Extend selected segments by an exact requested path length."""
 
-        amount=int(amount)
+    generator = rng or random.Random()
+    next_id = _next_sample_id(soma_samples, dendrite_samples)
+    lookup = _sample_lookup(soma_samples, dendrite_samples)
+    for root in list(target_dendrites):
+        segment = dendrite_samples.get(root)
+        if not segment:
+            raise ValueError(f"unknown dendrite {root}")
+        old_tip = segment[-1][:]
+        previous = _direction_parent(segment, lookup)
+        growth = _growth_distance(lengths[root], amount, extent_unit)
+        rows, next_id = _grow_path(old_tip, previous, growth, next_id, generator)
+        dendrite_samples[root].extend(rows)
+        _reconnect_after_extension(
+            root, old_tip, dendrite_samples[root][-1], descendants, dendrite_samples
+        )
+        lookup = _sample_lookup(soma_samples, dendrite_samples)
 
-        new_dist=dict() #saves the legth [value] of the new dendrite to its name [key]
-        new_segments=dict() #saves the list of lines [value] of the newly grown dendrite to its name [key]
-
-        sample_list=[]
-        for i in soma_samples:
-                sample_list.append(i)
-
-        for dend in target_dendrites:
-
-                if dend not in all_terminal:
-
-                        parent_updates=[]
-                        initial_position=dendrite_samples[dend][-1]
-                        obsolete_fp_idx=initial_position[0]
-                        for seg_id in parents:
-                                if parents[seg_id]==obsolete_fp_idx:
-                                        parent_updates.append(seg_id)
-
-
-                num_seg_1=len(dendrite_samples[dend])
-
-                radius_bins=[]
-                run_length=1
-
-                radius_bins.append([0, dendrite_samples[dend][0][5]])
-                for i in range(len(dendrite_samples[dend])-1):
-
-                        current_radius=dendrite_samples[dend][i][5]
-                        next_radius=dendrite_samples[dend][i+1][5]
-
-                        if i==len(dendrite_samples[dend])-2:
-                                radius_bins.append([i+1, next_radius])
-                                break
-
-                        if current_radius!=next_radius:
-                                radius_bins.append([i+1, next_radius])
-                                run_length=1
-                        else:
-                                run_length+=1
-
-                if extent_unit=='percent':
-                        new_dist[dend]=dist[dend]*float(amount)/100
-
-                if extent_unit=='micrometers':
-                        new_dist[dend]=float(amount)
-
-                if len(dendrite_samples[dend])==1:
-                        point1=dendrite_samples[dend][-1]
-                        point2=samples[parents[point1[0]]]
-
-                else:
-                        point1=dendrite_samples[dend][-1]
-                        point2=dendrite_samples[dend][-2]
-
-                (max_sample_id, new_segments[dend]) = extend_dendrite(
-                    dend,
-                    new_dist,
-                    point1,
-                    point2,
-                    max_sample_id,
-                    1,
-                )
-                dendrite_samples[dend]=dendrite_samples[dend]+new_segments[dend]
-
-                num_seg_2=len(dendrite_samples[dend])
-
-                ratio=float(num_seg_2)/num_seg_1
-
-                scaled_segments=[]
-                for bin_start in radius_bins:
-
-                        new_num_seg=int(round_to((bin_start[0]*ratio),1))
-                        scaled_segments.append(new_num_seg)
-
-                scaled_segments.append(num_seg_2)
-
-                n=0
-
-                for j in range(len(dendrite_samples[dend])):
-
-                        if j>=scaled_segments[n] and j<scaled_segments[n+1]:
-                                radius_value=radius_bins[n][1]
-                                dendrite_samples[dend][j][5]=radius_value
-                        else:
-                                n+=1
-                                radius_value=radius_bins[n][1]
-                                dendrite_samples[dend][j][5]=radius_value
-
-                if dend not in all_terminal:
-
-                        final_position=new_segments[dend][-1]
-
-                        offset_vector=[
-                            initial_position[2]-final_position[2],
-                            initial_position[3]-final_position[3],
-                            initial_position[4]-final_position[4],
-                        ]
-                        translation_vector = tuple(offset_vector)
-                        dendrite_samples = translate_descendants(
-                            translation_vector, dend, descendants, dendrite_samples
-                        )
-
-                        dendrite_samples[parent_updates[0]][0][6]=dendrite_samples[dend][-1][0]
-                        dendrite_samples[parent_updates[1]][0][6]=dendrite_samples[dend][-1][0]
-
-        for i in dendrite_samples:
-                for k in dendrite_samples[i]:
-                        if k not in sample_list:
-                                sample_list.append(k)
-
-        sample_list.sort(key=lambda x: x[0])
-
-        new_lines=[]
-        for k in sample_list:
-                m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                new_lines.append(m)
-
-        return new_lines
 
 def branch(
-    target_dendrites,
-    action,
-    amount,
-    extent_unit,
-    dendrite_samples,
-    dist,
-    max_sample_id,
-    soma_samples,
-    dendrite_roots,
-):
-        """Return SWC lines for newly created branch dendrites."""
-
-        amount=int(amount)
-
-        new_dist=dict() #saves the legth [value] of the new dendrite to its name [key]
-        new_segments=dict() #saves the list of lines [value] of the newly grown dendrite to its name [key]
-
-        sample_list=[]
-        for i in soma_samples:
-                sample_list.append(i)
-
-        for dend in target_dendrites:
-
-                (new_dend_a, new_dend_b, max_sample_id) = allocate_new_dendrites(max_sample_id)
-                dendrite_roots.append(new_dend_a)
-                dendrite_roots.append(new_dend_b)
-
-                point1=dendrite_samples[dend][-1]
-                point2=dendrite_samples[dend][-2]
-
-                new_point, length = add_random_point(
-                    point1,
-                    point2,
-                    2,
-                    LENGTHS,
-                    CUMULATIVE_INDICES,
-                )
-
-                new_point_a=[new_dend_a, point2[1], new_point[0][0], new_point[0][1], new_point[0][2], point2[5], dendrite_samples[dend][-1][0]]
-                new_point_b=[new_dend_b, point2[1], new_point[1][0], new_point[1][1], new_point[1][2], point2[5], dendrite_samples[dend][-1][0]]
-
-                if extent_unit=='percent':
-                        new_dist[new_dend_a]=dist[dend]*amount/100
-
-                if extent_unit=='micrometers':
-                        new_dist[new_dend_a]=amount
-
-                point1=new_point_a
-                point2=dendrite_samples[dend][-1]
-
-                (
-                    max_sample_id,
-                    new_segments[new_dend_a],
-                ) = extend_dendrite(
-                    new_dend_a,
-                    new_dist,
-                    point1,
-                    point2,
-                    max_sample_id,
-                    1,
-                )
-                new_segments[new_dend_a].insert(0, new_point_a)
-                dendrite_samples[new_dend_a]=dendrite_samples[dend]+new_segments[new_dend_a]
-
-                if extent_unit=='percent':
-                        new_dist[new_dend_b]=dist[dend]*amount/100
-
-                if extent_unit=='micrometers':
-                        new_dist[new_dend_b]=amount
-
-                point1=new_point_b
-                point2=dendrite_samples[dend][-1]
-
-                (
-                    max_sample_id,
-                    new_segments[new_dend_b],
-                ) = extend_dendrite(
-                    new_dend_b,
-                    new_dist,
-                    point1,
-                    point2,
-                    max_sample_id,
-                    1,
-                )
-                new_segments[new_dend_b].insert(0, new_point_b)
-                dendrite_samples[new_dend_b]=dendrite_samples[dend]+new_segments[new_dend_b]
-
-                for i in dendrite_samples:
-                        for k in dendrite_samples[i]:
-                                if k not in sample_list:
-                                        sample_list.append(k)
-                sample_list.sort(key=lambda x: x[0])
-
-                new_lines=[]
-                for k in sample_list:
-                        m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                        new_lines.append(m)
-
-        return (new_lines, dendrite_roots, sample_list)
-
-(LENGTHS, CUMULATIVE_INDICES) = parse_length_distribution()
-
-
-def radius_change(target_dendrites, change_percent, dendrite_samples, dendrite_roots, soma_samples):
-
-        """Scale dendrite radii by ``change_percent`` percent."""
-
-        change_percent=int(change_percent)
-        for dend in target_dendrites:
-
-                for i in range(len(dendrite_samples[dend])):
-                        x=dendrite_samples[dend][i][5]+(change_percent*dendrite_samples[dend][i][5]/100)
-                        dendrite_samples[dend][i][5]=x
-
-
-        sample_list=[]
-
-        for i in soma_samples:
-                sample_list.append(i)
-                        
-        for i in dendrite_roots:
-                for k in dendrite_samples[i]:
-                        sample_list.append(k)
-                                
-        sample_list.sort(key=lambda x: x[0])
-
-        new_lines=[]
-        for k in sample_list:
-                m=' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6])
-                new_lines.append(m)
-
-        return new_lines
-
-def scale(target_dendrites, soma_samples, dendrite_samples, amount):
-        """Scale coordinates and radius of dendrites by ``amount`` percent."""
-
-        amount=float(amount)/100
-
-        sample_list=[]
-
-        for i in soma_samples:
-                sample_list.append(i)
-
-        for dend in target_dendrites:
-
-                for i in dendrite_samples[dend]:
-
-                        i[2]=i[2]*amount
-                        i[3]=i[3]*amount
-                        i[4]=i[4]*amount
-                        i[5]=i[5]*amount
-
-        for i in dendrite_samples:
-                for k in dendrite_samples[i]:
-                        if k not in sample_list:
-                                sample_list.append(k)
-        sample_list.sort(key=lambda x: x[0])
-
-        new_lines=[]
-        for k in sample_list:
-                new_lines.append(' %d %d %.2f %.2f %.2f %.2f %d' % (k[0], k[1], k[2], k[3], k[4], k[5], k[6]))
-
-        return new_lines
-
-# ---------------------------------------------------------------------------
-# Dispatcher originally implemented in ``remodeling_actions.py``
-# ---------------------------------------------------------------------------
-
-ActionFunc = Callable[[], List[str]]
-BranchFunc = Callable[[], Tuple[List[str], List[int], List[List[Any]]]]
-
-
-def _build_actions(
     target_dendrites: Iterable[int],
-    action: str,
-    amount: Any,
+    amount,
     extent_unit: str,
-    dendrite_samples: Dict[int, List[List[Any]]],
-    dist: Dict[int, float],
-    max_sample_id: int,
-    soma_samples: List[List[Any]],
-    samples: Dict[int, List[Any]],
-    parents: Dict[int, int],
-    descendants: Dict[int, List[int]],
-    all_terminal: List[int],
-    dendrite_roots: List[int],
-) -> Tuple[Dict[str, ActionFunc], BranchFunc]:
-    """Return action dispatcher dictionaries."""
-    # Maps action names to callables and provides the branch function
+    dendrite_samples: SegmentMap,
+    lengths: Dict[int, float],
+    soma_samples: Sequence[Sample],
+    rng: random.Random | None = None,
+) -> None:
+    """Add exactly two daughter segments to each selected segment tip."""
 
-    return (
-        {
-            "shrink": lambda: shrink(
-                target_dendrites,
-                action,
-                amount,
-                extent_unit,
-                dendrite_samples,
-                dist,
-                soma_samples,
-                samples,
-                parents,
-                descendants,
-                all_terminal,
-            ),
-            "remove": lambda: remove(
-                target_dendrites,
-                action,
-                dendrite_samples,
-                soma_samples,
-                samples,
-                parents,
-                descendants,
-                all_terminal,
-            ),
-            "extend": lambda: extend(
-                target_dendrites,
-                action,
-                amount,
-                extent_unit,
-                dendrite_samples,
-                dist,
-                max_sample_id,
-                soma_samples,
-                samples,
-                parents,
-                descendants,
-                all_terminal,
-            ),
-            "scale": lambda: scale(target_dendrites, soma_samples, dendrite_samples, amount),
-        },
-        lambda: branch(
-            target_dendrites,
-            action,
-            amount,
-            extent_unit,
-            dendrite_samples,
-            dist,
-            max_sample_id,
-            soma_samples,
-            dendrite_roots,
-        ),
-    )
+    generator = rng or random.Random()
+    lookup = _sample_lookup(soma_samples, dendrite_samples)
+    next_id = _next_sample_id(soma_samples, dendrite_samples)
+    for root in list(target_dendrites):
+        segment = dendrite_samples.get(root)
+        if not segment:
+            raise ValueError(f"unknown dendrite {root}")
+        tip = segment[-1]
+        previous = _direction_parent(segment, lookup)
+        target = _growth_distance(lengths[root], amount, extent_unit)
+        _validate_growth_target(target)
+        first_length = min(select_length(LENGTHS, LENGTH_WEIGHTS, generator), target)
+        first_points = create_points(
+            first_length, 5.0, previous[2:5], tip[2:5], 2, generator
+        )
+        new_roots = []
+        for point in first_points:
+            first: Sample = [
+                next_id,
+                int(tip[1]),
+                *point,
+                float(tip[5]),
+                int(tip[0]),
+            ]
+            next_id += 1
+            daughter = [first]
+            remaining = target - first_length
+            if remaining > 0.0:
+                extra, next_id = _grow_path(first, tip, remaining, next_id, generator)
+                daughter.extend(extra)
+            new_root = int(first[0])
+            dendrite_samples[new_root] = daughter
+            new_roots.append(new_root)
+        if len(new_roots) != 2:
+            raise AssertionError("branch action did not create two daughters")
+        lookup = _sample_lookup(soma_samples, dendrite_samples)
+
+
+def radius_change(
+    target_dendrites: Iterable[int],
+    change,
+    dendrite_samples: SegmentMap,
+    unit: str = "percent",
+) -> None:
+    """Change selected segment radii by a percentage or absolute micrometers."""
+
+    value = float(change)
+    if not np.isfinite(value):
+        raise ValueError("radius change must be finite")
+    if unit not in {"percent", "micrometers"}:
+        raise ValueError("radius unit must be 'percent' or 'micrometers'")
+    for root in target_dendrites:
+        if root not in dendrite_samples:
+            raise ValueError(f"unknown dendrite {root}")
+        for sample in dendrite_samples[root]:
+            radius = float(sample[5])
+            updated = (
+                radius * (1.0 + value / 100.0) if unit == "percent" else radius + value
+            )
+            if not np.isfinite(updated):
+                raise ValueError("radius change exceeds finite numeric range")
+            if updated <= 0:
+                raise ValueError("radius change would produce a non-positive radius")
+            sample[5] = updated
+
+
+def scale(
+    target_dendrites: Iterable[int],
+    soma_samples: Sequence[Sample],
+    dendrite_samples: SegmentMap,
+    amount,
+    descendants: Dict[int, List[int]] | None = None,
+) -> None:
+    """Scale selected segments while preserving attached arbor geometry.
+
+    Each selected segment is scaled about its current proximal attachment.
+    Downstream segments are translated with the moved tip; selected downstream
+    segments are subsequently scaled about their translated attachment.  This
+    makes arbitrary, overlapping selections deterministic and keeps every SWC
+    edge connected.
+    """
+
+    factor = float(amount) / 100.0
+    if not np.isfinite(factor) or factor <= 0:
+        raise ValueError("scale percentage must be positive")
+    selected = {int(root) for root in target_dendrites}
+    if not selected:
+        return
+    descendants = descendants or {}
+    unknown = sorted(selected - set(dendrite_samples))
+    if unknown:
+        raise ValueError(f"unknown dendrite(s): {unknown}")
+
+    def ancestor_count(root: int) -> int:
+        return sum(
+            root in descendants.get(candidate, []) for candidate in dendrite_samples
+        )
+
+    for root in sorted(selected, key=lambda item: (ancestor_count(item), item)):
+        lookup = _sample_lookup(soma_samples, dendrite_samples)
+        segment = dendrite_samples[root]
+        pivot = np.asarray(lookup[int(segment[0][6])][2:5], dtype=float)
+        old_tip = np.asarray(segment[-1][2:5], dtype=float)
+        for sample in segment:
+            position = np.asarray(sample[2:5], dtype=float)
+            scaled_position = np.asarray(
+                [
+                    float(origin) + factor * (float(coordinate) - float(origin))
+                    for origin, coordinate in zip(pivot, position)
+                ],
+                dtype=float,
+            )
+            scaled_radius = float(sample[5]) * factor
+            if not np.isfinite(scaled_position).all() or not np.isfinite(scaled_radius):
+                raise ValueError("scale exceeds finite numeric range")
+            sample[2:5] = scaled_position.tolist()
+            sample[5] = scaled_radius
+        new_tip = np.asarray(segment[-1][2:5], dtype=float)
+        translate_descendants(new_tip - old_tip, root, descendants, dendrite_samples)
 
 
 def execute_action(
@@ -995,67 +517,65 @@ def execute_action(
     action: str,
     amount: Any,
     extent_unit: str,
-    dendrite_samples: Dict[int, List[List[Any]]],
-    dist: Dict[int, float],
-    max_sample_id: int,
-    change_percent: Any,
-    dendrite_roots: List[int],
-    soma_samples: List[List[Any]],
-    samples: Dict[int, List[Any]],
-    parents: Dict[int, int],
+    dendrite_samples: SegmentMap,
+    lengths: Dict[int, float],
+    radius_change_amount: Any,
+    soma_samples: List[Sample],
     descendants: Dict[int, List[int]],
-    all_terminal: List[int],
-) -> Tuple[List[str], List[int], List[List[Any]]]:
-    """Execute a remodeling action and optionally change radii."""
-    # Delegates to the appropriate action implementation
+    *,
+    radius_unit: str = "percent",
+    seed: int | None = None,
+) -> List[str]:
+    """Apply one remodeling action and an optional radius change."""
 
-    sample_list: List[List[Any]] = []
-    new_lines: List[str] = []
+    targets = list(dict.fromkeys(int(root) for root in target_dendrites))
+    generator = random.Random(seed)
 
-    if action != "none":
-        actions, branch_func = _build_actions(
-            target_dendrites,
-            action,
+    if action == "none":
+        pass
+    elif action == "shrink":
+        shrink(
+            targets,
             amount,
             extent_unit,
             dendrite_samples,
-            dist,
-            max_sample_id,
+            lengths,
             soma_samples,
-            samples,
-            parents,
             descendants,
-            all_terminal,
-            dendrite_roots,
         )
-
-        if action == "branch":
-            new_lines, dendrite_roots, sample_list = branch_func()
-        elif action in actions:
-            new_lines = actions[action]()
-        else:
-            raise ValueError(f"Unknown action: {action}")
-
-    if change_percent != "none":
-        new_lines = radius_change(
-            target_dendrites, change_percent, dendrite_samples, dendrite_roots, soma_samples
+    elif action == "remove":
+        remove(targets, dendrite_samples, descendants)
+    elif action == "extend":
+        extend(
+            targets,
+            amount,
+            extent_unit,
+            dendrite_samples,
+            lengths,
+            soma_samples,
+            descendants,
+            generator,
         )
+    elif action == "branch":
+        branch(
+            targets,
+            amount,
+            extent_unit,
+            dendrite_samples,
+            lengths,
+            soma_samples,
+            generator,
+        )
+    elif action == "scale":
+        scale(targets, soma_samples, dendrite_samples, amount, descendants)
+    else:
+        raise ValueError(f"unknown action: {action}")
 
-    return new_lines, dendrite_roots, sample_list
+    if radius_change_amount not in {None, "none"}:
+        radius_change(targets, radius_change_amount, dendrite_samples, radius_unit)
+    samples = _sample_lookup(soma_samples, dendrite_samples)
+    validate_samples(samples)
+    return format_swc_samples(list(samples.values()))
 
 
-class RemodelActions:
-    """Container class for the remodeling action helpers."""
-
-    parse_length_distribution = staticmethod(parse_length_distribution)
-    select_length = staticmethod(select_length)
-    create_points = staticmethod(create_points)
-    add_random_point = staticmethod(add_random_point)
-    translate_descendants = staticmethod(translate_descendants)
-    allocate_new_dendrites = staticmethod(allocate_new_dendrites)
-    extend_dendrite = staticmethod(extend_dendrite)
-    shrink = staticmethod(shrink)
-    remove = staticmethod(remove)
-    extend = staticmethod(extend)
-    radius_change = staticmethod(radius_change)
-    execute_action = staticmethod(execute_action)
+(LENGTHS, LENGTH_WEIGHTS) = parse_length_distribution()

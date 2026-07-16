@@ -1,184 +1,313 @@
-"""Utility functions for computing statistics on dendritic morphologies."""
+"""Morphometric statistics for validated SWC trees."""
 
-import re
-from collections import OrderedDict, Counter, defaultdict
+from __future__ import annotations
 
-from numpy import linalg as LA
+from collections import Counter, defaultdict
+from math import ceil, hypot, inf, sqrt
+from typing import Dict, Sequence
 
 import numpy as np
-from core_utils import distance
+
+FLOAT_EPSILON = np.finfo(float).eps
+MAX_SHOLL_BINS = 10_000
 
 
-def _soma_coords(soma_samples):
-    """Return the xyz coordinates of the soma root as a numpy array."""
-    # Helper for distance calculations relative to the soma
-    soma = next(i for i in soma_samples if i[6] == -1)
-    return np.array([soma[2], soma[3], soma[4]])
+def _soma_coords(soma_samples: Sequence[Sequence[float]]) -> np.ndarray:
+    """Return the mean position of root soma samples."""
+
+    roots = [sample for sample in soma_samples if int(sample[6]) == -1]
+    if not roots:
+        raise ValueError("morphology contains no root soma sample")
+    return np.mean(np.asarray([sample[2:5] for sample in roots], dtype=float), axis=0)
 
 
-def _coords(samples, indices):
-    """Return a numpy array of xyz coordinates for ``indices``."""
-    # Extract coordinates only once for efficiency
-    return np.array([[samples[i][2], samples[i][3], samples[i][4]] for i in indices])
+def _coords(samples, indices) -> np.ndarray:
+    return np.asarray([samples[index][2:5] for index in indices], dtype=float)
 
 
 def _mean_by_branch_order(dendrite_roots, branch_order, values):
-    """Return the mean of ``values`` grouped by branch order."""
-    # Data for the same branch order are accumulated then averaged
-    acc = defaultdict(list)
-    for dend in dendrite_roots:
-        acc[branch_order[dend]].append(values[dend])
+    grouped = defaultdict(list)
+    for root in dendrite_roots:
+        grouped[branch_order[root]].append(values[root])
+    return {order: float(np.mean(group)) for order, group in sorted(grouped.items())}
 
-    return {k: sum(v) / len(v) for k, v in acc.items() if v}
 
-def total_length(dendrite_roots, lengths):
-        # soma_included
-        """Return the total length of *dendrite_roots* using ``lengths`` mapping."""
-        # Each dendrite's precomputed length is summed
-        return sum(lengths[d] for d in dendrite_roots)
+def total_length(dendrite_roots, lengths) -> float:
+    """Return total centerline length for the selected segments."""
 
-def total_area(dendrite_roots, surface_areas):
-        # soma_included
-        """Return the total surface area of *dendrite_roots* using ``surface_areas`` mapping."""
-        # Aggregates surface areas returned by ``dendrite_areas``
-        return sum(surface_areas[d] for d in dendrite_roots)
+    return float(sum(lengths[root] for root in dendrite_roots))
+
+
+def total_area(dendrite_roots, surface_areas) -> float:
+    """Return total lateral surface area for the selected segments."""
+
+    return float(sum(surface_areas[root] for root in dendrite_roots))
+
+
+def total_volume(dendrite_roots, volumes) -> float:
+    """Return total cylindrical compartment volume for selected segments."""
+
+    return float(sum(volumes[root] for root in dendrite_roots))
+
 
 def path_length(dendrite_roots, soma_paths, lengths):
-        """Return a mapping of dendrite IDs to path length."""
-        # Path length sums distances along the path to the soma
+    """Return centerline path length from each segment tip to the soma."""
 
-        return {d: sum(lengths[i] for i in soma_paths[d]) for d in dendrite_roots}
+    return {
+        root: float(sum(lengths[path_root] for path_root in soma_paths[root]))
+        for root in dendrite_roots
+    }
+
 
 def median_radius(dendrite_roots, dendrite_samples):
-        """Return the median radius for each dendrite in *dendrite_roots*."""
-        # Radius at the midpoint acts as a robust representative
-        med_rad = {}
-        for dend in dendrite_roots:
-                mid_idx = len(dendrite_samples[dend]) // 2
-                med_rad[dend] = float(dendrite_samples[dend][mid_idx][5])
-        return med_rad
+    """Return the median sample radius in each segment."""
+
+    return {
+        root: float(np.median([sample[5] for sample in dendrite_samples[root]]))
+        for root in dendrite_roots
+    }
+
+
+def diameter_taper(dendrite_roots, dendrite_samples, lengths):
+    """Return fractional and length-normalized diameter taper per segment.
+
+    ``fraction`` is ``(proximal - distal) / proximal``. ``per_length`` is the
+    absolute diameter change divided by segment centerline length.
+    """
+
+    result = {}
+    for root in dendrite_roots:
+        segment = dendrite_samples[root]
+        proximal = 2.0 * float(segment[0][5])
+        distal = 2.0 * float(segment[-1][5])
+        segment_length = float(lengths[root])
+        result[root] = {
+            "fraction": 0.0 if proximal == 0 else (proximal - distal) / proximal,
+            "per_length": 0.0
+            if segment_length == 0
+            else (proximal - distal) / segment_length,
+        }
+    return result
 
 
 def branch_order_frequency(dendrite_roots, branch_order):
-        """Return the frequency of each branch order."""
-        # Counts how many dendrites occur at each order
+    """Return segment counts by centrifugal branch order and the maximum order."""
 
-        orders = [branch_order[d] for d in dendrite_roots]
-        counter = Counter(orders)
-        branch_order_max = max(counter) if counter else 0
-        branch_order_freq = {i: counter.get(i, 0) for i in range(1, branch_order_max + 1)}
+    counts = Counter(branch_order[root] for root in dendrite_roots)
+    maximum = max(counts, default=0)
+    return {order: counts.get(order, 0) for order in range(1, maximum + 1)}, maximum
 
-        return branch_order_freq, branch_order_max
 
 def branch_order_dlength(dendrite_roots, branch_order, branch_order_max, lengths):
-        """Return average dendrite length per branch order."""
-        # Groups lengths by branch order then averages them
-        return _mean_by_branch_order(dendrite_roots, branch_order, lengths)
+    del branch_order_max
+    return _mean_by_branch_order(dendrite_roots, branch_order, lengths)
 
-def branch_order_path_length(dendrite_roots, branch_order, branch_order_max, path_lengths):
-        """Return average path length per branch order."""
-        # Path lengths are summed for each order before averaging
-        return _mean_by_branch_order(dendrite_roots, branch_order, path_lengths)
+
+def branch_order_path_length(
+    dendrite_roots, branch_order, branch_order_max, path_lengths
+):
+    del branch_order_max
+    return _mean_by_branch_order(dendrite_roots, branch_order, path_lengths)
+
+
+def _bound_value(step: float, index: int) -> int | float:
+    value = float(f"{step * index:.15g}")
+    return int(value) if float(value).is_integer() else value
+
+
+def _shell_bounds(
+    samples, soma: np.ndarray, radius: float, parameter
+) -> list[int | float]:
+    if not np.isfinite(radius) or radius <= 0:
+        raise ValueError("Sholl radius step must be positive")
+    relevant_ids = {
+        sample_id
+        for sample_id, sample in samples.items()
+        if int(sample[1]) in parameter
+    }
+    relevant_ids.update(
+        int(samples[sample_id][6])
+        for sample_id in list(relevant_ids)
+        if int(samples[sample_id][6]) in samples
+    )
+    distances = [
+        hypot(*(np.asarray(samples[sample_id][2:5], dtype=float) - soma).tolist())
+        for sample_id in relevant_ids
+    ]
+    if not distances:
+        return []
+    maximum = max(distances)
+    ratio = maximum / radius
+    if not np.isfinite(ratio) or ratio > MAX_SHOLL_BINS:
+        raise ValueError(
+            f"Sholl analysis would require more than {MAX_SHOLL_BINS} radial bins; "
+            "increase the Sholl step"
+        )
+    count = max(1, int(ceil(np.nextafter(ratio, -inf))))
+    return [_bound_value(radius, index) for index in range(1, count + 1)]
+
+
+def _sphere_parameters(
+    start: np.ndarray, end: np.ndarray, radius: float
+) -> list[float]:
+    """Return line-segment parameters where a segment touches a sphere."""
+
+    normalizer = max(
+        abs(float(radius)),
+        *(abs(float(value)) for value in start),
+        *(abs(float(value)) for value in end),
+    )
+    if not np.isfinite(normalizer):
+        raise ValueError("Sholl coordinate magnitude exceeds finite numeric range")
+    if normalizer == 0.0:
+        return []
+    scaled_start = start / normalizer
+    scaled_end = end / normalizer
+    scaled_radius = float(radius) / normalizer
+    vector = scaled_end - scaled_start
+    a = float(np.dot(vector, vector))
+    if not np.isfinite(a):
+        raise ValueError("Sholl edge magnitude exceeds finite numeric range")
+    if a == 0.0:
+        return []
+
+    projection = -float(np.dot(scaled_start, vector)) / a
+    closest = scaled_start + projection * vector
+    closest_squared = float(np.dot(closest, closest))
+    radius_squared = scaled_radius * scaled_radius
+    start_squared = float(np.dot(scaled_start, scaled_start))
+    end_squared = float(np.dot(scaled_end, scaled_end))
+    scale = max(
+        abs(radius_squared),
+        abs(start_squared),
+        abs(end_squared),
+        abs(a),
+        np.finfo(float).tiny,
+    )
+    tolerance = 64.0 * FLOAT_EPSILON * scale
+    radial_gap = radius_squared - closest_squared
+    if radial_gap < -tolerance:
+        return []
+    if abs(radial_gap) <= tolerance:
+        candidates = [projection]
+    else:
+        offset = sqrt(max(0.0, radial_gap) / a)
+        candidates = [projection - offset, projection + offset]
+    parameter_tolerance = 64.0 * FLOAT_EPSILON
+    return sorted(
+        {
+            min(1.0, max(0.0, value))
+            for value in candidates
+            if value > parameter_tolerance and value <= 1.0 + parameter_tolerance
+        }
+    )
+
+
+def _dendritic_edges(samples, parents, parameter):
+    for sample_id, sample in samples.items():
+        if int(sample[1]) not in parameter:
+            continue
+        parent_id = parents[sample_id]
+        if parent_id == -1 or parent_id not in samples:
+            continue
+        yield samples[parent_id], sample
+
 
 def sholl_intersections(samples, parents, soma_samples, radius, parameter):
-        """Compute Sholl intersection counts for the given radius."""
-        # Measures crossings of concentric shells centred at the soma
+    """Count geometric neurite-segment intersections with concentric spheres.
 
-        soma_coords = _soma_coords(soma_samples)
+    An intersection at a segment's distal endpoint is assigned to that segment;
+    its proximal endpoint is excluded to avoid counting a shared node twice.
+    """
 
-        values = np.arange(0, 10000, radius)
-        ids = [i for i in samples if samples[i][1] in parameter]
-        pts = _coords(samples, ids)
-        parents = _coords(samples, [parents[i] for i in ids])
+    soma = _soma_coords(soma_samples)
+    bounds = _shell_bounds(samples, soma, float(radius), set(parameter))
+    result = {bound: 0 for bound in bounds}
+    for proximal, distal in _dendritic_edges(samples, parents, set(parameter)):
+        start = np.asarray(proximal[2:5], dtype=float) - soma
+        end = np.asarray(distal[2:5], dtype=float) - soma
+        for bound in bounds:
+            result[bound] += len(_sphere_parameters(start, end, float(bound)))
+    return result
 
-        dist1 = np.linalg.norm(pts - soma_coords, axis=1)
-        dist2 = np.linalg.norm(parents - soma_coords, axis=1)
-
-        sholl_list = {}
-        for prev, nxt in zip(values[:-1], values[1:]):
-                mask = (dist1 > nxt) & (dist2 < nxt)
-                sholl_list[int(nxt)] = int(mask.sum())
-
-        return sholl_list
 
 def sholl_branch_points(branch_points, samples, soma_samples, radius):
-        """Compute number of branch samples crossing each Sholl shell."""
-        # Each branch point is assigned to a radial distance bin
+    """Count true branch-point samples within concentric spherical shells."""
 
-        soma_coords = _soma_coords(soma_samples)
+    step = float(radius)
+    if not np.isfinite(step) or step <= 0:
+        raise ValueError("Sholl radius step must be positive")
+    soma = _soma_coords(soma_samples)
+    result: Dict[int | float, int] = {}
+    for sample_id in branch_points:
+        radial_distance = float(
+            hypot(*(np.asarray(samples[sample_id][2:5], dtype=float) - soma).tolist())
+        )
+        ratio = radial_distance / step
+        if not np.isfinite(ratio) or ratio > MAX_SHOLL_BINS:
+            raise ValueError(
+                f"Sholl analysis would require more than {MAX_SHOLL_BINS} radial "
+                "bins; increase the Sholl step"
+            )
+        shell_index = max(1, int(ceil(np.nextafter(ratio, -inf))))
+        bound = _bound_value(step, shell_index)
+        result[bound] = result.get(bound, 0) + 1
+    if not result:
+        return {}
+    maximum_index = max(max(1, int(round(float(bound) / step))) for bound in result)
+    return {
+        _bound_value(step, index): result.get(_bound_value(step, index), 0)
+        for index in range(1, maximum_index + 1)
+    }
 
-        values = np.arange(0, 10000, radius)
-        pts = _coords(samples, branch_points)
-        dist = np.linalg.norm(pts - soma_coords, axis=1)
 
-        sholl_list = {}
-        for prev, nxt in zip(values[:-1], values[1:]):
-                mask = (dist > prev) & (dist < nxt)
-                sholl_list[int(nxt)] = int(mask.sum())
-
-        return sholl_list
-
-def remove_trailing_zeros(sholl_list, values, radius):
-        """Trim trailing zeros from ``sholl_list``."""
-        arr = np.array([sholl_list.get(v + radius, 0) for v in values[:-1]])
-        non_zero = np.nonzero(arr)[0]
-        if non_zero.size == 0:
-                return {}
-        idx = non_zero[-1] + 1
-        return {
-                int(values[i] + radius): sholl_list[values[i] + radius]
-                for i in range(idx)
-        }
+def _fraction_in_shell(
+    start: np.ndarray, end: np.ndarray, inner: float, outer: float
+) -> float:
+    cuts = {0.0, 1.0}
+    if inner > 0:
+        cuts.update(_sphere_parameters(start, end, inner))
+    cuts.update(_sphere_parameters(start, end, outer))
+    ordered = sorted(cuts)
+    fraction = 0.0
+    for left, right in zip(ordered, ordered[1:]):
+        midpoint = start + ((left + right) / 2.0) * (end - start)
+        radial_distance = hypot(*midpoint.tolist())
+        if radial_distance >= inner and radial_distance < outer:
+            fraction += right - left
+    return fraction
 
 
 def sholl_length(samples, parents, soma_samples, radius, parameter):
-        """Compute total dendrite length inside successive Sholl shells."""
-        # Sums segment lengths that fall within each radial bin
+    """Return exact centerline length contained in each spherical shell."""
 
-        soma_coords = _soma_coords(soma_samples)
-
-        values = np.arange(0, 10000, radius)
-        ids = [i for i in samples if samples[i][1] in parameter]
-        pts = _coords(samples, ids)
-        parents = _coords(samples, [parents[i] for i in ids])
-
-        lengths = np.linalg.norm(pts - parents, axis=1)
-        dist1 = np.linalg.norm(pts - soma_coords, axis=1)
-
-        sholl_list = {}
-        for prev, nxt in zip(values[:-1], values[1:]):
-                mask = (dist1 > prev) & (dist1 < nxt)
-                sholl_list[int(nxt)] = float(lengths[mask].sum())
-
-        return sholl_list
+    step = float(radius)
+    soma = _soma_coords(soma_samples)
+    bounds = _shell_bounds(samples, soma, step, set(parameter))
+    result = {bound: 0.0 for bound in bounds}
+    for proximal, distal in _dendritic_edges(samples, parents, set(parameter)):
+        start = np.asarray(proximal[2:5], dtype=float) - soma
+        end = np.asarray(distal[2:5], dtype=float) - soma
+        segment_length = hypot(*(end - start).tolist())
+        for bound in bounds:
+            inner = float(bound) - step
+            result[bound] += segment_length * _fraction_in_shell(
+                start, end, inner, float(bound)
+            )
+    return result
 
 
 __all__ = [
-    "total_length",
-    "total_area",
-    "path_length",
-    "median_radius",
-    "branch_order_frequency",
     "branch_order_dlength",
+    "branch_order_frequency",
     "branch_order_path_length",
-    "sholl_intersections",
+    "diameter_taper",
+    "median_radius",
+    "path_length",
     "sholl_branch_points",
-    "remove_trailing_zeros",
+    "sholl_intersections",
     "sholl_length",
+    "total_area",
+    "total_length",
+    "total_volume",
 ]
-
-
-class MorphologyStats:
-    """Namespace for morphometric statistic helpers."""
-
-    total_length = staticmethod(total_length)
-    total_area = staticmethod(total_area)
-    path_length = staticmethod(path_length)
-    median_radius = staticmethod(median_radius)
-    branch_order_frequency = staticmethod(branch_order_frequency)
-    branch_order_dlength = staticmethod(branch_order_dlength)
-    branch_order_path_length = staticmethod(branch_order_path_length)
-    sholl_intersections = staticmethod(sholl_intersections)
-    sholl_branch_points = staticmethod(sholl_branch_points)
-    remove_trailing_zeros = staticmethod(remove_trailing_zeros)
-    sholl_length = staticmethod(sholl_length)
