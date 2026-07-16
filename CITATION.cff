@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use REMOD, cite the article in preferred-citation."
 title: REMOD
 type: software
+license: MIT
 authors:
   - family-names: Bozelos
     given-names: Panagiotis

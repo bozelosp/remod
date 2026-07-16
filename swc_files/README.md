@@ -32,8 +32,8 @@ cite all of the following:
    2024;6(7):207–221.
    [doi:10.1096/fba.2024-00048](https://doi.org/10.1096/fba.2024-00048).
 
-This notice applies to the bundled morphology data. It does not assign a
-license to the REMOD software.
+This CC BY 4.0 notice applies to the bundled morphology data. The REMOD
+software is licensed separately under the [MIT License](../LICENSE).
 
 ## Use as fixtures
 

@@ -230,6 +230,12 @@ The two bundled morphology fixtures and their attribution are documented in
 [swc_files/README.md](swc_files/README.md). They are nontrivial test inputs,
 not complete biological ground truth.
 
+## License
+
+The REMOD software is available under the [MIT License](LICENSE). The bundled
+SWC morphology data are licensed separately and attributed in
+[swc_files/README.md](swc_files/README.md).
+
 ## Citation
 
 Citation metadata is provided in [CITATION.cff](CITATION.cff):
