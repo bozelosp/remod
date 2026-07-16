@@ -9,11 +9,23 @@ from itertools import chain
 from core_utils import ensure_dir
 
 
+def _json_compatible(value):
+    """Return nested data with NumPy-style scalar values converted to Python types."""
+    if isinstance(value, dict):
+        return {_json_compatible(key): _json_compatible(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_compatible(item) for item in value]
+    item = getattr(value, "item", None)
+    if callable(item):
+        return item()
+    return value
+
+
 def write_json(path: Path | str, data) -> None:
     """Write *data* as JSON to *path*."""
     ensure_dir(path)
     with Path(path).open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(_json_compatible(data), f, indent=2)
 
 
 def write_value(path: Path | str, value) -> None:
@@ -373,4 +385,3 @@ class FileIO:
     write_pickle = staticmethod(write_pickle)
     build_plot_from_lines = staticmethod(build_plot_from_lines)
     graph = staticmethod(graph)
-

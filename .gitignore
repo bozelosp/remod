@@ -53,3 +53,8 @@ random_sampling.pyc
 morphology_statistics.pyc
 warn.pyc
 logs.md
+__pycache__/
+downloads/
+*_before.txt
+current_average_statistics.p
+log_parsed_files.txt

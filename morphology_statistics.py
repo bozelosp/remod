@@ -97,7 +97,7 @@ def sholl_intersections(samples, parents, soma_samples, radius, parameter):
         sholl_list = {}
         for prev, nxt in zip(values[:-1], values[1:]):
                 mask = (dist1 > nxt) & (dist2 < nxt)
-                sholl_list[nxt] = int(mask.sum())
+                sholl_list[int(nxt)] = int(mask.sum())
 
         return sholl_list
 
@@ -114,7 +114,7 @@ def sholl_branch_points(branch_points, samples, soma_samples, radius):
         sholl_list = {}
         for prev, nxt in zip(values[:-1], values[1:]):
                 mask = (dist > prev) & (dist < nxt)
-                sholl_list[nxt] = int(mask.sum())
+                sholl_list[int(nxt)] = int(mask.sum())
 
         return sholl_list
 
@@ -125,7 +125,10 @@ def remove_trailing_zeros(sholl_list, values, radius):
         if non_zero.size == 0:
                 return {}
         idx = non_zero[-1] + 1
-        return {values[i] + radius: sholl_list[values[i] + radius] for i in range(idx)}
+        return {
+                int(values[i] + radius): sholl_list[values[i] + radius]
+                for i in range(idx)
+        }
 
 
 def sholl_length(samples, parents, soma_samples, radius, parameter):
@@ -145,7 +148,7 @@ def sholl_length(samples, parents, soma_samples, radius, parameter):
         sholl_list = {}
         for prev, nxt in zip(values[:-1], values[1:]):
                 mask = (dist1 > prev) & (dist1 < nxt)
-                sholl_list[nxt] = float(lengths[mask].sum())
+                sholl_list[int(nxt)] = float(lengths[mask].sum())
 
         return sholl_list
 
@@ -179,4 +182,3 @@ class MorphologyStats:
     sholl_branch_points = staticmethod(sholl_branch_points)
     remove_trailing_zeros = staticmethod(remove_trailing_zeros)
     sholl_length = staticmethod(sholl_length)
-

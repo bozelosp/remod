@@ -463,9 +463,15 @@ def analyze_main(argv=None):
                                 pass
                         vector.append(sholl_apical_intersections[length])
         
-                from plot_statistics import plot_the_data
-                prefix = stats_dir / f'{file_name}_'
-                plot_the_data(prefix)
+                try:
+                        from plot_statistics import plot_the_data
+                except ModuleNotFoundError as exc:
+                        if exc.name != "matplotlib":
+                                raise
+                        log("Matplotlib is not installed; skipping statistics plots.")
+                else:
+                        prefix = stats_dir / f'{file_name}_'
+                        plot_the_data(prefix)
         
                 log(
                     "Successful parsing and calculation of morphometric statistics!"
@@ -935,8 +941,9 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    if not argv:
+    if not argv or argv[0] in {'-h', '--help'}:
         print("Usage: remod_cli.py <analyze|edit> [options]")
+        print("\nCommands:\n  analyze  Compute morphometric statistics\n  edit     Remodel an SWC file")
         return
 
     command, *sub_args = argv

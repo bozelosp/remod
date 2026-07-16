@@ -6,8 +6,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Iterable, Dict
-from logger_utils import log
-
 from swc_parser import parse_swc_file
 from morphology_statistics import (
     total_length,
@@ -139,9 +137,10 @@ def main(argv: list[str] | None = None) -> None:
 
     data = json.dumps(results, indent=2)
     if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(data, encoding="utf-8")
     else:
-        log(data)
+        print(data)
 
 
 if __name__ == "__main__":
