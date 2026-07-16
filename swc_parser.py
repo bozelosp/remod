@@ -195,21 +195,31 @@ def paths_to_soma(
     soma_samples: Iterable[List[float]],
 ) -> Dict[int, List[int]]:
     """Return the pathway from each dendrite to the soma."""
-    # Walk up the tree from each dendrite until hitting the soma root
+    # Walk up the sample tree, recording only dendrite roots.  Intermediate
+    # sample IDs do not have entries in the per-dendrite statistics mappings.
 
     soma_set = {s[0] for s in soma_samples}
+    root_set = set(dendrite_roots)
     soma_paths: Dict[int, List[int]] = {}
 
-    for dend in dendrite_roots:
+    for dend in root_set:
         current = dend
         pathway = [current]
+        visited = {current}
         while True:
             parent = int(samples[current][6])
             if parent in soma_set or parent == -1:
                 break
-            # if the parent is also a dendrite start, jump to its first index
-            current = sample_id_map.get(parent, [parent])[0]
-            pathway.append(current)
+            if parent not in samples:
+                raise ValueError(
+                    f"sample {current} refers to missing parent {parent}"
+                )
+            if parent in visited:
+                raise ValueError(f"cycle detected while tracing sample {dend} to soma")
+            visited.add(parent)
+            current = parent
+            if current in root_set:
+                pathway.append(current)
 
         soma_paths[dend] = pathway
 
@@ -481,4 +491,3 @@ def index_reassign(
         for s in samples
     ]
     return new_lines
-
