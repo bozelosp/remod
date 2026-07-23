@@ -7,6 +7,7 @@ a branch point is the segment identifier used by the remodeling interface.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from math import pi
 from numbers import Integral, Real
 from pathlib import Path
@@ -19,6 +20,31 @@ from file_io import read_lines
 
 Sample = List[float]
 SampleMap = Dict[int, Sample]
+
+
+@dataclass(frozen=True)
+class ParsedMorphology:
+    """Validated SWC topology and measurements used by current commands."""
+
+    samples: SampleMap
+    comments: List[str]
+    branch_points: List[int]
+    basal_branch_points: List[int]
+    apical_branch_points: List[int]
+    soma_samples: List[Sample]
+    dendrite_roots: List[int]
+    descendants: Dict[int, List[int]]
+    segments: Dict[int, List[Sample]]
+    soma_paths: Dict[int, List[int]]
+    all_terminal: List[int]
+    basal_terminal: List[int]
+    apical_terminal: List[int]
+    lengths: Dict[int, float]
+    surface_areas: Dict[int, float]
+    branch_order: Dict[int, int]
+    basal: List[int]
+    apical: List[int]
+    parents: Dict[int, int]
 
 
 def read_swc_lines(file_path: str | Path) -> List[str]:
@@ -94,7 +120,7 @@ def _children_map(samples: SampleMap) -> Dict[int, List[int]]:
 
 
 def validate_samples(samples: SampleMap) -> None:
-    """Validate SWC rows, parent references, roots, and acyclicity."""
+    """Validate SWC rows, parent references, soma topology, and acyclicity."""
 
     if not samples:
         raise ValueError("SWC morphology contains no samples")
@@ -136,6 +162,10 @@ def validate_samples(samples: SampleMap) -> None:
             raise ValueError(f"sample {sample_id} cannot be its own parent")
         elif parent_id not in samples:
             raise ValueError(f"sample {sample_id} refers to missing parent {parent_id}")
+        elif int(sample[1]) == 1 and int(samples[parent_id][1]) != 1:
+            raise ValueError(
+                f"non-root soma sample {sample_id} has non-soma parent {parent_id}"
+            )
 
     if not roots:
         raise ValueError("SWC morphology has no root sample")
@@ -147,22 +177,24 @@ def validate_samples(samples: SampleMap) -> None:
     if non_soma_roots:
         raise ValueError(f"non-soma root sample(s): {non_soma_roots}")
 
+    state = {sample_id: 0 for sample_id in samples}
     for start in samples:
+        if state[start] == 2:
+            continue
         current = start
-        seen: Set[int] = set()
+        path: List[int] = []
         while current != -1:
-            if current in seen:
+            if state[current] == 2:
+                break
+            if state[current] == 1:
                 raise ValueError(
                     f"cycle detected while tracing sample {start} to the soma"
                 )
-            seen.add(current)
+            state[current] = 1
+            path.append(current)
             current = int(samples[current][6])
-
-
-def max_sample_id(samples: SampleMap) -> int:
-    """Return the largest sample ID."""
-
-    return max(samples)
+        for sample_id in path:
+            state[sample_id] = 2
 
 
 def find_branch_points(samples: SampleMap):
@@ -175,21 +207,17 @@ def find_branch_points(samples: SampleMap):
         if len([child for child in child_ids if int(samples[child][1]) != 1]) > 1
     ]
     branch_points.sort()
-    axon = [sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 2]
     basal = [
         sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 3
     ]
     apical = [
         sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 4
     ]
-    soma = [sample_id for sample_id in branch_points if int(samples[sample_id][1]) == 1]
     dendritic = basal + apical
     return (
         dendritic,
-        axon,
         basal,
         apical,
-        soma,
         [sample for sample in samples.values() if int(sample[1]) == 1],
     )
 
@@ -245,25 +273,6 @@ def collect_dendrite_sample_ids(
     return result
 
 
-def classify_dendrites(dendrite_roots: Iterable[int], samples: SampleMap):
-    """Group segment roots by SWC neurite type."""
-
-    names: Dict[int, str] = {}
-    groups = {2: [], 3: [], 4: []}
-    undefined: List[int] = []
-    prefixes = {2: "axon", 3: "dend", 4: "apic"}
-    for root in sorted(dendrite_roots):
-        sample_type = int(samples[root][1])
-        if sample_type in groups:
-            group = groups[sample_type]
-            names[root] = f"{prefixes[sample_type]}[{len(group)}]"
-            group.append(root)
-        else:
-            names[root] = f"undef[{len(undefined)}]"
-            undefined.append(root)
-    return names, groups[2], groups[3], groups[4], undefined
-
-
 def collect_dendrite_samples(
     dendrite_roots: Iterable[int],
     sample_id_map: Dict[int, List[int]],
@@ -300,7 +309,8 @@ def paths_to_soma(
             parent_segment = sample_to_segment.get(parent_id)
             if parent_segment is None:
                 raise ValueError(
-                    f"sample {root} cannot be connected to a segment through parent {parent_id}"
+                    f"sample {root} cannot be connected to a segment "
+                    f"through parent {parent_id}"
                 )
             if parent_segment in path:
                 raise ValueError(
@@ -334,7 +344,6 @@ def terminal_dendrites(
 
 def build_descendant_map(
     dendrite_roots: Iterable[int],
-    all_terminal: Iterable[int],
     soma_paths: Dict[int, List[int]],
 ) -> Dict[int, List[int]]:
     """Return all downstream segments for each segment root."""
@@ -453,85 +462,59 @@ def compute_branch_order(
     return result
 
 
-def toward_soma_map(
-    dendrite_roots: Iterable[int], soma_paths: Dict[int, List[int]]
-) -> Dict[int, int]:
-    """Return the adjacent segment toward the soma, or ``-1`` for primary segments."""
-
-    return {
-        root: soma_paths[root][1] if len(soma_paths[root]) > 1 else -1
-        for root in dendrite_roots
-    }
-
-
-def parse_swc_file(file_path: str | Path):
-    """Parse and derive the morphology structures used by REMOD.
-
-    The tuple return shape is retained for compatibility with the original
-    command-line implementation.
-    """
+def parse_swc_file(file_path: str | Path) -> ParsedMorphology:
+    """Parse and derive the validated morphology used by REMOD commands."""
 
     swc_lines = read_swc_lines(file_path)
     comment_lines, samples = parse_swc_lines(swc_lines)
     validate_samples(samples)
     (
         branch_points,
-        axon_branch_points,
         basal_branch_points,
         apical_branch_points,
-        soma_branch_points,
         soma_samples,
     ) = find_branch_points(samples)
     parents = parent_map(samples)
     all_roots = segment_roots(samples)
     sample_id_map = collect_dendrite_sample_ids(all_roots, samples)
-    dend_names, axon, basal, apical, undefined = classify_dendrites(all_roots, samples)
+    basal = [root for root in all_roots if int(samples[root][1]) == 3]
+    apical = [root for root in all_roots if int(samples[root][1]) == 4]
     dendrite_records = collect_dendrite_samples(all_roots, sample_id_map, samples)
     soma_paths = paths_to_soma(all_roots, samples, sample_id_map, soma_samples)
     all_terminal, basal_terminal, apical_terminal = terminal_dendrites(
         all_roots, soma_paths, basal, apical
     )
-    descendants = build_descendant_map(all_roots, all_terminal, soma_paths)
+    descendants = build_descendant_map(all_roots, soma_paths)
     lengths = dendrite_lengths(dendrite_records, all_roots, parents, samples)
     surface_areas = dendrite_areas(dendrite_records, all_roots, parents, samples)
     branch_order_map = compute_branch_order(all_roots, samples)
-    connectivity_map = toward_soma_map(all_roots, soma_paths)
     dendrite_roots = basal + apical
 
-    return (
-        swc_lines,
-        samples,
-        comment_lines,
-        branch_points,
-        axon_branch_points,
-        basal_branch_points,
-        apical_branch_points,
-        soma_branch_points,
-        soma_samples,
-        max_sample_id(samples),
-        dendrite_roots,
-        descendants,
-        sample_id_map,
-        dend_names,
-        axon,
-        basal,
-        apical,
-        undefined,
-        dendrite_records,
-        soma_paths,
-        all_terminal,
-        basal_terminal,
-        apical_terminal,
-        lengths,
-        surface_areas,
-        branch_order_map,
-        connectivity_map,
-        parents,
+    return ParsedMorphology(
+        samples=samples,
+        comments=comment_lines,
+        branch_points=branch_points,
+        basal_branch_points=basal_branch_points,
+        apical_branch_points=apical_branch_points,
+        soma_samples=soma_samples,
+        dendrite_roots=dendrite_roots,
+        descendants=descendants,
+        segments=dendrite_records,
+        soma_paths=soma_paths,
+        all_terminal=all_terminal,
+        basal_terminal=basal_terminal,
+        apical_terminal=apical_terminal,
+        lengths=lengths,
+        surface_areas=surface_areas,
+        branch_order=branch_order_map,
+        basal=basal,
+        apical=apical,
+        parents=parents,
     )
 
 
 def _format_number(value: float) -> str:
-    return f"{float(value):.15g}"
+    return f"{float(value):.17g}"
 
 
 def format_swc_samples(samples: Sequence[Sample]) -> List[str]:
@@ -604,6 +587,7 @@ def renumber_samples(samples: SampleMap | Iterable[Sample]) -> List[Sample]:
 
 
 __all__ = [
+    "ParsedMorphology",
     "collect_dendrite_sample_ids",
     "compute_branch_order",
     "dendrite_areas",

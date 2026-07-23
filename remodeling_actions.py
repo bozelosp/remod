@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 import re
-from math import cos, hypot, pi, sin
+from math import cos, hypot, isclose, pi, sin
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
@@ -18,6 +18,10 @@ Sample = List[Any]
 SegmentMap = Dict[int, List[Sample]]
 DEFAULT_DISTRIBUTION = Path(__file__).with_name("length_distribution.txt")
 MAX_GROWTH_POINTS = 100_000
+MAX_DIRECTION_ATTEMPTS = 128
+# Near the coordinate-resolution limit, an otherwise valid step can differ by
+# a few units in the last stored place. Larger mismatches are rejected.
+GEOMETRY_REL_TOLERANCE = 1e-5
 
 
 def parse_length_distribution(
@@ -82,15 +86,23 @@ def _rotate(vector: np.ndarray, axis: np.ndarray, angle: float) -> np.ndarray:
     )
 
 
+def _radial_distance(point: np.ndarray, origin: np.ndarray) -> float:
+    value = hypot(*(point - origin).tolist())
+    if not np.isfinite(value):
+        raise ValueError("coordinate magnitude exceeds finite numeric range")
+    return value
+
+
 def create_points(
     length: float,
     angle: float,
     start_point: Iterable[float],
     end_point: Iterable[float],
+    soma_origin: Iterable[float],
     branch_option: int,
     rng: random.Random | None = None,
 ) -> List[List[float]]:
-    """Create one or two points on a cone around the parent direction."""
+    """Create one or two representable, soma-outward points on a direction cone."""
 
     if not np.isfinite(length) or length <= 0:
         raise ValueError("new segment length must be positive")
@@ -101,8 +113,11 @@ def create_points(
     generator = rng or random
     start = np.asarray(list(start_point), dtype=float)
     end = np.asarray(list(end_point), dtype=float)
-    if start.shape != (3,) or end.shape != (3,):
-        raise ValueError("start and end points must be three-dimensional")
+    origin = np.asarray(list(soma_origin), dtype=float)
+    if start.shape != (3,) or end.shape != (3,) or origin.shape != (3,):
+        raise ValueError("growth points and soma origin must be three-dimensional")
+    if not np.isfinite([*start, *end, *origin]).all():
+        raise ValueError("growth points and soma origin must be finite")
     axis = _unit(end - start, "parent segment")
     reference = np.asarray(
         min(np.eye(3), key=lambda candidate: abs(float(np.dot(candidate, axis)))),
@@ -111,18 +126,46 @@ def create_points(
     perpendicular = _unit(np.cross(axis, reference), "perpendicular axis")
     deflection = np.deg2rad(float(angle))
     tilted = cos(deflection) * axis + sin(deflection) * perpendicular
-    azimuth = generator.random() * 2.0 * pi
-    first_direction = _rotate(tilted, axis, azimuth)
-    points = [(end + float(length) * first_direction).tolist()]
-    if branch_option == 2:
-        second_direction = _rotate(tilted, axis, azimuth + pi)
-        points.append((end + float(length) * second_direction).tolist())
-    for point in points:
-        if distance(end[0], point[0], end[1], point[1], end[2], point[2]) == 0.0:
-            raise ValueError(
-                "requested growth is below coordinate precision at the selected tip"
+    current_radius = _radial_distance(end, origin)
+
+    for _attempt in range(MAX_DIRECTION_ATTEMPTS):
+        azimuth = generator.random() * 2.0 * pi
+        directions = [_rotate(tilted, axis, azimuth)]
+        if branch_option == 2:
+            directions.append(_rotate(tilted, axis, azimuth + pi))
+        candidates = [end + float(length) * direction for direction in directions]
+        if any(
+            _radial_distance(candidate, origin) < current_radius
+            for candidate in candidates
+        ):
+            continue
+        actual_steps = [
+            distance(
+                end[0],
+                candidate[0],
+                end[1],
+                candidate[1],
+                end[2],
+                candidate[2],
             )
-    return points
+            for candidate in candidates
+        ]
+        if all(
+            actual > 0.0
+            and isclose(
+                actual,
+                float(length),
+                rel_tol=GEOMETRY_REL_TOLERANCE,
+                abs_tol=0.0,
+            )
+            for actual in actual_steps
+        ):
+            return [candidate.tolist() for candidate in candidates]
+
+    raise ValueError(
+        "requested growth cannot be represented outward from the soma "
+        "within the 5-degree direction cone"
+    )
 
 
 def translate_descendants(
@@ -171,6 +214,24 @@ def _direction_parent(segment: Sequence[Sample], lookup: Dict[int, Sample]) -> S
     raise ValueError("cannot grow from a segment without a defined direction")
 
 
+def _soma_origin(soma_samples: Sequence[Sample]) -> np.ndarray:
+    roots = [sample for sample in soma_samples if int(sample[6]) == -1]
+    if len(roots) != 1:
+        raise ValueError("growth requires exactly one root soma sample")
+    return np.asarray(roots[0][2:5], dtype=float)
+
+
+def _segment_length(segment: Sequence[Sample], parent: Sample) -> float:
+    points = [parent, *segment]
+    value = sum(
+        distance(a[2], b[2], a[3], b[3], a[4], b[4])
+        for a, b in zip(points, points[1:])
+    )
+    if not np.isfinite(value):
+        raise ValueError("segment length exceeds finite numeric range")
+    return value
+
+
 def _growth_distance(length: float, amount: Any, extent_unit: str) -> float:
     if amount is None:
         raise ValueError("an action amount is required")
@@ -203,10 +264,12 @@ def _grow_path(
     target_length: float,
     next_id: int,
     rng: random.Random,
+    soma_origin: np.ndarray,
 ) -> Tuple[List[Sample], int]:
     _validate_growth_target(target_length)
     rows: List[Sample] = []
     remaining = float(target_length)
+    grown = 0.0
     while remaining > 0.0:
         if len(rows) >= MAX_GROWTH_POINTS:
             raise ValueError(
@@ -214,14 +277,28 @@ def _grow_path(
             )
         sampled = select_length(LENGTHS, LENGTH_WEIGHTS, rng)
         step = min(sampled, remaining)
-        point = create_points(step, 5.0, parent[2:5], current[2:5], 1, rng)[0]
+        point = create_points(
+            step,
+            5.0,
+            parent[2:5],
+            current[2:5],
+            soma_origin,
+            1,
+            rng,
+        )[0]
         actual_step = distance(
             current[2], point[0], current[3], point[1], current[4], point[2]
         )
-        if actual_step == 0.0:
+        if actual_step == 0.0 or not isclose(
+            actual_step,
+            step,
+            rel_tol=GEOMETRY_REL_TOLERANCE,
+            abs_tol=0.0,
+        ):
             raise ValueError(
-                "requested growth is below coordinate precision at the selected tip"
+                "requested growth is not representable at the selected tip"
             )
+        grown += actual_step
         row: Sample = [
             next_id,
             int(current[1]),
@@ -241,6 +318,13 @@ def _grow_path(
                     "requested growth distance exceeds floating-point resolution"
                 )
             remaining = updated
+    if not isclose(
+        grown,
+        target_length,
+        rel_tol=GEOMETRY_REL_TOLERANCE,
+        abs_tol=0.0,
+    ):
+        raise ValueError("generated path does not match the requested growth distance")
     return rows, next_id
 
 
@@ -309,6 +393,16 @@ def shrink(
         dendrite_samples[root] = _truncate_segment(
             dendrite_samples[root], parent, target_length
         )
+        actual_length = _segment_length(dendrite_samples[root], parent)
+        if actual_length <= 0.0 or not isclose(
+            actual_length,
+            target_length,
+            rel_tol=GEOMETRY_REL_TOLERANCE,
+            abs_tol=0.0,
+        ):
+            raise ValueError(
+                "requested shrink is not representable at the selected coordinates"
+            )
         new_tip = np.asarray(dendrite_samples[root][-1][2:5], dtype=float)
         translate_descendants(new_tip - old_tip, root, descendants, dendrite_samples)
         lookup = _sample_lookup(soma_samples, dendrite_samples)
@@ -365,6 +459,7 @@ def extend(
     generator = rng or random.Random()
     next_id = _next_sample_id(soma_samples, dendrite_samples)
     lookup = _sample_lookup(soma_samples, dendrite_samples)
+    soma_origin = _soma_origin(soma_samples)
     for root in list(target_dendrites):
         segment = dendrite_samples.get(root)
         if not segment:
@@ -372,7 +467,9 @@ def extend(
         old_tip = segment[-1][:]
         previous = _direction_parent(segment, lookup)
         growth = _growth_distance(lengths[root], amount, extent_unit)
-        rows, next_id = _grow_path(old_tip, previous, growth, next_id, generator)
+        rows, next_id = _grow_path(
+            old_tip, previous, growth, next_id, generator, soma_origin
+        )
         dendrite_samples[root].extend(rows)
         _reconnect_after_extension(
             root, old_tip, dendrite_samples[root][-1], descendants, dendrite_samples
@@ -394,6 +491,7 @@ def branch(
     generator = rng or random.Random()
     lookup = _sample_lookup(soma_samples, dendrite_samples)
     next_id = _next_sample_id(soma_samples, dendrite_samples)
+    soma_origin = _soma_origin(soma_samples)
     for root in list(target_dendrites):
         segment = dendrite_samples.get(root)
         if not segment:
@@ -404,7 +502,13 @@ def branch(
         _validate_growth_target(target)
         first_length = min(select_length(LENGTHS, LENGTH_WEIGHTS, generator), target)
         first_points = create_points(
-            first_length, 5.0, previous[2:5], tip[2:5], 2, generator
+            first_length,
+            5.0,
+            previous[2:5],
+            tip[2:5],
+            soma_origin,
+            2,
+            generator,
         )
         new_roots = []
         for point in first_points:
@@ -419,7 +523,9 @@ def branch(
             daughter = [first]
             remaining = target - first_length
             if remaining > 0.0:
-                extra, next_id = _grow_path(first, tip, remaining, next_id, generator)
+                extra, next_id = _grow_path(
+                    first, tip, remaining, next_id, generator, soma_origin
+                )
                 daughter.extend(extra)
             new_root = int(first[0])
             dendrite_samples[new_root] = daughter
@@ -493,6 +599,7 @@ def scale(
         lookup = _sample_lookup(soma_samples, dendrite_samples)
         segment = dendrite_samples[root]
         pivot = np.asarray(lookup[int(segment[0][6])][2:5], dtype=float)
+        original_length = _segment_length(segment, lookup[int(segment[0][6])])
         old_tip = np.asarray(segment[-1][2:5], dtype=float)
         for sample in segment:
             position = np.asarray(sample[2:5], dtype=float)
@@ -506,8 +613,24 @@ def scale(
             scaled_radius = float(sample[5]) * factor
             if not np.isfinite(scaled_position).all() or not np.isfinite(scaled_radius):
                 raise ValueError("scale exceeds finite numeric range")
+            if scaled_radius <= 0.0:
+                raise ValueError("scale would produce a non-positive radius")
             sample[2:5] = scaled_position.tolist()
             sample[5] = scaled_radius
+        scaled_length = _segment_length(segment, lookup[int(segment[0][6])])
+        expected_length = original_length * factor
+        if original_length > 0.0 and (
+            scaled_length <= 0.0
+            or not isclose(
+                scaled_length,
+                expected_length,
+                rel_tol=GEOMETRY_REL_TOLERANCE,
+                abs_tol=0.0,
+            )
+        ):
+            raise ValueError(
+                "requested scale is not representable at the selected coordinates"
+            )
         new_tip = np.asarray(segment[-1][2:5], dtype=float)
         translate_descendants(new_tip - old_tip, root, descendants, dendrite_samples)
 

@@ -45,18 +45,20 @@ def read_lines(path: Path | str) -> list[str]:
 
 
 def write_swc(
-    directory: Path | str,
-    file_name: str,
+    output_path: Path | str,
     lines: Sequence[str],
     comment: str = "",
+    *,
+    overwrite: bool = False,
 ) -> Path:
-    """Write an edited morphology beneath ``downloads/files``."""
+    """Write an edited morphology without silently replacing an existing file."""
 
-    output_directory = Path(directory) / "downloads" / "files"
-    output_directory.mkdir(parents=True, exist_ok=True)
-    source_name = Path(file_name).name
-    stem = source_name[:-4] if source_name.lower().endswith(".swc") else source_name
-    output = output_directory / f"{stem}_new.swc"
+    output = Path(output_path)
+    if output.exists() and not overwrite:
+        raise FileExistsError(f"{output} already exists; pass --force to replace it")
+    if output.exists() and not output.is_file():
+        raise IsADirectoryError(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w", encoding="utf-8") as handle:
         if comment:
             handle.write(comment.rstrip("\n") + "\n")

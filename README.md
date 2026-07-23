@@ -13,7 +13,7 @@ The maintained command-line paths provide:
   taper, and geometric Sholl measurements;
 - shrink, remove, extend, branch, scale, and radius operations;
 - manual, regional, terminal, and seeded random segment selection;
-- deterministic JSON statistics and SVG plots; and
+- deterministic JSON statistics and static SVG plots; and
 - validated, parent-before-child SWC serialization after editing.
 
 ## Installation
@@ -35,6 +35,7 @@ An input file must contain one connected, acyclic SWC tree with exactly seven
 columns per numeric row. Sample identifiers must be positive and unique,
 coordinates must be finite, radii must be positive, and every non-root parent
 must exist. The single root must be a soma sample with parent `-1`.
+Additional soma-contour samples must be connected through other soma samples.
 
 Dendritic measurements include SWC types `3` (basal) and `4` (apical). Other
 neurite types are preserved during editing but excluded from dendritic totals.
@@ -62,14 +63,6 @@ count bins are treated as zero during aggregation; branch-order length bins are
 averaged only over morphologies in which that order occurs. Segment-specific
 maps are not aggregated across files because sample identifiers are local to
 each morphology.
-
-For a single JSON document without aggregate output:
-
-```bash
-python json_stats.py swc_files 0-2.CNG.swc --sholl-step 20
-python json_stats.py swc_files 0-2.CNG.swc \
-  --output swc_files/downloads/statistics.json
-```
 
 ## Visualization
 
@@ -109,12 +102,14 @@ python remod_cli.py edit \
   --action branch \
   --amount 80 \
   --extent-unit percent \
-  --seed 2026
+  --seed 2026 \
+  --output swc_files/downloads/files/0-2.CNG_new.swc
 ```
 
-The edited file is written to
-`swc_files/downloads/files/0-2.CNG_new.swc`. It is reparsed before the command
-reports success.
+`--output` selects the destination. Without it, the command writes
+`swc_files/downloads/files/0-2.CNG_new.swc`. An existing destination is not
+replaced unless `--force` is supplied. The exact file written is reparsed
+before the command reports success.
 
 Available selectors are:
 
@@ -148,6 +143,25 @@ each selected segment's original length. `--extent-unit micrometers` applies
 the same absolute distance to each target. Radius changes accept `percent` or
 `micrometers`; a non-positive result is rejected.
 
+Generated extension and branch steps follow a 5-degree cone around the
+preceding segment direction. Every new endpoint must remain at least as far
+from the root soma as its parent endpoint. If the direction cone cannot meet
+that condition at a selected tip, the edit is rejected.
+
+Sequential actions use the first output as the second input. This example
+removes a seeded 17% sample of apical terminal segments, then shrinks a seeded
+10% sample of the remaining apical terminal segments by 18%:
+
+```bash
+python remod_cli.py edit --directory swc_files --file-name 0-2.CNG.swc \
+  --who random_apical --random-ratio 17 --action remove --seed 2026 \
+  --output swc_files/downloads/files/ca3_pruned.swc
+python remod_cli.py edit --directory swc_files/downloads/files \
+  --file-name ca3_pruned.swc --who random_apical --random-ratio 10 \
+  --action shrink --amount 18 --seed 2027 \
+  --output swc_files/downloads/files/ca3_pruned_shrunk.swc
+```
+
 For example, scale only the basal arbor to 80%:
 
 ```bash
@@ -170,40 +184,11 @@ python -m unittest discover -v
 python -m compileall -q .
 ```
 
-The tests use analytical synthetic trees for geometry and action invariants,
-then exercise the full CLI in subprocesses. The retained reference morphology
-`0-2.CNG.swc` has these independently established graph values:
-
-| Measurement | Value |
-| --- | ---: |
-| Numeric samples | 485 |
-| Dendritic stems | 5 |
-| Dendritic branch points | 17 |
-| Dendritic segments | 39 |
-| Terminal dendritic segments | 22 |
-| Maximum centrifugal branch order | 6 (one-based) |
-| Total dendritic length | 2605.513043 µm |
-| Total dendritic surface area | 8718.751740 µm² |
-| Total dendritic volume | 3696.007347 µm³ |
-| Basal dendritic length | 1575.759248 µm |
-| Apical dendritic length | 1029.753795 µm |
-
-For the totals it exposes, the
-[NeuroMorpho.Org morphometry record](https://neuromorpho.org/api/morphometry/id/1999)
-agrees with the sample, stem, branch-point, segment, terminal, length, area, and
-volume values above. That record reports maximum branch order `5` because it
-uses a zero-based convention; REMOD uses one-based centrifugal order.
-
-The second fixture, `0-2a.CNG.swc`, is checked independently in the same way:
-457 samples, 6 stems, 12 branch points, 30 segments, 18 terminals,
-2140.519262 µm length, 7353.333392 µm² area, and 3283.859700 µm³ volume.
-These totals agree, after display rounding, with its
-[NeuroMorpho.Org record](https://neuromorpho.org/api/morphometry/id/2000).
-
-Tests also establish that Sholl shell lengths conserve total cable length,
-branch-point bins conserve branch-point counts, seeded edits are repeatable,
-new branch lengths meet the requested extent, descendants remain connected,
-and whole-tree scaling changes length, area, and volume by `s`, `s²`, and `s³`.
+The checks use analytical trees for geometry and action invariants, then
+exercise the maintained CLI. The topology and aggregate geometry of both
+bundled fixtures are checked against their NeuroMorpho.Org records, linked from
+[swc_files/README.md](swc_files/README.md). This is a fixture-level consistency
+check, not validation for every SWC reconstruction.
 
 ## Scope and limitations
 
@@ -242,5 +227,5 @@ Citation metadata is provided in [CITATION.cff](CITATION.cff):
 
 Bozelos P, Stefanou SS, Bouloukakis G, Melachrinos C, Poirazi P. “REMOD: A
 Tool for Analyzing and Remodeling the Dendritic Architecture of Neural Cells.”
-*Frontiers in Neuroanatomy*. 2015;9:156.
+*Frontiers in Neuroanatomy*. 2016;9:156.
 [doi:10.3389/fnana.2015.00156](https://doi.org/10.3389/fnana.2015.00156).

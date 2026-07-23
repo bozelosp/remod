@@ -81,6 +81,16 @@ def parse_edit_args(args: list[str] | None = None):
     )
     parser.add_argument("--file-name", required=True, help="Relative SWC file name")
     parser.add_argument(
+        "--output",
+        type=Path,
+        help="Output SWC path (default: downloads/files/<stem>_new.swc)",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace an existing output file",
+    )
+    parser.add_argument(
         "--who",
         required=True,
         choices=[
@@ -116,7 +126,6 @@ def parse_edit_args(args: list[str] | None = None):
     )
     parser.add_argument(
         "--extent-unit",
-        "--hm-choice",
         dest="extent_unit",
         default="percent",
         choices=["percent", "micrometers"],
@@ -125,7 +134,6 @@ def parse_edit_args(args: list[str] | None = None):
     parser.add_argument("--amount", type=float, help="Structural action amount")
     parser.add_argument(
         "--radius-unit",
-        "--var-choice",
         dest="radius_unit",
         default="percent",
         choices=["percent", "micrometers"],
@@ -145,6 +153,8 @@ def parse_edit_args(args: list[str] | None = None):
     source = options.directory / options.file_name
     if not source.is_file():
         parser.error(f"{source} is not a file")
+    if options.output is not None and options.output.suffix.lower() != ".swc":
+        parser.error("--output must have an .swc extension")
 
     if not isfinite(options.random_ratio) or not 0 <= options.random_ratio <= 100:
         parser.error("--random-ratio must be between 0 and 100")

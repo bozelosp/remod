@@ -258,49 +258,35 @@ def edit_main(argv: list[str] | None = None) -> int:
     options = parse_edit_args(argv)
     directory = Path(options.directory)
     source_path = directory / options.file_name
+    if options.output is None:
+        output_path = (
+            directory
+            / "downloads"
+            / "files"
+            / f"{source_path.stem}_new.swc"
+        )
+    else:
+        output_path = Path(options.output)
+    if output_path.resolve() == source_path.resolve():
+        raise ValueError("input and output paths must differ")
+    if output_path.exists() and not options.force:
+        raise FileExistsError(
+            f"{output_path} already exists; pass --force to replace it"
+        )
 
-    (
-        _swc_lines,
-        _samples,
-        comments,
-        _branch_points,
-        _axon_branch_points,
-        _basal_branch_points,
-        _apical_branch_points,
-        _soma_branch_points,
-        soma_samples,
-        _max_sample_number,
-        dendrite_roots,
-        descendants,
-        _sample_id_map,
-        _dend_names,
-        _axon,
-        basal,
-        apical,
-        _undefined,
-        dendrite_records,
-        _soma_paths,
-        all_terminal,
-        basal_terminal,
-        apical_terminal,
-        lengths,
-        _surface_areas,
-        _branch_order_map,
-        _connectivity_map,
-        _parents,
-    ) = parse_swc_file(source_path)
+    parsed = parse_swc_file(source_path)
 
     targets, selector = _select_dendrites(
         options.who,
         options.random_ratio,
         options.manual_dendrites,
-        dendrite_records,
-        dendrite_roots,
-        basal,
-        apical,
-        all_terminal,
-        basal_terminal,
-        apical_terminal,
+        parsed.segments,
+        parsed.dendrite_roots,
+        parsed.basal,
+        parsed.apical,
+        parsed.all_terminal,
+        parsed.basal_terminal,
+        parsed.apical_terminal,
         options.seed,
     )
     edited_lines = execute_action(
@@ -308,11 +294,11 @@ def edit_main(argv: list[str] | None = None) -> int:
         options.action,
         options.amount,
         options.extent_unit,
-        dendrite_records,
-        lengths,
+        parsed.segments,
+        parsed.lengths,
         options.radius_change,
-        soma_samples,
-        descendants,
+        parsed.soma_samples,
+        parsed.descendants,
         radius_unit=options.radius_unit,
         seed=options.seed,
     )
@@ -328,10 +314,13 @@ def edit_main(argv: list[str] | None = None) -> int:
         options.radius_unit,
         options.seed,
     )
-    source_comments = "\n".join(comments)
+    source_comments = "\n".join(parsed.comments)
     output_comment = header if not source_comments else f"{header}\n{source_comments}"
     output_path = write_swc(
-        directory, options.file_name, renumbered, comment=output_comment
+        output_path,
+        renumbered,
+        comment=output_comment,
+        overwrite=options.force,
     )
 
     # Reparse the exact file written to disk so formatting and serialization
