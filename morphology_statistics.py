@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from math import ceil, hypot, inf, sqrt
+from math import ceil, floor, hypot, inf, sqrt
 from typing import Dict, Sequence
 
 import numpy as np
@@ -297,6 +297,89 @@ def sholl_length(samples, parents, soma_samples, radius, parameter):
     return result
 
 
+def _edge_sholl_profiles(
+    start: np.ndarray,
+    end: np.ndarray,
+    bounds: Sequence[int | float],
+    step: float,
+) -> tuple[list[float], list[int]]:
+    """Return shell lengths and crossings for one edge in one shared pass."""
+
+    lengths = [0.0] * len(bounds)
+    intersections = [0] * len(bounds)
+    vector = end - start
+    edge_length = hypot(*vector.tolist())
+    if edge_length == 0.0 or not bounds:
+        return lengths, intersections
+
+    denominator = float(np.dot(vector, vector))
+    projection = min(1.0, max(0.0, -float(np.dot(start, vector)) / denominator))
+    minimum = hypot(*(start + projection * vector).tolist())
+    maximum = max(hypot(*start.tolist()), hypot(*end.tolist()))
+    first = max(0, int(ceil(minimum / step)) - 1)
+    last = min(len(bounds), int(floor(maximum / step)) + 1)
+
+    cuts = {0.0, 1.0}
+    for index in range(first, last):
+        roots = _sphere_parameters(start, end, float(bounds[index]))
+        intersections[index] = len(roots)
+        cuts.update(roots)
+
+    ordered = sorted(cuts)
+    for left, right in zip(ordered, ordered[1:]):
+        if right <= left:
+            continue
+        midpoint = start + ((left + right) / 2.0) * vector
+        radial_distance = hypot(*midpoint.tolist())
+        shell_index = int(floor(radial_distance / step))
+        if 0 <= shell_index < len(lengths):
+            lengths[shell_index] += edge_length * (right - left)
+    return lengths, intersections
+
+
+def sholl_profiles(samples, parents, soma_samples, radius):
+    """Calculate all regional Sholl length and crossing profiles in one pass.
+
+    The legacy public helpers remain available for focused calculations.  This
+    combined path avoids six repeated morphology scans during full analysis.
+    """
+
+    step = float(radius)
+    soma = _soma_coords(soma_samples)
+    parameters = {"all": {3, 4}, "basal": {3}, "apical": {4}}
+    bounds = {
+        name: _shell_bounds(samples, soma, step, types)
+        for name, types in parameters.items()
+    }
+    profiles = {
+        name: {
+            "length": {bound: 0.0 for bound in region_bounds},
+            "intersections": {bound: 0 for bound in region_bounds},
+        }
+        for name, region_bounds in bounds.items()
+    }
+    all_bounds = bounds["all"]
+    if not all_bounds:
+        return profiles
+
+    for proximal, distal in _dendritic_edges(samples, parents, {3, 4}):
+        sample_type = int(distal[1])
+        region = "basal" if sample_type == 3 else "apical"
+        start = np.asarray(proximal[2:5], dtype=float) - soma
+        end = np.asarray(distal[2:5], dtype=float) - soma
+        edge_lengths, edge_intersections = _edge_sholl_profiles(
+            start, end, all_bounds, step
+        )
+        for name in ("all", region):
+            region_bounds = bounds[name]
+            length_profile = profiles[name]["length"]
+            intersection_profile = profiles[name]["intersections"]
+            for index, bound in enumerate(region_bounds):
+                length_profile[bound] += edge_lengths[index]
+                intersection_profile[bound] += edge_intersections[index]
+    return profiles
+
+
 __all__ = [
     "branch_order_dlength",
     "branch_order_frequency",
@@ -307,6 +390,7 @@ __all__ = [
     "sholl_branch_points",
     "sholl_intersections",
     "sholl_length",
+    "sholl_profiles",
     "total_area",
     "total_length",
     "total_volume",

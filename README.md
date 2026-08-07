@@ -13,6 +13,7 @@ The maintained command-line paths provide:
   taper, and geometric Sholl measurements;
 - shrink, remove, extend, branch, scale, and radius operations;
 - manual, regional, terminal, and seeded random segment selection;
+- an interactive rotating 3D browser workspace with cohort comparison;
 - deterministic JSON statistics and static SVG plots; and
 - validated, parent-before-child SWC serialization after editing.
 
@@ -31,6 +32,30 @@ NumPy is required for analysis and editing. Matplotlib is used only by
 `plot_statistics.py`. `requirements.txt` records the direct dependency policy;
 `requirements.lock` is the reproducible, fully hashed environment and records
 its regeneration command in the file header.
+
+## Browser interface
+
+Start the local REMOD Studio:
+
+```bash
+python remod_ui.py
+```
+
+The command opens `http://127.0.0.1:8765/` in the default browser. The interface
+accepts one or many SWC files and provides:
+
+- continuously rotating 3D morphology views with drag, zoom, and click-to-select
+  segment controls;
+- basal, apical, terminal, random, and multi-segment remodeling targets;
+- shrink, remove, extend, branch, scale, and radius edits with preview undo;
+- morphometry tables, regional Sholl charts, and SWC/JSON downloads; and
+- Group A/Group B comparisons of scalar, branch-order, and Sholl measurements,
+  including cohort means and population-standard-deviation error bars.
+
+Uploaded data and generated results remain in the local browser/server process.
+REMOD Studio does not transmit files or send email. Use
+`python remod_ui.py --help` to change the local host or port, or to prevent
+automatic browser launch.
 
 ## Input requirements
 
@@ -209,10 +234,10 @@ cannot be reproduced from this repository because the complete cohorts,
 selected segment sets, and random seeds are not included. Those reported
 percentages are contextual results rather than regression targets.
 
-The maintained commands do not provide the interactive rotating morphology
-view or direct two-group comparison described for the paper-era application.
-`plot_statistics.py` produces static statistics plots for one result record or
-one analyzed aggregate.
+Group comparisons describe the files assigned to each cohort and do not perform
+inferential hypothesis tests. Users remain responsible for cohort construction,
+independence assumptions, multiple-comparison control, and biological
+interpretation.
 
 The two bundled morphology fixtures and their attribution are documented in
 [swc_files/README.md](swc_files/README.md). They are nontrivial test inputs,

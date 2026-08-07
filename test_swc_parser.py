@@ -27,12 +27,15 @@ from morphology_statistics import (
     sholl_branch_points,
     sholl_intersections,
     sholl_length,
+    sholl_profiles,
 )
+from remod_engine import RemodelRequest, analyze_text, remodel_text
 from remodeling_actions import execute_action, parse_length_distribution, select_length
 from swc_parser import (
     dendrite_volumes,
     parse_swc_file,
     parse_swc_lines,
+    parse_swc_text,
     validate_samples,
 )
 
@@ -446,6 +449,67 @@ class SerializationTests(unittest.TestCase):
             path = Path(directory) / "statistics.json"
             write_json(path, {np.int64(20): np.float64(1.5)})
             self.assertEqual(json.loads(path.read_text(encoding="utf-8")), {"20": 1.5})
+
+
+class InMemoryEngineTests(unittest.TestCase):
+    def test_analysis_reuses_one_parsed_morphology_for_ui_geometry_and_statistics(self):
+        analysis = analyze_text(Y_MORPHOLOGY, 1.0)
+        parsed = parse_swc_text(Y_MORPHOLOGY)
+
+        self.assertEqual(analysis["morphology"]["counts"]["samples"], 7)
+        self.assertEqual(analysis["morphology"]["counts"]["segments"], 4)
+        self.assertEqual(
+            analysis["statistics"]["all_total_length"],
+            sum(parsed.lengths[root] for root in parsed.dendrite_roots),
+        )
+
+    def test_text_remodeling_is_reparsed_and_preserves_a_deterministic_header(self):
+        result = remodel_text(
+            Y_MORPHOLOGY,
+            RemodelRequest(
+                file_name="fixture.swc",
+                who="all_terminal",
+                action="shrink",
+                amount=10.0,
+                seed=41,
+            ),
+        )
+
+        self.assertEqual(result.targets, (4, 5, 6))
+        self.assertIn("# REMOD edited morphology", result.content)
+        self.assertIn("# source_file: fixture.swc", result.content)
+        self.assertIn("# Analytic two-region morphology", result.content)
+        self.assertLess(
+            sum(result.parsed.lengths.values()),
+            sum(parse_swc_text(Y_MORPHOLOGY).lengths.values()),
+        )
+
+    def test_combined_sholl_profiles_match_the_focused_public_helpers(self):
+        parsed = parse_swc_file(BUNDLED_MORPHOLOGY)
+        profiles = sholl_profiles(
+            parsed.samples, parsed.parents, parsed.soma_samples, 20.0
+        )
+        for name, types in (("all", {3, 4}), ("basal", {3}), ("apical", {4})):
+            self.assertEqual(
+                profiles[name]["length"],
+                sholl_length(
+                    parsed.samples,
+                    parsed.parents,
+                    parsed.soma_samples,
+                    20.0,
+                    types,
+                ),
+            )
+            self.assertEqual(
+                profiles[name]["intersections"],
+                sholl_intersections(
+                    parsed.samples,
+                    parsed.parents,
+                    parsed.soma_samples,
+                    20.0,
+                    types,
+                ),
+            )
 
 
 class CommandLineIntegrationTests(unittest.TestCase):

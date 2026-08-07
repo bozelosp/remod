@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import random
 import re
+from bisect import bisect
+from itertools import accumulate
 from math import cos, hypot, isclose, pi, sin
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence, Tuple
@@ -65,8 +67,24 @@ def select_length(
         or sum(weights) <= 0
     ):
         raise ValueError("distribution weights must have finite positive mass")
-    generator = rng or random
-    return float(generator.choices(lengths, weights=weights, k=1)[0])
+    return _select_length_cumulative(
+        lengths, tuple(accumulate(float(weight) for weight in weights)), rng or random
+    )
+
+
+def _select_length_cumulative(
+    lengths: Sequence[float], cumulative_weights: Sequence[float], rng
+) -> float:
+    """Sample from precomputed cumulative weights in logarithmic time."""
+
+    total = cumulative_weights[-1]
+    index = bisect(
+        cumulative_weights,
+        rng.random() * total,
+        0,
+        len(cumulative_weights) - 1,
+    )
+    return float(lengths[index])
 
 
 def _unit(vector: np.ndarray, label: str) -> np.ndarray:
@@ -275,7 +293,7 @@ def _grow_path(
             raise ValueError(
                 f"requested growth would require more than {MAX_GROWTH_POINTS} samples"
             )
-        sampled = select_length(LENGTHS, LENGTH_WEIGHTS, rng)
+        sampled = _select_length_cumulative(LENGTHS, LENGTH_CUMULATIVE_WEIGHTS, rng)
         step = min(sampled, remaining)
         point = create_points(
             step,
@@ -702,3 +720,4 @@ def execute_action(
 
 
 (LENGTHS, LENGTH_WEIGHTS) = parse_length_distribution()
+LENGTH_CUMULATIVE_WEIGHTS = tuple(accumulate(LENGTH_WEIGHTS))

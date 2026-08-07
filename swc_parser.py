@@ -41,6 +41,7 @@ class ParsedMorphology:
     apical_terminal: List[int]
     lengths: Dict[int, float]
     surface_areas: Dict[int, float]
+    volumes: Dict[int, float]
     branch_order: Dict[int, int]
     basal: List[int]
     apical: List[int]
@@ -197,10 +198,12 @@ def validate_samples(samples: SampleMap) -> None:
             state[sample_id] = 2
 
 
-def find_branch_points(samples: SampleMap):
+def find_branch_points(
+    samples: SampleMap, children: Dict[int, List[int]] | None = None
+):
     """Return true branch-point sample IDs grouped by SWC type."""
 
-    children = _children_map(samples)
+    children = children or _children_map(samples)
     branch_points = [
         sample_id
         for sample_id, child_ids in children.items()
@@ -228,10 +231,12 @@ def parent_map(samples: SampleMap) -> Dict[int, int]:
     return {sample_id: int(sample[6]) for sample_id, sample in samples.items()}
 
 
-def segment_roots(samples: SampleMap) -> List[int]:
+def segment_roots(
+    samples: SampleMap, children: Dict[int, List[int]] | None = None
+) -> List[int]:
     """Return the first sample ID of every non-soma neurite segment."""
 
-    children = _children_map(samples)
+    children = children or _children_map(samples)
     roots: List[int] = []
     for sample_id, sample in samples.items():
         if int(sample[1]) == 1:
@@ -251,12 +256,14 @@ def segment_roots(samples: SampleMap) -> List[int]:
 
 
 def collect_dendrite_sample_ids(
-    dendrite_roots: Iterable[int], samples: SampleMap
+    dendrite_roots: Iterable[int],
+    samples: SampleMap,
+    children: Dict[int, List[int]] | None = None,
 ) -> Dict[int, List[int]]:
     """Map each segment root to its ordered samples."""
 
     roots = set(dendrite_roots)
-    children = _children_map(samples)
+    children = children or _children_map(samples)
     result: Dict[int, List[int]] = {}
     for root in sorted(roots):
         segment = [root]
@@ -349,14 +356,43 @@ def build_descendant_map(
     """Return all downstream segments for each segment root."""
 
     roots = list(dendrite_roots)
-    descendants: Dict[int, List[int]] = {}
-    for root in roots:
-        downstream: Set[int] = set()
-        for path in soma_paths.values():
-            if root in path:
-                downstream.update(path[: path.index(root)])
-        descendants[root] = sorted(downstream)
-    return descendants
+    descendants: Dict[int, Set[int]] = {root: set() for root in roots}
+    for descendant, path in soma_paths.items():
+        for ancestor in path[1:]:
+            descendants[ancestor].add(descendant)
+    return {root: sorted(descendants[root]) for root in roots}
+
+
+def _dendrite_geometry(
+    coords_map: Dict[int, List[Sample]],
+    dendrite_roots: Iterable[int],
+    parents: Dict[int, int],
+    samples: SampleMap,
+) -> Tuple[Dict[int, float], Dict[int, float], Dict[int, float]]:
+    """Compute segment length, area, and volume in one geometry pass."""
+
+    lengths: Dict[int, float] = {}
+    areas: Dict[int, float] = {}
+    volumes: Dict[int, float] = {}
+    for root in dendrite_roots:
+        segment = coords_map[root]
+        points = [samples[parents[int(segment[0][0])]], *segment]
+        length = area = volume = 0.0
+        for proximal, distal in zip(points, points[1:]):
+            edge_length = distance(
+                proximal[2], distal[2], proximal[3], distal[3], proximal[4], distal[4]
+            )
+            length += edge_length
+            if edge_length:
+                radius = float(distal[5])
+                area += 2.0 * pi * radius * edge_length
+                volume += pi * radius * radius * edge_length
+        if not np.isfinite([length, area, volume]).all():
+            raise ValueError(f"segment {root} geometry is not finite")
+        lengths[root] = length
+        areas[root] = area
+        volumes[root] = volume
+    return lengths, areas, volumes
 
 
 def dendrite_lengths(
@@ -436,7 +472,9 @@ def dendrite_volumes(
 
 
 def compute_branch_order(
-    dendrite_roots: Iterable[int], samples: SampleMap
+    dendrite_roots: Iterable[int],
+    samples: SampleMap,
+    children: Dict[int, List[int]] | None = None,
 ) -> Dict[int, int]:
     """Return one-based centrifugal order from true bifurcations.
 
@@ -445,7 +483,7 @@ def compute_branch_order(
     children.
     """
 
-    children = _children_map(samples)
+    children = children or _children_map(samples)
     result: Dict[int, int] = {}
     for root in dendrite_roots:
         order = 1
@@ -462,21 +500,22 @@ def compute_branch_order(
     return result
 
 
-def parse_swc_file(file_path: str | Path) -> ParsedMorphology:
-    """Parse and derive the validated morphology used by REMOD commands."""
+def build_morphology(
+    samples: SampleMap, comments: Iterable[str] = ()
+) -> ParsedMorphology:
+    """Derive REMOD's immutable working model from parsed SWC samples."""
 
-    swc_lines = read_swc_lines(file_path)
-    comment_lines, samples = parse_swc_lines(swc_lines)
     validate_samples(samples)
+    children = _children_map(samples)
     (
         branch_points,
         basal_branch_points,
         apical_branch_points,
         soma_samples,
-    ) = find_branch_points(samples)
+    ) = find_branch_points(samples, children)
     parents = parent_map(samples)
-    all_roots = segment_roots(samples)
-    sample_id_map = collect_dendrite_sample_ids(all_roots, samples)
+    all_roots = segment_roots(samples, children)
+    sample_id_map = collect_dendrite_sample_ids(all_roots, samples, children)
     basal = [root for root in all_roots if int(samples[root][1]) == 3]
     apical = [root for root in all_roots if int(samples[root][1]) == 4]
     dendrite_records = collect_dendrite_samples(all_roots, sample_id_map, samples)
@@ -485,14 +524,15 @@ def parse_swc_file(file_path: str | Path) -> ParsedMorphology:
         all_roots, soma_paths, basal, apical
     )
     descendants = build_descendant_map(all_roots, soma_paths)
-    lengths = dendrite_lengths(dendrite_records, all_roots, parents, samples)
-    surface_areas = dendrite_areas(dendrite_records, all_roots, parents, samples)
-    branch_order_map = compute_branch_order(all_roots, samples)
+    lengths, surface_areas, volumes = _dendrite_geometry(
+        dendrite_records, all_roots, parents, samples
+    )
+    branch_order_map = compute_branch_order(all_roots, samples, children)
     dendrite_roots = basal + apical
 
     return ParsedMorphology(
         samples=samples,
-        comments=comment_lines,
+        comments=list(comments),
         branch_points=branch_points,
         basal_branch_points=basal_branch_points,
         apical_branch_points=apical_branch_points,
@@ -506,11 +546,26 @@ def parse_swc_file(file_path: str | Path) -> ParsedMorphology:
         apical_terminal=apical_terminal,
         lengths=lengths,
         surface_areas=surface_areas,
+        volumes=volumes,
         branch_order=branch_order_map,
         basal=basal,
         apical=apical,
         parents=parents,
     )
+
+
+def parse_swc_text(text: str) -> ParsedMorphology:
+    """Parse and derive a morphology directly from UTF-8-compatible text."""
+
+    comments, samples = parse_swc_lines(text.splitlines())
+    return build_morphology(samples, comments)
+
+
+def parse_swc_file(file_path: str | Path) -> ParsedMorphology:
+    """Parse and derive the validated morphology used by REMOD commands."""
+
+    comments, samples = parse_swc_lines(read_swc_lines(file_path))
+    return build_morphology(samples, comments)
 
 
 def _format_number(value: float) -> str:
@@ -557,22 +612,19 @@ def renumber_samples(samples: SampleMap | Iterable[Sample]) -> List[Sample]:
         raise ValueError("cannot renumber an empty morphology")
     validate_samples(by_id)
 
+    children = _children_map(by_id)
+    ready = sorted(
+        sample_id for sample_id, sample in by_id.items() if int(sample[6]) == -1
+    )
     ordered: List[Sample] = []
-    pending = dict(by_id)
-    emitted: Set[int] = set()
-    while pending:
-        ready = sorted(
-            sample_id
-            for sample_id, sample in pending.items()
-            if int(sample[6]) == -1 or int(sample[6]) in emitted
-        )
-        if not ready:
-            raise ValueError(
-                "cannot renumber morphology with missing parents or a cycle"
-            )
+    while ready:
+        next_ready: List[int] = []
         for sample_id in ready:
-            ordered.append(pending.pop(sample_id))
-            emitted.add(sample_id)
+            ordered.append(by_id[sample_id])
+            next_ready.extend(children[sample_id])
+        ready = sorted(next_ready)
+    if len(ordered) != len(by_id):
+        raise ValueError("cannot renumber morphology with missing parents or a cycle")
 
     mapping = {int(sample[0]): index for index, sample in enumerate(ordered, start=1)}
     renumbered: List[Sample] = []
@@ -588,6 +640,7 @@ def renumber_samples(samples: SampleMap | Iterable[Sample]) -> List[Sample]:
 
 __all__ = [
     "ParsedMorphology",
+    "build_morphology",
     "collect_dendrite_sample_ids",
     "compute_branch_order",
     "dendrite_areas",
@@ -597,6 +650,7 @@ __all__ = [
     "format_swc_samples",
     "parse_swc_file",
     "parse_swc_lines",
+    "parse_swc_text",
     "renumber_samples",
     "segment_roots",
     "validate_samples",

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
+import math
 from numbers import Real
 from pathlib import Path
+from statistics import mean, pstdev
 
 import numpy as np
 
@@ -15,15 +18,85 @@ from morphology_statistics import (
     median_radius,
     path_length,
     sholl_branch_points,
-    sholl_intersections,
-    sholl_length,
+    sholl_profiles,
     total_area,
     total_length,
     total_volume,
 )
-from swc_parser import dendrite_volumes, parse_swc_file
+from swc_parser import ParsedMorphology, parse_swc_file
 
 DEFAULT_SHOLL_STEP = 20.0
+
+
+def _finite_number(value: object) -> bool:
+    return (
+        isinstance(value, Real)
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+    )
+
+
+def _describe(values: Iterable[Real]) -> dict[str, float | int]:
+    numbers = [float(value) for value in values]
+    return {
+        "mean": mean(numbers),
+        "standard_deviation": pstdev(numbers),
+        "sample_count": len(numbers),
+    }
+
+
+def _mapping_key(value: object) -> tuple[int, float | str]:
+    try:
+        return 0, float(value)
+    except (TypeError, ValueError):
+        return 1, str(value)
+
+
+def _zero_fill_distribution(metric: str) -> bool:
+    return metric.startswith("sholl_") or metric.startswith("number_of_")
+
+
+def summarize_statistics(
+    results: Mapping[str, Mapping[str, object]],
+) -> dict[str, object]:
+    """Aggregate scalar and one-dimensional measurements across morphologies."""
+
+    file_names = sorted(results)
+    measurements = [results[name] for name in file_names]
+    metric_names = sorted({key for values in measurements for key in values})
+    scalar_metrics: dict[str, object] = {}
+    distribution_metrics: dict[str, object] = {}
+
+    for metric in metric_names:
+        values = [item[metric] for item in measurements if metric in item]
+        if values and all(_finite_number(value) for value in values):
+            scalar_metrics[metric] = _describe(values)  # type: ignore[arg-type]
+            continue
+        if metric.endswith("_by_dendrite") or not values:
+            continue
+        if not all(isinstance(value, Mapping) for value in values):
+            continue
+        mappings = [value for value in values if isinstance(value, Mapping)]
+        if not all(
+            all(_finite_number(item) for item in value.values()) for value in mappings
+        ):
+            continue
+        keys = sorted({key for value in mappings for key in value}, key=_mapping_key)
+        bins: dict[str, object] = {}
+        for key in keys:
+            if _zero_fill_distribution(metric):
+                observations = [float(value.get(key, 0.0)) for value in mappings]
+            else:
+                observations = [float(value[key]) for value in mappings if key in value]
+            bins[str(key)] = _describe(observations)
+        distribution_metrics[metric] = bins
+
+    return {
+        "file_count": len(file_names),
+        "files": file_names,
+        "scalar_metrics": scalar_metrics,
+        "distribution_metrics": distribution_metrics,
+    }
 
 
 def _require_finite(value, location: str = "statistics") -> None:
@@ -64,25 +137,13 @@ def _region_statistics(roots, branch_order, lengths, soma_paths) -> dict:
     }
 
 
-def compute_statistics(
-    swc_path: Path | str, sholl_step: float = DEFAULT_SHOLL_STEP
+def compute_statistics_for_morphology(
+    parsed: ParsedMorphology, sholl_step: float = DEFAULT_SHOLL_STEP
 ) -> dict:
-    """Return the implemented REMOD morphometrics for one SWC file."""
+    """Return REMOD morphometrics for an already validated morphology."""
 
-    swc_path = Path(swc_path)
-    if not swc_path.is_file():
-        raise FileNotFoundError(swc_path)
     if not np.isfinite(sholl_step) or sholl_step <= 0:
         raise ValueError("Sholl step must be positive")
-
-    parsed = parse_swc_file(swc_path)
-
-    volumes = dendrite_volumes(
-        parsed.segments,
-        parsed.dendrite_roots,
-        parsed.parents,
-        parsed.samples,
-    )
     taper = diameter_taper(
         parsed.dendrite_roots, parsed.segments, parsed.lengths
     )
@@ -114,9 +175,9 @@ def compute_statistics(
         ),
         "basal_total_area": total_area(parsed.basal, parsed.surface_areas),
         "apical_total_area": total_area(parsed.apical, parsed.surface_areas),
-        "all_total_volume": total_volume(parsed.dendrite_roots, volumes),
-        "basal_total_volume": total_volume(parsed.basal, volumes),
-        "apical_total_volume": total_volume(parsed.apical, volumes),
+        "all_total_volume": total_volume(parsed.dendrite_roots, parsed.volumes),
+        "basal_total_volume": total_volume(parsed.basal, parsed.volumes),
+        "apical_total_volume": total_volume(parsed.apical, parsed.volumes),
         "all_mean_path_length": _mean_for_roots(
             parsed.dendrite_roots, path_lengths
         ),
@@ -174,41 +235,42 @@ def compute_statistics(
 
     step = float(sholl_step)
     results["sholl_step"] = step
-    sholl_lengths = {
-        "all": sholl_length(
-            parsed.samples, parsed.parents, parsed.soma_samples, step, {3, 4}
-        ),
-        "basal": sholl_length(
-            parsed.samples, parsed.parents, parsed.soma_samples, step, {3}
-        ),
-        "apical": sholl_length(
-            parsed.samples, parsed.parents, parsed.soma_samples, step, {4}
-        ),
-    }
+    profiles = sholl_profiles(
+        parsed.samples, parsed.parents, parsed.soma_samples, step
+    )
     branchpoint_ids = {
         "all": parsed.branch_points,
         "basal": parsed.basal_branch_points,
         "apical": parsed.apical_branch_points,
     }
     for name in regions:
-        results[f"sholl_{name}_length"] = sholl_lengths[name]
+        results[f"sholl_{name}_length"] = profiles[name]["length"]
         observed = sholl_branch_points(
             branchpoint_ids[name], parsed.samples, parsed.soma_samples, step
         )
         results[f"sholl_{name}_branchpoints"] = {
-            bound: observed.get(bound, 0) for bound in sholl_lengths[name]
+            bound: observed.get(bound, 0) for bound in profiles[name]["length"]
         }
-    results["sholl_all_intersections"] = sholl_intersections(
-        parsed.samples, parsed.parents, parsed.soma_samples, step, {3, 4}
-    )
-    results["sholl_basal_intersections"] = sholl_intersections(
-        parsed.samples, parsed.parents, parsed.soma_samples, step, {3}
-    )
-    results["sholl_apical_intersections"] = sholl_intersections(
-        parsed.samples, parsed.parents, parsed.soma_samples, step, {4}
-    )
+    for name in regions:
+        results[f"sholl_{name}_intersections"] = profiles[name]["intersections"]
     _require_finite(results)
     return results
 
 
-__all__ = ["DEFAULT_SHOLL_STEP", "compute_statistics"]
+def compute_statistics(
+    swc_path: Path | str, sholl_step: float = DEFAULT_SHOLL_STEP
+) -> dict:
+    """Parse an SWC file and return its implemented REMOD morphometrics."""
+
+    swc_path = Path(swc_path)
+    if not swc_path.is_file():
+        raise FileNotFoundError(swc_path)
+    return compute_statistics_for_morphology(parse_swc_file(swc_path), sholl_step)
+
+
+__all__ = [
+    "DEFAULT_SHOLL_STEP",
+    "compute_statistics",
+    "compute_statistics_for_morphology",
+    "summarize_statistics",
+]

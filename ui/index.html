@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Analyze, compare, and remodel neuronal SWC morphologies locally.">
+    <title>REMOD Studio</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#workspace" aria-label="REMOD Studio home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><b>REMOD</b><small>Studio</small></span>
+      </a>
+      <nav class="mode-nav" aria-label="Workspace modes">
+        <button class="mode-button active" data-view="workspace">Workspace</button>
+        <button class="mode-button" data-view="compare">Compare <span id="compareCount">0 + 0</span></button>
+      </nav>
+      <div class="top-actions">
+        <label class="step-control">Sholl step <input id="shollStep" type="number" min="0.000001" step="any" value="20"><span>µm</span></label>
+        <button id="addFiles" class="button secondary">Add SWC files</button>
+        <input id="fileInput" type="file" accept=".swc,text/plain" multiple hidden>
+      </div>
+    </header>
+
+    <main>
+      <section id="emptyState" class="empty-state">
+        <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload SWC morphology files">
+          <span class="eyebrow">Morphology workspace</span>
+          <h1>See the arbor.<br>Shape the experiment.</h1>
+          <p>Drop one or many SWC reconstructions to inspect their 3D topology, quantify morphometry, remodel selected segments, and compare cohorts.</p>
+          <div class="empty-actions">
+            <button id="chooseFiles" class="button primary">Choose SWC files</button>
+            <button id="loadExample" class="button ghost">Open bundled example</button>
+          </div>
+          <div class="privacy-note"><span></span> Processing stays on this computer</div>
+        </div>
+        <div class="empty-aside" aria-hidden="true">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <svg viewBox="0 0 520 520" role="img" aria-label="Abstract dendritic arbor">
+            <g id="heroNeuron"></g>
+          </svg>
+          <div class="metric-float metric-a"><b>3D</b><span>interactive</span></div>
+          <div class="metric-float metric-b"><b>5</b><span>edit actions</span></div>
+          <div class="metric-float metric-c"><b>A:B</b><span>cohort compare</span></div>
+        </div>
+      </section>
+
+      <section id="workspaceView" class="app-view hidden" aria-label="Morphology workspace">
+        <div class="file-rail">
+          <div class="rail-heading"><span>Morphologies</span><b id="fileCount">0</b></div>
+          <div id="fileList" class="file-list"></div>
+          <button id="railAdd" class="rail-add">＋ Add files</button>
+        </div>
+
+        <section class="viewer-panel">
+          <div class="panel-heading viewer-heading">
+            <div>
+              <span class="eyebrow" id="activeLabel">Active morphology</span>
+              <h2 id="activeName">No file selected</h2>
+            </div>
+            <div class="viewer-actions">
+              <button id="undoEdit" class="icon-button" disabled title="Undo last edit" aria-label="Undo last edit">↶</button>
+              <button id="resetView" class="icon-button" title="Reset view" aria-label="Reset 3D view">⌖</button>
+              <button id="downloadSwc" class="button secondary">Download SWC</button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="morphologyCanvas" aria-label="Interactive 3D morphology view"></canvas>
+            <div id="canvasLoading" class="canvas-loading hidden"><span></span>Analyzing morphology</div>
+            <div class="canvas-help">Drag to rotate · scroll to zoom · click a segment to select</div>
+            <div class="axis-widget"><i class="axis-x">X</i><i class="axis-y">Y</i><i class="axis-z">Z</i></div>
+            <div class="legend">
+              <span><i class="basal"></i>Basal</span><span><i class="apical"></i>Apical</span><span><i class="soma"></i>Soma</span><span><i class="selected"></i>Selected</span>
+            </div>
+          </div>
+          <div id="quickMetrics" class="quick-metrics"></div>
+        </section>
+
+        <aside class="inspector">
+          <div class="inspector-tabs" role="tablist">
+            <button class="inspector-tab active" data-panel="overview">Analyze</button>
+            <button class="inspector-tab" data-panel="remodel">Remodel</button>
+            <button class="inspector-tab" data-panel="data">Data</button>
+          </div>
+
+          <section id="overviewPanel" class="inspector-panel active">
+            <div class="section-heading"><div><span class="eyebrow">Morphometry</span><h3>At a glance</h3></div><span id="analysisTime" class="runtime"></span></div>
+            <div id="statCards" class="stat-cards"></div>
+            <div class="chart-card">
+              <div class="chart-heading">
+                <div><span class="eyebrow">Radial profile</span><h3>Sholl analysis</h3></div>
+                <select id="shollMetric" aria-label="Sholl metric">
+                  <option value="length">Length</option>
+                  <option value="intersections">Intersections</option>
+                  <option value="branchpoints">Branch points</option>
+                </select>
+              </div>
+              <canvas id="shollCanvas" aria-label="Sholl analysis chart"></canvas>
+              <div class="region-toggle" aria-label="Dendrite region">
+                <button class="active" data-region="all">All</button><button data-region="basal">Basal</button><button data-region="apical">Apical</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="remodelPanel" class="inspector-panel">
+            <div class="section-heading"><div><span class="eyebrow">End-state editor</span><h3>Remodel dendrites</h3></div></div>
+            <form id="remodelForm">
+              <label class="field">Target
+                <select id="who" name="who">
+                  <option value="all_terminal">All terminal</option>
+                  <option value="all_dendrites">All dendrites</option>
+                  <option value="apical_terminal">Apical terminal</option>
+                  <option value="basal_terminal">Basal terminal</option>
+                  <option value="all_apical">All apical</option>
+                  <option value="all_basal">All basal</option>
+                  <option value="random_all">Random terminal</option>
+                  <option value="random_apical">Random apical terminal</option>
+                  <option value="random_basal">Random basal terminal</option>
+                  <option value="manual">Selected in viewer</option>
+                </select>
+              </label>
+              <div id="manualSelection" class="selection-box hidden"><span>Selected segments</span><div id="selectionChips"></div><button id="clearSelection" type="button">Clear</button></div>
+              <label id="ratioField" class="field hidden">Random sample
+                <span class="input-unit"><input id="randomRatio" name="random_ratio" type="number" min="0" max="100" value="10" step="any"><b>%</b></span>
+              </label>
+              <label class="field">Action
+                <select id="action" name="action">
+                  <option value="shrink">Shrink</option>
+                  <option value="remove">Remove</option>
+                  <option value="extend">Extend</option>
+                  <option value="branch">Branch</option>
+                  <option value="scale">Scale</option>
+                  <option value="none">Radius only</option>
+                </select>
+              </label>
+              <div id="amountFields" class="field-row">
+                <label class="field">Extent<input id="amount" name="amount" type="number" value="20" step="any"></label>
+                <label class="field">Unit<select id="extentUnit" name="extent_unit"><option value="percent">Percent</option><option value="micrometers">Micrometers</option></select></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Radius change<input id="radiusChange" name="radius_change" type="number" placeholder="Optional" step="any"></label>
+                <label class="field">Unit<select id="radiusUnit" name="radius_unit"><option value="percent">Percent</option><option value="micrometers">Micrometers</option></select></label>
+              </div>
+              <label class="field">Random seed<input id="seed" name="seed" type="number" placeholder="Optional, for repeatability" step="1"></label>
+              <div class="edit-note" id="editNote">Shrinks the distal end while preserving downstream attachment and geometry.</div>
+              <button id="applyEdit" class="button primary full" type="submit">Apply to preview</button>
+            </form>
+          </section>
+
+          <section id="dataPanel" class="inspector-panel">
+            <div class="section-heading"><div><span class="eyebrow">Measurements</span><h3>Complete results</h3></div><button id="downloadJson" class="button secondary small">JSON</button></div>
+            <div class="data-search"><input id="metricSearch" type="search" placeholder="Filter measurements"></div>
+            <div id="metricsTable" class="metrics-table"></div>
+          </section>
+        </aside>
+      </section>
+
+      <section id="compareView" class="app-view compare-view hidden" aria-label="Cohort comparison">
+        <div class="compare-sidebar">
+          <span class="eyebrow">Cohort builder</span><h1>Compare morphology groups</h1>
+          <p>Assign every reconstruction to Group A or B. Charts report cohort means and population standard deviations.</p>
+          <div id="groupAssignments" class="group-assignments"></div>
+          <button id="compareAddFiles" class="button secondary full">Add more files</button>
+        </div>
+        <div class="compare-main">
+          <div class="compare-header">
+            <div><span class="eyebrow">Direct comparison</span><h2 id="compareTitle">Group A vs Group B</h2></div>
+            <button id="downloadComparison" class="button secondary">Download comparison JSON</button>
+          </div>
+          <div id="compareEmpty" class="compare-empty">Assign at least one analyzed morphology to each group.</div>
+          <div id="compareContent" class="hidden">
+            <div id="compareCards" class="compare-cards"></div>
+            <div class="comparison-chart-card">
+              <div class="chart-heading compare-chart-heading">
+                <div><span class="eyebrow">Distribution</span><h3 id="comparisonChartTitle">Sholl length</h3></div>
+                <select id="comparisonMetric" aria-label="Comparison metric">
+                  <option value="sholl_all_length">Sholl length · all</option>
+                  <option value="sholl_basal_length">Sholl length · basal</option>
+                  <option value="sholl_apical_length">Sholl length · apical</option>
+                  <option value="sholl_all_intersections">Sholl intersections · all</option>
+                  <option value="number_of_all_dendrites_per_branch_order">Segments per branch order</option>
+                  <option value="all_dendritic_length_per_branch_order">Length per branch order</option>
+                  <option value="all_path_length_per_branch_order">Path length per branch order</option>
+                </select>
+              </div>
+              <canvas id="comparisonCanvas" aria-label="Group comparison chart"></canvas>
+              <div class="comparison-legend"><span><i class="group-a"></i>Group A</span><span><i class="group-b"></i>Group B</span><em>Error bars show population SD</em></div>
+            </div>
+            <div class="comparison-table-card"><div class="section-heading"><div><span class="eyebrow">Scalar metrics</span><h3>Group difference</h3></div></div><div id="comparisonTable" class="comparison-table"></div></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
