@@ -18,16 +18,19 @@ The maintained command-line paths provide:
 
 ## Installation
 
-REMOD requires Python 3.10 or later. From a fresh checkout:
+REMOD uses Python 3.14; the tested patch release is pinned in
+`.python-version`. From a fresh checkout:
 
 ```bash
-python3 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install --require-hashes -r requirements.lock
 ```
 
 NumPy is required for analysis and editing. Matplotlib is used only by
-`plot_statistics.py`.
+`plot_statistics.py`. `requirements.txt` records the direct dependency policy;
+`requirements.lock` is the reproducible, fully hashed environment and records
+its regeneration command in the file header.
 
 ## Input requirements
 
