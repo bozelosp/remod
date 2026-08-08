@@ -8,7 +8,7 @@ a branch point is the segment identifier used by the remodeling interface.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import pi
+from math import isfinite, pi
 from numbers import Integral, Real
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Set, Tuple
@@ -88,7 +88,7 @@ def parse_swc_lines(swc_lines: Iterable[str]) -> Tuple[List[str], SampleMap]:
             raise ValueError(f"line {line_number}: sample ID must be positive")
         if sample_id in samples:
             raise ValueError(f"line {line_number}: duplicate sample ID {sample_id}")
-        if not np.isfinite([x, y, z, radius]).all():
+        if not all(isfinite(value) for value in (x, y, z, radius)):
             raise ValueError(
                 f"line {line_number}: coordinates and radius must be finite"
             )
@@ -147,7 +147,7 @@ def validate_samples(samples: SampleMap) -> None:
             raise ValueError(
                 f"sample {sample_id} has a non-numeric coordinate or radius"
             )
-        if not np.isfinite(numeric_values).all():
+        if not all(isfinite(float(value)) for value in numeric_values):
             raise ValueError(
                 f"sample {sample_id} has a non-finite coordinate or radius"
             )
@@ -311,6 +311,7 @@ def paths_to_soma(
     paths: Dict[int, List[int]] = {}
     for root in sorted(roots):
         path = [root]
+        seen = {root}
         parent_id = int(samples[root][6])
         while parent_id not in soma_ids and parent_id != -1:
             parent_segment = sample_to_segment.get(parent_id)
@@ -319,11 +320,12 @@ def paths_to_soma(
                     f"sample {root} cannot be connected to a segment "
                     f"through parent {parent_id}"
                 )
-            if parent_segment in path:
+            if parent_segment in seen:
                 raise ValueError(
                     f"cycle detected while tracing segment {root} to the soma"
                 )
             path.append(parent_segment)
+            seen.add(parent_segment)
             parent_id = int(samples[parent_segment][6])
         paths[root] = path
     return paths
@@ -484,20 +486,29 @@ def compute_branch_order(
     """
 
     children = children or _children_map(samples)
-    result: Dict[int, int] = {}
-    for root in dendrite_roots:
-        order = 1
-        parent_id = int(samples[root][6])
-        while parent_id != -1:
-            parent = samples[parent_id]
-            neurite_children = [
-                child for child in children[parent_id] if int(samples[child][1]) != 1
-            ]
-            if int(parent[1]) != 1 and len(neurite_children) > 1:
-                order += 1
-            parent_id = int(parent[6])
-        result[root] = order
-    return result
+    bifurcation = {
+        sample_id: int(sample[1]) != 1
+        and sum(int(samples[child][1]) != 1 for child in children[sample_id]) > 1
+        for sample_id, sample in samples.items()
+    }
+    counts: Dict[int, int] = {}
+
+    def count_to_soma(sample_id: int) -> int:
+        trail = []
+        current = sample_id
+        while current != -1 and current not in counts:
+            trail.append(current)
+            current = int(samples[current][6])
+        count = counts.get(current, 0)
+        for item in reversed(trail):
+            count += int(bifurcation[item])
+            counts[item] = count
+        return counts.get(sample_id, 0)
+
+    return {
+        root: 1 + count_to_soma(int(samples[root][6]))
+        for root in dendrite_roots
+    }
 
 
 def build_morphology(

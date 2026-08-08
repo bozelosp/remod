@@ -6,14 +6,14 @@ described in the [REMOD article](https://doi.org/10.3389/fnana.2015.00156).
 The exact conventions used by the code are recorded in
 [docs/ALGORITHM.md](docs/ALGORITHM.md).
 
-The maintained command-line paths provide:
+The maintained analysis engine, command-line interface, and local Studio provide:
 
 - basal, apical, and combined dendritic topology;
 - length, lateral surface area, volume, path length, branch order, diameter,
   taper, and geometric Sholl measurements;
 - shrink, remove, extend, branch, scale, and radius operations;
 - manual, regional, terminal, and seeded random segment selection;
-- an interactive rotating 3D browser workspace with cohort comparison;
+- an interactive 3D morphology workstation with exact edit previews and cohort comparison;
 - deterministic JSON statistics and static SVG plots; and
 - validated, parent-before-child SWC serialization after editing.
 
@@ -44,13 +44,25 @@ python remod_ui.py
 The command opens `http://127.0.0.1:8765/` in the default browser. The interface
 accepts one or many SWC files and provides:
 
-- continuously rotating 3D morphology views with drag, zoom, and click-to-select
-  segment controls;
-- basal, apical, terminal, random, and multi-segment remodeling targets;
-- shrink, remove, extend, branch, scale, and radius edits with preview undo;
-- morphometry tables, regional Sholl charts, and SWC/JSON downloads; and
-- Group A/Group B comparisons of scalar, branch-order, and Sholl measurements,
-  including cohort means and population-standard-deviation error bars.
+- a dense three-pane morphology workstation with typed geometry, visibility
+  controls, standard orientations, fit/focus, pan, zoom, rotation, a scale bar,
+  orientation axes, and hover inspection;
+- click and modifier-click segment selection with explicit multi-selection
+  feedback;
+- a `select → configure → preview → apply` workflow for shrink, remove, extend,
+  branch, scale, and SWC-radius edits;
+- exact before/after/overlay previews with metric deltas, structural warnings,
+  discard, applied-edit history, and undo;
+- scientifically labeled scalar, Sholl, and centrifugal branch-order views with
+  hover values and CSV/JSON exports; and
+- named A/B cohorts with descriptive means, population standard deviations,
+  sample counts, missing-observation gaps, and exportable comparison data.
+
+Previewing does not mutate the active morphology or create a history entry.
+Applying promotes the exact analyzed preview artifact, so stochastic selection
+and generated geometry cannot drift between preview and apply. If a stochastic
+operation has no seed, Studio generates and displays one before requesting the
+preview.
 
 Uploaded data and generated results remain in the local browser/server process.
 REMOD Studio does not transmit files or send email. Use
@@ -67,7 +79,11 @@ Additional soma-contour samples must be connected through other soma samples.
 
 Dendritic measurements include SWC types `3` (basal) and `4` (apical). Other
 neurite types are preserved during editing but excluded from dendritic totals.
-Coordinates and radii are interpreted as micrometers.
+SWC does not encode a coordinate unit. REMOD labels coordinates and radii as
+micrometers by convention, matching the article and bundled fixtures, but the
+interface marks this as an assumption. Convert files recorded in pixels or
+another unit before interpreting physical measurements. The sixth SWC column
+is radius, not diameter.
 
 ## Analysis
 
@@ -235,9 +251,12 @@ selected segment sets, and random seeds are not included. Those reported
 percentages are contextual results rather than regression targets.
 
 Group comparisons describe the files assigned to each cohort and do not perform
-inferential hypothesis tests. Users remain responsible for cohort construction,
-independence assumptions, multiple-comparison control, and biological
-interpretation.
+inferential hypothesis tests. Population SD and per-bin sample count are shown;
+with `n=1`, SD is zero by definition and is not evidence of low variability.
+Missing Sholl/count bins are zero-filled, while missing mean branch-order length
+or path bins remain absent observations. Users remain responsible for cohort
+construction, independence assumptions, multiple-comparison control, and
+biological interpretation.
 
 The two bundled morphology fixtures and their attribution are documented in
 [swc_files/README.md](swc_files/README.md). They are nontrivial test inputs,

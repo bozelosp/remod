@@ -302,11 +302,11 @@ def _edge_sholl_profiles(
     end: np.ndarray,
     bounds: Sequence[int | float],
     step: float,
-) -> tuple[list[float], list[int]]:
-    """Return shell lengths and crossings for one edge in one shared pass."""
+) -> tuple[dict[int, float], dict[int, int]]:
+    """Return sparse shell lengths and crossings for one edge."""
 
-    lengths = [0.0] * len(bounds)
-    intersections = [0] * len(bounds)
+    lengths: dict[int, float] = {}
+    intersections: dict[int, int] = {}
     vector = end - start
     edge_length = hypot(*vector.tolist())
     if edge_length == 0.0 or not bounds:
@@ -322,7 +322,8 @@ def _edge_sholl_profiles(
     cuts = {0.0, 1.0}
     for index in range(first, last):
         roots = _sphere_parameters(start, end, float(bounds[index]))
-        intersections[index] = len(roots)
+        if roots:
+            intersections[index] = len(roots)
         cuts.update(roots)
 
     ordered = sorted(cuts)
@@ -332,8 +333,10 @@ def _edge_sholl_profiles(
         midpoint = start + ((left + right) / 2.0) * vector
         radial_distance = hypot(*midpoint.tolist())
         shell_index = int(floor(radial_distance / step))
-        if 0 <= shell_index < len(lengths):
-            lengths[shell_index] += edge_length * (right - left)
+        if 0 <= shell_index < len(bounds):
+            lengths[shell_index] = lengths.get(shell_index, 0.0) + edge_length * (
+                right - left
+            )
     return lengths, intersections
 
 
@@ -374,9 +377,12 @@ def sholl_profiles(samples, parents, soma_samples, radius):
             region_bounds = bounds[name]
             length_profile = profiles[name]["length"]
             intersection_profile = profiles[name]["intersections"]
-            for index, bound in enumerate(region_bounds):
-                length_profile[bound] += edge_lengths[index]
-                intersection_profile[bound] += edge_intersections[index]
+            for index, value in edge_lengths.items():
+                if index < len(region_bounds):
+                    length_profile[region_bounds[index]] += value
+            for index, value in edge_intersections.items():
+                if index < len(region_bounds):
+                    intersection_profile[region_bounds[index]] += value
     return profiles
 
 

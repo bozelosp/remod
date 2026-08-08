@@ -671,6 +671,14 @@ def execute_action(
 
     targets = list(dict.fromkeys(int(root) for root in target_dendrites))
     generator = random.Random(seed)
+    radius_applied = False
+
+    # Daughter paths inherit the parent tip radius.  Apply a requested parent
+    # radius change first so a combined branch/radius operation does not create
+    # an artificial discontinuity at the new attachment.
+    if action == "branch" and radius_change_amount not in {None, "none"}:
+        radius_change(targets, radius_change_amount, dendrite_samples, radius_unit)
+        radius_applied = True
 
     if action == "none":
         pass
@@ -712,7 +720,7 @@ def execute_action(
     else:
         raise ValueError(f"unknown action: {action}")
 
-    if radius_change_amount not in {None, "none"}:
+    if radius_change_amount not in {None, "none"} and not radius_applied:
         radius_change(targets, radius_change_amount, dendrite_samples, radius_unit)
     samples = _sample_lookup(soma_samples, dendrite_samples)
     validate_samples(samples)

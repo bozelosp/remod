@@ -49,8 +49,12 @@ bundled fixture, report values one lower.
 
 ## Morphometric definitions
 
-Coordinates and radii are interpreted in micrometers. Soma cable, surface area,
-and volume are excluded from dendritic totals.
+SWC carries no machine-readable coordinate unit. REMOD labels coordinates and
+radii as micrometers by convention, matching the article and bundled fixtures;
+for arbitrary input this is an assumption that the caller must verify. Files
+recorded in pixels or another unit must be converted before physical quantities
+are interpreted. The sixth SWC column is radius. Soma cable, surface area, and
+volume are excluded from dendritic totals.
 
 For an edge with Euclidean centerline length `L` and distal sample radius `r`,
 REMOD uses:
@@ -145,7 +149,13 @@ to each target.
   arbors are translated to preserve connections. The soma is unchanged.
 - **radius change:** applies either `radius * (1 + percentage / 100)` or
   `radius + micrometers` to selected segment samples. A result that is not
-  positive is rejected.
+  positive is rejected. When combined with branching, the radius edit occurs
+  first so both daughters inherit the edited attachment radius.
+
+The browser interface previews the exact serialized and reanalyzed result
+without mutating the active morphology. Applying promotes that same artifact;
+it does not repeat random selection or geometry generation. Studio supplies an
+explicit seed for stochastic requests that do not already have one.
 
 Extension and branching divide the requested distance into steps drawn from
 `length_distribution.txt`; the final step is truncated when necessary so the

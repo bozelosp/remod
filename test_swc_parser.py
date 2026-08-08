@@ -22,14 +22,21 @@ import numpy as np
 
 from core_utils import sample_random_dendrites
 from file_io import write_json
-from json_stats import compute_statistics
+from json_stats import compute_statistics, summarize_statistics
 from morphology_statistics import (
     sholl_branch_points,
     sholl_intersections,
     sholl_length,
     sholl_profiles,
 )
-from remod_engine import RemodelRequest, analyze_text, remodel_text
+from remod_engine import (
+    AnalysisCache,
+    RemodelRequest,
+    analyze_text,
+    remodel_text,
+    validate_remodel_request,
+)
+from remod_ui import _optional_number
 from remodeling_actions import execute_action, parse_length_distribution, select_length
 from swc_parser import (
     dendrite_volumes,
@@ -450,6 +457,27 @@ class SerializationTests(unittest.TestCase):
             write_json(path, {np.int64(20): np.float64(1.5)})
             self.assertEqual(json.loads(path.read_text(encoding="utf-8")), {"20": 1.5})
 
+    def test_cohort_distribution_missing_bins_follow_metric_semantics(self):
+        summary = summarize_statistics(
+            {
+                "a.swc": {
+                    "sholl_all_length": {20: 5.0, 40: 2.0},
+                    "all_dendritic_length_per_branch_order": {1: 10.0, 2: 20.0},
+                },
+                "b.swc": {
+                    "sholl_all_length": {20: 7.0},
+                    "all_dendritic_length_per_branch_order": {1: 30.0},
+                },
+            }
+        )
+        sholl_bin = summary["distribution_metrics"]["sholl_all_length"]["40"]
+        branch_bin = summary["distribution_metrics"][
+            "all_dendritic_length_per_branch_order"
+        ]["2"]
+
+        self.assertEqual(sholl_bin, {"mean": 1.0, "standard_deviation": 1.0, "sample_count": 2})
+        self.assertEqual(branch_bin, {"mean": 20.0, "standard_deviation": 0.0, "sample_count": 1})
+
 
 class InMemoryEngineTests(unittest.TestCase):
     def test_analysis_reuses_one_parsed_morphology_for_ui_geometry_and_statistics(self):
@@ -510,6 +538,104 @@ class InMemoryEngineTests(unittest.TestCase):
                     types,
                 ),
             )
+
+    def test_compact_geometry_contract_is_columnar_and_complete(self):
+        analysis = analyze_text(Y_MORPHOLOGY, 1.0)
+        morphology = analysis["morphology"]
+
+        self.assertEqual(morphology["schema"], 2)
+        self.assertEqual(
+            morphology["sample_columns"],
+            ["id", "type", "x", "y", "z", "radius", "parent", "segment"],
+        )
+        self.assertEqual(len(morphology["samples"]), 7)
+        self.assertTrue(all(len(row) == 8 for row in morphology["samples"]))
+        self.assertEqual(len(morphology["segments"]), 4)
+        self.assertTrue(all(len(row) == 8 for row in morphology["segments"]))
+        self.assertEqual(morphology["bounds"], {"min": [0.0, -1.0, 0.0], "max": [3.0, 2.0, 0.0]})
+
+    def test_analysis_cache_reuses_topology_across_sholl_steps(self):
+        cache = AnalysisCache(max_entries=2)
+        first, first_cached = cache.get_or_analyze(Y_MORPHOLOGY, 1.0)
+        second, second_cached = cache.get_or_analyze(Y_MORPHOLOGY, 2.0)
+        repeated, repeated_cached = cache.get_or_analyze(Y_MORPHOLOGY, 2.0)
+
+        self.assertFalse(first_cached)
+        self.assertFalse(second_cached)
+        self.assertTrue(repeated_cached)
+        self.assertIs(first.parsed, second.parsed)
+        self.assertIs(first.morphology, second.morphology)
+        self.assertIs(second, repeated)
+        self.assertNotEqual(first.analysis_id, second.analysis_id)
+
+    def test_statistics_survive_full_analysis_eviction_for_cohort_summaries(self):
+        cache = AnalysisCache(max_entries=1, max_statistics=3)
+        first, _ = cache.get_or_analyze(Y_MORPHOLOGY, 1.0)
+        cache.get_or_analyze(UNBRANCHED_MORPHOLOGY, 1.0)
+
+        self.assertIsNone(cache.get(first.analysis_id))
+        self.assertIs(cache.get_statistics(first.analysis_id), first.statistics)
+
+    def test_local_api_numeric_options_are_finite_and_seed_is_integral(self):
+        self.assertEqual(_optional_number("12.0", integer=True), 12)
+        self.assertAlmostEqual(_optional_number("1.25"), 1.25)
+        with self.assertRaisesRegex(ValueError, "whole number"):
+            _optional_number("1.5", integer=True)
+        with self.assertRaisesRegex(ValueError, "finite"):
+            _optional_number("nan")
+        with self.assertRaisesRegex(ValueError, "true or false"):
+            _optional_number(True, integer=True)
+
+    def test_prepared_remodeling_produces_the_exact_seeded_artifact(self):
+        request = RemodelRequest(
+            file_name="fixture.swc",
+            who="random_all",
+            random_ratio=50.0,
+            action="extend",
+            amount=20.0,
+            seed=1789,
+        )
+        direct = remodel_text(Y_MORPHOLOGY, request)
+        prepared = remodel_text(
+            Y_MORPHOLOGY,
+            request,
+            parsed=parse_swc_text(Y_MORPHOLOGY),
+        )
+
+        self.assertEqual(prepared.content, direct.content)
+        self.assertEqual(prepared.targets, direct.targets)
+        self.assertIn("# seed: 1789", prepared.content)
+
+    def test_interface_remodel_validation_matches_the_scientific_contract(self):
+        invalid = (
+            RemodelRequest("fixture.swc", "all_terminal", "none"),
+            RemodelRequest(
+                "fixture.swc",
+                "all_terminal",
+                "remove",
+                radius_change=10.0,
+            ),
+            RemodelRequest(
+                "fixture.swc",
+                "all_terminal",
+                "shrink",
+                random_ratio=10.0,
+                amount=20.0,
+            ),
+        )
+        for request in invalid:
+            with self.subTest(request=request), self.assertRaises(ValueError):
+                validate_remodel_request(request)
+
+        validate_remodel_request(
+            RemodelRequest(
+                "fixture.swc",
+                "all_terminal",
+                "none",
+                radius_change=-0.1,
+                radius_unit="micrometers",
+            )
+        )
 
 
 class CommandLineIntegrationTests(unittest.TestCase):
@@ -855,6 +981,35 @@ class RemodelingInvariantTests(unittest.TestCase):
             total_dendritic_length(after),
             total_dendritic_length(before) + 2.0 * target_length,
         )
+
+    def test_branch_daughters_inherit_the_changed_attachment_radius(self):
+        result = remodel_text(
+            Y_MORPHOLOGY,
+            RemodelRequest(
+                file_name="fixture.swc",
+                who="manual",
+                manual_dendrites="4",
+                action="branch",
+                amount=50.0,
+                radius_change=50.0,
+                seed=41,
+            ),
+        )
+        parsed = result.parsed
+        new_branch = max(parsed.branch_points)
+        daughters = [
+            root
+            for root in parsed.dendrite_roots
+            if int(parsed.segments[root][0][6]) == new_branch
+        ]
+
+        self.assertEqual(len(daughters), 2)
+        self.assertAlmostEqual(parsed.samples[new_branch][5], 0.75)
+        for daughter in daughters:
+            self.assertAlmostEqual(
+                parsed.segments[daughter][0][5],
+                parsed.samples[new_branch][5],
+            )
 
     def test_tiny_representable_extension_is_not_silently_ignored(self):
         before, after, _lines, _roots, _samples = remodel(

@@ -7,13 +7,19 @@ import argparse
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+from math import isfinite
 from pathlib import Path
 from time import perf_counter
 from urllib.parse import unquote, urlparse
 import webbrowser
 
-from json_stats import compute_statistics_for_morphology, summarize_statistics
-from remod_engine import RemodelRequest, analyze_text, morphology_payload, remodel_text
+from json_stats import summarize_statistics
+from remod_engine import (
+    AnalysisCache,
+    RemodelRequest,
+    analyze_morphology,
+    remodel_text,
+)
 
 
 REPOSITORY = Path(__file__).resolve().parent
@@ -25,12 +31,31 @@ STATIC_FILES = {
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
 }
+ANALYSIS_CACHE = AnalysisCache(max_entries=12)
+
+PREVIEW_METRICS = {
+    "all_total_length": ("Total dendritic length", "µm"),
+    "all_total_area": ("Lateral dendritic area", "µm²"),
+    "all_total_volume": ("Dendritic volume", "µm³"),
+    "number_of_all_dendrites": ("Dendritic segments", "count"),
+    "number_of_all_terminal_dendrites": ("Terminal segments", "count"),
+    "number_of_all_branchpoints": ("Branch points", "count"),
+}
 
 
 def _optional_number(value, *, integer: bool = False):
     if value in (None, ""):
         return None
-    return int(value) if integer else float(value)
+    if isinstance(value, bool):
+        raise ValueError("numeric options cannot be true or false")
+    number = float(value)
+    if not isfinite(number):
+        raise ValueError("numeric options must be finite")
+    if integer:
+        if not number.is_integer():
+            raise ValueError("random seed must be a whole number")
+        return int(number)
+    return number
 
 
 class RemodHandler(BaseHTTPRequestHandler):
@@ -56,6 +81,8 @@ class RemodHandler(BaseHTTPRequestHandler):
 
     def _request_json(self) -> dict:
         length = int(self.headers.get("Content-Length", "0"))
+        if length > 100 * 1024 * 1024:
+            raise ValueError("request body exceeds the 100 MB local limit")
         value = json.loads(self.rfile.read(length) or b"{}")
         if not isinstance(value, dict):
             raise ValueError("request body must be a JSON object")
@@ -68,7 +95,7 @@ class RemodHandler(BaseHTTPRequestHandler):
             self._send((UI_ROOT / file_name).read_bytes(), content_type)
             return
         if path == "/api/health":
-            self._json({"status": "ready"})
+            self._json({"status": "ready", "analysis_cache": ANALYSIS_CACHE.info()})
             return
         if path == "/api/examples":
             self._json(
@@ -102,6 +129,9 @@ class RemodHandler(BaseHTTPRequestHandler):
             if path == "/api/remodel":
                 self._remodel(request)
                 return
+            if path == "/api/groups":
+                self._groups(request)
+                return
             self._json({"error": "not found"}, HTTPStatus.NOT_FOUND)
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             self._json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
@@ -115,38 +145,62 @@ class RemodHandler(BaseHTTPRequestHandler):
         step = float(request.get("sholl_step", 20.0))
         started = perf_counter()
         analyses = []
-        group_results: dict[str, dict[str, dict[str, object]]] = {"A": {}, "B": {}}
         for item in files:
             if not isinstance(item, dict):
                 raise ValueError("each file must be an object")
             name = str(item["name"])
             content = str(item["content"])
-            group = str(item.get("group", "A")).upper()
-            if group not in group_results:
-                raise ValueError(f"unknown comparison group: {group}")
             file_started = perf_counter()
-            analysis = analyze_text(content, step)
-            statistics = analysis["statistics"]
-            group_results[group][name] = statistics  # type: ignore[assignment]
+            analysis, cached = ANALYSIS_CACHE.get_or_analyze(content, step)
+            statistics = analysis.statistics
             analyses.append(
                 {
                     "name": name,
-                    "group": group,
-                    "morphology": analysis["morphology"],
+                    "analysis_id": analysis.analysis_id,
+                    "cached": cached,
+                    "morphology": analysis.morphology,
                     "statistics": statistics,
                     "elapsed_ms": (perf_counter() - file_started) * 1000.0,
                 }
             )
-        summaries = {
-            group: summarize_statistics(results)
-            for group, results in group_results.items()
-            if results
-        }
         self._json(
             {
                 "files": analyses,
-                "groups": summaries,
                 "elapsed_ms": (perf_counter() - started) * 1000.0,
+                "cache": ANALYSIS_CACHE.info(),
+            }
+        )
+
+    def _groups(self, request: dict) -> None:
+        files = request.get("files")
+        if not isinstance(files, list) or not files:
+            raise ValueError("group comparison requires analyzed morphologies")
+        group_results: dict[str, dict[str, dict[str, object]]] = {"A": {}, "B": {}}
+        seen_names: dict[str, set[str]] = {"A": set(), "B": set()}
+        for item in files:
+            if not isinstance(item, dict):
+                raise ValueError("each group member must be an object")
+            name = str(item["name"])
+            group = str(item.get("group", "A")).upper()
+            if group not in group_results:
+                raise ValueError(f"unknown comparison group: {group}")
+            normalized_name = name.casefold()
+            if normalized_name in seen_names[group]:
+                raise ValueError(f"duplicate morphology name in cohort {group}: {name}")
+            seen_names[group].add(normalized_name)
+            statistics = ANALYSIS_CACHE.get_statistics(str(item["analysis_id"]))
+            if statistics is None:
+                raise ValueError(
+                    f"analysis for {name} is no longer cached; analyze it again"
+                )
+            group_results[group][name] = statistics
+        self._json(
+            {
+                "groups": {
+                    group: summarize_statistics(results)
+                    for group, results in group_results.items()
+                    if results
+                }
             }
         )
 
@@ -168,19 +222,67 @@ class RemodHandler(BaseHTTPRequestHandler):
             seed=_optional_number(options.get("seed"), integer=True),
         )
         started = perf_counter()
-        result = remodel_text(str(request["content"]), edit)
-        statistics = compute_statistics_for_morphology(result.parsed, step)
+        source = str(request["content"])
+        before, _cached = ANALYSIS_CACHE.get_or_analyze(source, step)
+        result = remodel_text(source, edit, parsed=before.parsed)
+        after = analyze_morphology(result.content, step, parsed=result.parsed)
+        ANALYSIS_CACHE.store(after)
+        statistics = after.statistics
         stem = Path(edit.file_name).stem
         output_stem = stem if stem.endswith("_remodeled") else f"{stem}_remodeled"
         output_name = f"{output_stem}.swc"
+        changes = []
+        for key, (label, unit) in PREVIEW_METRICS.items():
+            previous = float(before.statistics[key])
+            current = float(statistics[key])
+            changes.append(
+                {
+                    "key": key,
+                    "label": label,
+                    "unit": unit,
+                    "before": previous,
+                    "after": current,
+                    "delta": current - previous,
+                    "percent": None
+                    if previous == 0.0
+                    else (current - previous) / abs(previous) * 100.0,
+                }
+            )
+        warnings = []
+        if edit.action == "remove":
+            warnings.append("Removal includes every distal descendant of each target.")
+        if edit.action in {"shrink", "extend", "scale"} and any(
+            target not in before.parsed.all_terminal for target in result.targets
+        ):
+            warnings.append(
+                "At least one target is nonterminal; its distal subtree is translated "
+                "rigidly, which can change spatial and Sholl profiles."
+            )
+        if edit.seed is None and (
+            edit.who.startswith("random_") or edit.action in {"extend", "branch"}
+        ):
+            warnings.append(
+                "No random seed is set; another preview may select or generate different geometry."
+            )
+        if len(result.targets) > max(10, len(before.parsed.dendrite_roots) // 2):
+            warnings.append("This operation affects a broad portion of the dendritic tree.")
         self._json(
             {
                 "name": output_name,
                 "content": result.content,
                 "targets": result.targets,
                 "selector": result.selector,
-                "morphology": morphology_payload(result.parsed),
+                "analysis_id": after.analysis_id,
+                "morphology": after.morphology,
                 "statistics": statistics,
+                "changes": changes,
+                "warnings": warnings,
+                "impact": {
+                    "samples_before": len(before.parsed.samples),
+                    "samples_after": len(result.parsed.samples),
+                    "segments_before": len(before.parsed.dendrite_roots),
+                    "segments_after": len(result.parsed.dendrite_roots),
+                },
                 "elapsed_ms": (perf_counter() - started) * 1000.0,
             }
         )
