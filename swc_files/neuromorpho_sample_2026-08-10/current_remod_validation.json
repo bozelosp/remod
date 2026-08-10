@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "validated_at": "2026-08-10",
+  "implementation": "tolerant morphology capability and diagnostics model",
+  "summary": {
+    "files": 12,
+    "accepted": 12,
+    "with_soma_root": 8,
+    "without_soma_root": 4,
+    "classified_dendrite_files": 6,
+    "generic_only_files": 6
+  },
+  "morphologies": [
+    {
+      "file": "NMO_001750__6-S18-3.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 42, "dendrite": 42, "axon": 0, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["COORDINATE_UNIT_UNSPECIFIED", "SOMA_ATTACHMENT_OUTLIER"]
+    },
+    {
+      "file": "NMO_006053__201SL.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 43, "dendrite": 43, "axon": 0, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["LOW_RADIUS_VARIATION", "COORDINATE_UNIT_UNSPECIFIED", "GEOMETRIC_DENDRITE_GAP"]
+    },
+    {
+      "file": "NMO_024621__VGlut-F-400826.CNG.swc",
+      "root_type": 2,
+      "root_is_soma": false,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 99, "dendrite": 0, "axon": 99, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["NO_SOMA_ROOT", "NO_CLASSIFIED_DENDRITES", "LOW_RADIUS_VARIATION", "COORDINATE_UNIT_UNSPECIFIED"]
+    },
+    {
+      "file": "NMO_097192__2012-6-5s2c2X1_25.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 346, "dendrite": 81, "axon": 265, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["COORDINATE_UNIT_UNSPECIFIED", "LONG_AXON_EDGE"]
+    },
+    {
+      "file": "NMO_110695__TF2RU5.CNG.swc",
+      "root_type": 3,
+      "root_is_soma": false,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 11, "dendrite": 11, "axon": 0, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["NO_SOMA_ROOT", "COORDINATE_UNIT_UNSPECIFIED"]
+    },
+    {
+      "file": "NMO_115735__V2_14.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 40, "dendrite": 40, "axon": 0, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["LOW_RADIUS_VARIATION", "COORDINATE_UNIT_UNSPECIFIED"]
+    },
+    {
+      "file": "NMO_136439__siGlut3_C_121217_1-0001.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 2,
+      "segments": {"all_arbor": 130, "dendrite": 17, "axon": 113, "unspecified_neurite": 0, "glial_process": 0},
+      "warning_codes": ["LOW_DIMENSIONAL_RECONSTRUCTION", "LOW_RADIUS_VARIATION", "COORDINATE_UNIT_UNSPECIFIED", "SOMA_ATTACHMENT_OUTLIER", "LONG_AXON_EDGE"]
+    },
+    {
+      "file": "NMO_147946__PVN12_microglia_7.CNG.swc",
+      "root_type": 7,
+      "root_is_soma": false,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 153, "dendrite": 0, "axon": 0, "unspecified_neurite": 0, "glial_process": 153},
+      "warning_codes": ["NO_SOMA_ROOT", "GLIAL_PROCESSES_TYPE_7", "NO_CLASSIFIED_DENDRITES", "COORDINATE_UNIT_UNSPECIFIED", "LONG_ARBOR_EDGE"]
+    },
+    {
+      "file": "NMO_199018__S1_CKp25_6w_F_Animal03_Trace144.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 46, "dendrite": 0, "axon": 0, "unspecified_neurite": 0, "glial_process": 46},
+      "warning_codes": ["GLIAL_PROCESSES_TYPE_7", "NO_CLASSIFIED_DENDRITES", "COORDINATE_UNIT_UNSPECIFIED"]
+    },
+    {
+      "file": "NMO_247091__SU8nano1min_T3_10X_3_03.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 2, "dendrite": 0, "axon": 0, "unspecified_neurite": 2, "glial_process": 0},
+      "warning_codes": ["UNSPECIFIED_NEURITES_TYPE_6", "NO_CLASSIFIED_DENDRITES", "LOW_RADIUS_VARIATION", "COORDINATE_UNIT_UNSPECIFIED"]
+    },
+    {
+      "file": "NMO_300219__NGF_D1_2_212.CNG.swc",
+      "root_type": 6,
+      "root_is_soma": false,
+      "spatial_dimension": 3,
+      "segments": {"all_arbor": 52, "dendrite": 0, "axon": 0, "unspecified_neurite": 52, "glial_process": 0},
+      "warning_codes": ["NO_SOMA_ROOT", "UNSPECIFIED_NEURITES_TYPE_6", "NO_CLASSIFIED_DENDRITES", "COORDINATE_UNIT_UNSPECIFIED"]
+    },
+    {
+      "file": "NMO_318012__S18_Microglia373.CNG.swc",
+      "root_type": 1,
+      "root_is_soma": true,
+      "spatial_dimension": 2,
+      "segments": {"all_arbor": 6, "dendrite": 0, "axon": 0, "unspecified_neurite": 0, "glial_process": 6},
+      "warning_codes": ["GLIAL_PROCESSES_TYPE_7", "NO_CLASSIFIED_DENDRITES", "LOW_DIMENSIONAL_RECONSTRUCTION", "LOW_RADIUS_VARIATION", "COORDINATE_UNIT_UNSPECIFIED", "SOMA_ATTACHMENT_OUTLIER"]
+    }
+  ]
+}

@@ -1,0 +1,1388 @@
+{
+  "schema_version": 2,
+  "created_at": "2026-08-10T15:08:47Z",
+  "source_snapshot": {
+    "repository": "NeuroMorpho.Org",
+    "observed_release": "8.6.124",
+    "observed_repository_cells": 298339,
+    "terms_url": "https://neuromorpho.org/useterm.jsp",
+    "api_reference_url": "https://neuromorpho.org/apiReference.html",
+    "license": "CC BY 4.0",
+    "access_method": "NeuroMorpho metadata API plus identified direct HTTP access to standardized SWC files"
+  },
+  "publication_copy": {
+    "comment_headers_sanitized": true,
+    "line_endings": "LF",
+    "numeric_rows_unchanged": true,
+    "removed_comment_content": [
+      "legacy email addresses",
+      "absolute upstream filesystem paths"
+    ],
+    "hash_note": "Each validation.sha256 is the acquisition hash of the raw upstream download. Published copies differ only in sanitized comments and normalized line endings; numeric SWC fields were verified unchanged."
+  },
+  "sampling": {
+    "method": "Deterministic stratified random sample, one record per stratum",
+    "seed": 20260810,
+    "prng": "32-bit LCG: state = (1664525 * state + 1013904223) mod 2^32",
+    "selection": "For each ordered stratum, page = state mod totalElements; request size=1 sorted by neuron_id ascending",
+    "http_client_identifier": "REMOD morphology sampler 1.0",
+    "maximum_source_file_bytes": 25000000,
+    "note": "This is a coverage-oriented sample, not an unbiased estimate of the repository-wide distribution."
+  },
+  "summary": {
+    "morphology_count": 12,
+    "total_bytes": 689695,
+    "remod_analyzable": 5,
+    "remod_accepted_no_dendrites": 3,
+    "remod_rejected": 4,
+    "generic_swc_topology_failures": 0
+  },
+  "morphologies": [
+    {
+      "stratum": {
+        "label": "global_baseline",
+        "criterion": null,
+        "population_size": 298339,
+        "selected_zero_based_page": 220074,
+        "prng_state": 1555461281
+      },
+      "local_file": "NMO_318012__S18_Microglia373.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/318012",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/saminathan_sharma/CNG%20version/S18_Microglia373.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/saminathan_sharma/Remaining%20issues/S18_Microglia373.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_318012",
+        "neuron_id": 318012,
+        "neuron_name": "S18_Microglia373",
+        "archive": "Saminathan_Sharma",
+        "species": "mouse",
+        "scientific_name": "",
+        "brain_region": [
+          "hippocampus",
+          "CA1"
+        ],
+        "cell_type": [
+          "Glia",
+          "microglia",
+          "Iba1-positive"
+        ],
+        "domain": "Processes, Soma",
+        "attributes": "No Diameter, 2D, Angles",
+        "physical_integrity": "Process Moderate",
+        "original_format": "Simple Neurite Tracer.traces",
+        "reference_pmid": [
+          "41550298"
+        ],
+        "reference_doi": [
+          "10.3389/fncel.2025.1720382"
+        ]
+      },
+      "validation": {
+        "status": "accepted_no_dendrites",
+        "bytes": 2799,
+        "constant_z": true,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 0,
+        "dendritic_segment_count": 0,
+        "duplicate_id_count": 0,
+        "file": "NMO_318012__S18_Microglia373.CNG.swc",
+        "id": 318012,
+        "malformed_row_count": 0,
+        "max_edge_length": 2.31,
+        "median_edge_length": 0.17464249196572973,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 108
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "long_segment": 2,
+            "radius": 105
+          },
+          "code_counts": {
+            "2.1": 1,
+            "2.4": 2,
+            "4.3": 101,
+            "4.5": 4
+          },
+          "long_edge_warnings": [
+            {
+              "child": 4,
+              "child_type": 7,
+              "length": 1.946175737183053,
+              "match_delta": 0.000024262816946896137,
+              "median_ratio": 11.143769853930813,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 1.9462,
+              "reported_point": 4
+            },
+            {
+              "child": 57,
+              "child_type": 7,
+              "length": 2.1121789696898317,
+              "match_delta": 0.000021030310168423938,
+              "median_ratio": 12.094301598171805,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 2.1122,
+              "reported_point": 57
+            }
+          ],
+          "warning_count": 108
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 2.311,
+        "radius_min": 0.5,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 109,
+        "sha256": "6fa7d481c5137c9d4d6389fcd708b653f90a7b55a6efd696caec10f6d82588da",
+        "type_counts": {
+          "1": 3,
+          "7": 106
+        },
+        "unique_radius_count": 2,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "dendrites_soma_no_axon",
+        "criterion": {
+          "field": "domain",
+          "value": "Dendrites, Soma, No Axon"
+        },
+        "population_size": 83255,
+        "selected_zero_based_page": 8690,
+        "prng_state": 132384140
+      },
+      "local_file": "NMO_115735__V2_14.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/115735",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/defelipe/CNG%20version/V2_14.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/defelipe/Remaining%20issues/V2_14.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_115735",
+        "neuron_id": 115735,
+        "neuron_name": "V2_14",
+        "archive": "DeFelipe",
+        "species": "mouse",
+        "scientific_name": "",
+        "brain_region": [
+          "neocortex",
+          "occipital",
+          "secondary visual",
+          "layer 3"
+        ],
+        "cell_type": [
+          "principal cell",
+          "pyramidal"
+        ],
+        "domain": "Dendrites, Soma, No Axon",
+        "attributes": "No Diameter, 3D, Angles",
+        "physical_integrity": "Dendrites Moderate",
+        "original_format": "Neurolucida.asc",
+        "reference_pmid": [
+          "20534523"
+        ],
+        "reference_doi": [
+          "10.1073/pnas.1006269107"
+        ]
+      },
+      "validation": {
+        "status": "analyzable",
+        "bytes": 22781,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 620,
+        "dendritic_segment_count": 40,
+        "duplicate_id_count": 0,
+        "file": "NMO_115735__V2_14.CNG.swc",
+        "id": 115735,
+        "malformed_row_count": 0,
+        "max_edge_length": 16.74268198348162,
+        "median_edge_length": 2.1750464969233345,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 25
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "radius": 24
+          },
+          "code_counts": {
+            "2.1": 1,
+            "4.5": 24
+          },
+          "long_edge_warnings": [],
+          "warning_count": 25
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 6.22346,
+        "radius_min": 0.105,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 623,
+        "sha256": "bcf6fcdee6e8fb68378f326c6232bb1996ab538838951840f57f5d906212d786",
+        "type_counts": {
+          "1": 3,
+          "3": 620
+        },
+        "unique_radius_count": 2,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "dendrites_soma_axon",
+        "criterion": {
+          "field": "domain",
+          "value": "Dendrites, Soma, Axon"
+        },
+        "population_size": 22491,
+        "selected_zero_based_page": 22139,
+        "prng_state": 132449147
+      },
+      "local_file": "NMO_097192__2012-6-5s2c2X1_25.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/97192",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/wang_ye/CNG%20version/2012-6-5s2c2X1_25.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/wang_ye/Remaining%20issues/2012-6-5s2c2X1_25.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_97192",
+        "neuron_id": 97192,
+        "neuron_name": "2012-6-5s2c2X1_25",
+        "archive": "Wang_Ye",
+        "species": "human",
+        "scientific_name": null,
+        "brain_region": [
+          "neocortex",
+          "temporal",
+          "layer 4",
+          "anterior",
+          "right"
+        ],
+        "cell_type": [
+          "interneuron",
+          "bitufted",
+          "persistent activity neuron (PAN)"
+        ],
+        "domain": "Dendrites, Soma, Axon",
+        "attributes": "Diameter, 3D, Angles",
+        "physical_integrity": "Dendrites Moderate, Axon Incomplete",
+        "original_format": "Neurolucida.dat",
+        "reference_pmid": [
+          "25753411"
+        ],
+        "reference_doi": [
+          "10.1016/j.celrep.2015.02.018"
+        ]
+      },
+      "validation": {
+        "status": "analyzable",
+        "bytes": 200794,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 1821,
+        "dendritic_segment_count": 81,
+        "duplicate_id_count": 0,
+        "file": "NMO_097192__2012-6-5s2c2X1_25.CNG.swc",
+        "id": 97192,
+        "malformed_row_count": 0,
+        "max_edge_length": 48.88043882781741,
+        "median_edge_length": 2.9282930181250557,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 190
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "long_segment": 3,
+            "other": 167,
+            "radius": 11,
+            "short_segment": 8
+          },
+          "code_counts": {
+            "2.1": 1,
+            "2.4": 3,
+            "2.5": 8,
+            "4.3": 11,
+            "4.4": 167
+          },
+          "long_edge_warnings": [
+            {
+              "child": 3368,
+              "child_type": 2,
+              "length": 48.88043882781741,
+              "match_delta": 0.000038827817405717724,
+              "median_ratio": 16.69246845355485,
+              "parent": 3367,
+              "parent_is_soma": false,
+              "parent_type": 2,
+              "reported_length": 48.8804,
+              "reported_point": 3368
+            },
+            {
+              "child": 3374,
+              "child_type": 2,
+              "length": 42.15668511636084,
+              "match_delta": 0.00001488363916024582,
+              "median_ratio": 14.396334265535067,
+              "parent": 3367,
+              "parent_is_soma": false,
+              "parent_type": 2,
+              "reported_length": 42.1567,
+              "reported_point": 3374
+            },
+            {
+              "child": 4069,
+              "child_type": 2,
+              "length": 27.1909433451655,
+              "match_delta": 0.00004334516550130729,
+              "median_ratio": 9.285595115264616,
+              "parent": 4068,
+              "parent_is_soma": false,
+              "parent_type": 2,
+              "reported_length": 27.1909,
+              "reported_point": 4069
+            }
+          ],
+          "warning_count": 190
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 6.804,
+        "radius_min": 0.055,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 5202,
+        "sha256": "ae595910e01ff6c99709a6e5c5e98d6a083c6b1dca35f85751411a6d2fcc42ef",
+        "type_counts": {
+          "1": 3,
+          "2": 3378,
+          "3": 1821
+        },
+        "unique_radius_count": 16,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "dendrites_no_soma",
+        "criterion": {
+          "field": "domain",
+          "value": "Dendrites, No Soma, No Axon"
+        },
+        "population_size": 19887,
+        "selected_zero_based_page": 1210,
+        "prng_state": 964043422
+      },
+      "local_file": "NMO_110695__TF2RU5.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/110695",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/boyle/CNG%20version/TF2RU5.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/boyle/Remaining%20issues/TF2RU5.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_110695",
+        "neuron_id": 110695,
+        "neuron_name": "TF2RU5",
+        "archive": "Boyle",
+        "species": "Toadfish",
+        "scientific_name": null,
+        "brain_region": [
+          "peripheral nervous system",
+          "Scarpas Ganglion",
+          "right"
+        ],
+        "cell_type": [
+          "sensory",
+          "bipolar",
+          "utricular afferents"
+        ],
+        "domain": "Dendrites, No Soma, No Axon",
+        "attributes": "Diameter, 3D, Angles",
+        "physical_integrity": "Dendrites Moderate",
+        "original_format": "Neurolucida.dat",
+        "reference_pmid": [
+          "29524209"
+        ],
+        "reference_doi": [
+          "10.1002/cne.24429"
+        ]
+      },
+      "validation": {
+        "status": "rejected",
+        "bytes": 4103,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": null,
+        "dendritic_segment_count": null,
+        "duplicate_id_count": 0,
+        "file": "NMO_110695__TF2RU5.CNG.swc",
+        "id": 110695,
+        "malformed_row_count": 0,
+        "max_edge_length": 5.747843073710346,
+        "median_edge_length": 1.6527855275261802,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 1
+          },
+          "category_counts": {
+            "root_type": 1
+          },
+          "code_counts": {
+            "2.2": 1
+          },
+          "long_edge_warnings": [],
+          "warning_count": 1
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 1.699,
+        "radius_min": 0.516,
+        "remod_parse": "ValueError: non-soma root sample(s): [1]",
+        "root_count": 1,
+        "root_types": [
+          3
+        ],
+        "rows": 102,
+        "sha256": "efcab39d081d58a2e8df6b66145c5a39e39232678b225ef2554f88309ede9281",
+        "type_counts": {
+          "3": 102
+        },
+        "unique_radius_count": 24,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "neurites_soma",
+        "criterion": {
+          "field": "domain",
+          "value": "Neurites, Soma"
+        },
+        "population_size": 28752,
+        "selected_zero_based_page": 12405,
+        "prng_state": 2594679141
+      },
+      "local_file": "NMO_247091__SU8nano1min_T3_10X_3_03.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/247091",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/lin/CNG%20version/SU8nano1min_T3_10X_3_03.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/lin/Remaining%20issues/SU8nano1min_T3_10X_3_03.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_247091",
+        "neuron_id": 247091,
+        "neuron_name": "SU8nano1min_T3_10X_3_03",
+        "archive": "Lin",
+        "species": "rat",
+        "scientific_name": null,
+        "brain_region": [
+          "endocrine system",
+          "adrenal gland",
+          "adrenal medulla"
+        ],
+        "cell_type": [
+          "principal cell",
+          "Parachromaffin",
+          "Pheochromocytoma line 12"
+        ],
+        "domain": "Neurites, Soma",
+        "attributes": "No Diameter, 2D, Angles",
+        "physical_integrity": "Neurites Complete",
+        "original_format": "NeuronJ.ndf",
+        "reference_pmid": [
+          "34015777"
+        ],
+        "reference_doi": [
+          "10.1088/1361-6528/ac0381"
+        ]
+      },
+      "validation": {
+        "status": "accepted_no_dendrites",
+        "bytes": 1357,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 0,
+        "dendritic_segment_count": 0,
+        "duplicate_id_count": 0,
+        "file": "NMO_247091__SU8nano1min_T3_10X_3_03.CNG.swc",
+        "id": 247091,
+        "malformed_row_count": 0,
+        "max_edge_length": 18.0045355396911,
+        "median_edge_length": 5.833318095218188,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 42
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "radius": 41
+          },
+          "code_counts": {
+            "2.1": 1,
+            "4.3": 39,
+            "4.5": 2
+          },
+          "long_edge_warnings": [],
+          "warning_count": 42
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 18.02,
+        "radius_min": 0.5,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 45,
+        "sha256": "f009e41ba2f84d9ae93c91c10539b1e9c8ada0dbe4eff46ad7cd6b4d4859d85a",
+        "type_counts": {
+          "1": 3,
+          "6": 42
+        },
+        "unique_radius_count": 2,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "processes_soma",
+        "criterion": {
+          "field": "domain",
+          "value": "Processes, Soma"
+        },
+        "population_size": 78735,
+        "selected_zero_based_page": 11349,
+        "prng_state": 1867369344
+      },
+      "local_file": "NMO_199018__S1_CKp25_6w_F_Animal03_Trace144.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/199018",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/siegert/CNG%20version/S1_CKp25_6w_F_Animal03_Trace144.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/siegert/Remaining%20issues/S1_CKp25_6w_F_Animal03_Trace144.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_199018",
+        "neuron_id": 199018,
+        "neuron_name": "S1_CKp25_6w_F_Animal03_Trace144",
+        "archive": "Siegert",
+        "species": "mouse",
+        "scientific_name": null,
+        "brain_region": [
+          "neocortex",
+          "somatosensory",
+          "primary somatosensory"
+        ],
+        "cell_type": [
+          "Glia",
+          "microglia",
+          "Iba1-positive"
+        ],
+        "domain": "Processes, Soma",
+        "attributes": "Diameter, 3D, Angles",
+        "physical_integrity": "Process Complete",
+        "original_format": "Imaris.swc",
+        "reference_pmid": [
+          "-42"
+        ],
+        "reference_doi": [
+          "10.1101/2021.11.30.470610"
+        ]
+      },
+      "validation": {
+        "status": "accepted_no_dendrites",
+        "bytes": 33332,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 0,
+        "dendritic_segment_count": 0,
+        "duplicate_id_count": 0,
+        "file": "NMO_199018__S1_CKp25_6w_F_Animal03_Trace144.CNG.swc",
+        "id": 199018,
+        "malformed_row_count": 0,
+        "max_edge_length": 1.127563745426395,
+        "median_edge_length": 0.3215587038162705,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 1
+          },
+          "category_counts": {
+            "high_degree": 1
+          },
+          "code_counts": {
+            "2.1": 1
+          },
+          "long_edge_warnings": [],
+          "warning_count": 1
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 1.192,
+        "radius_min": 0.45,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 962,
+        "sha256": "622b5b7504d69d4d6c02570c5fe575ca81fd7289965d54f4f84e3c846a9295a8",
+        "type_counts": {
+          "1": 3,
+          "7": 959
+        },
+        "unique_radius_count": 326,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "processes_no_soma",
+        "criterion": {
+          "field": "domain",
+          "value": "Processes, No Soma"
+        },
+        "population_size": 14164,
+        "selected_zero_based_page": 1407,
+        "prng_state": 3254208735
+      },
+      "local_file": "NMO_147946__PVN12_microglia_7.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/147946",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/althammer/CNG%20version/PVN12_microglia_7.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/althammer/Remaining%20issues/PVN12_microglia_7.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_147946",
+        "neuron_id": 147946,
+        "neuron_name": "PVN12_microglia_7",
+        "archive": "Althammer",
+        "species": "rat",
+        "scientific_name": "rattus norvegicus",
+        "brain_region": [
+          "hypothalamus",
+          "Paraventricular hypothalamic nucleus"
+        ],
+        "cell_type": [
+          "Glia",
+          "microglia",
+          "Iba1-positive"
+        ],
+        "domain": "Processes, No Soma",
+        "attributes": "Diameter, 3D, Angles",
+        "physical_integrity": "Process Complete",
+        "original_format": "Imaris.ims",
+        "reference_pmid": [
+          "32703230"
+        ],
+        "reference_doi": [
+          "10.1186/s12974-020-01892-4"
+        ]
+      },
+      "validation": {
+        "status": "rejected",
+        "bytes": 56842,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": null,
+        "dendritic_segment_count": null,
+        "duplicate_id_count": 0,
+        "file": "NMO_147946__PVN12_microglia_7.CNG.swc",
+        "id": 147946,
+        "malformed_row_count": 0,
+        "max_edge_length": 1.8249931506720787,
+        "median_edge_length": 0.36837478412210256,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 4
+          },
+          "category_counts": {
+            "long_segment": 2,
+            "radius": 1,
+            "root_type": 1
+          },
+          "code_counts": {
+            "2.2": 1,
+            "2.4": 2,
+            "4.5": 1
+          },
+          "long_edge_warnings": [
+            {
+              "child": 502,
+              "child_type": 7,
+              "length": 1.8249931506720787,
+              "match_delta": 0.000006849327921276682,
+              "median_ratio": 4.954175012335158,
+              "parent": 4,
+              "parent_is_soma": false,
+              "parent_type": 7,
+              "reported_length": 1.825,
+              "reported_point": 502
+            },
+            {
+              "child": 1202,
+              "child_type": 7,
+              "length": 1.1013627921806692,
+              "match_delta": 0.000037207819330697944,
+              "median_ratio": 2.989788768537448,
+              "parent": 1163,
+              "parent_is_soma": false,
+              "parent_type": 7,
+              "reported_length": 1.1014,
+              "reported_point": 1202
+            }
+          ],
+          "warning_count": 4
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 3.5,
+        "radius_min": 0.15,
+        "remod_parse": "ValueError: non-soma root sample(s): [1]",
+        "root_count": 1,
+        "root_types": [
+          7
+        ],
+        "rows": 1631,
+        "sha256": "27e3db8dc6438c7f145f8fa6aa8d99957e97bd14fe2bd2236d441f413228bd7e",
+        "type_counts": {
+          "7": 1631
+        },
+        "unique_radius_count": 843,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "no_diameter_2d",
+        "criterion": {
+          "field": "attributes",
+          "value": "No Diameter, 2D, Angles"
+        },
+        "population_size": 57686,
+        "selected_zero_based_page": 7308,
+        "prng_state": 3134030002
+      },
+      "local_file": "NMO_136439__siGlut3_C_121217_1-0001.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/136439",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/soriano/CNG%20version/siGlut3_C_121217_1-0001.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/soriano/Remaining%20issues/siGlut3_C_121217_1-0001.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_136439",
+        "neuron_id": 136439,
+        "neuron_name": "siGlut3_C_121217_1-0001",
+        "archive": "Soriano",
+        "species": "rat",
+        "scientific_name": "rattus norvegicus",
+        "brain_region": [
+          "neocortex"
+        ],
+        "cell_type": [
+          "principal cell"
+        ],
+        "domain": "Dendrites, Soma, Axon",
+        "attributes": "No Diameter, 2D, Angles",
+        "physical_integrity": "Dendrites & Axon Complete",
+        "original_format": "Simple Neurite Tracer.traces",
+        "reference_pmid": [
+          "29615453"
+        ],
+        "reference_doi": [
+          "e97368"
+        ]
+      },
+      "validation": {
+        "status": "analyzable",
+        "bytes": 283488,
+        "constant_z": true,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 406,
+        "dendritic_segment_count": 17,
+        "duplicate_id_count": 0,
+        "file": "NMO_136439__siGlut3_C_121217_1-0001.CNG.swc",
+        "id": 136439,
+        "malformed_row_count": 0,
+        "max_edge_length": 21.094200624816292,
+        "median_edge_length": 1.6308280105516955,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 7896
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "long_segment": 6,
+            "radius": 7889
+          },
+          "code_counts": {
+            "2.1": 1,
+            "2.4": 6,
+            "4.3": 7823,
+            "4.5": 66
+          },
+          "long_edge_warnings": [
+            {
+              "child": 7488,
+              "child_type": 3,
+              "length": 16.84231872397622,
+              "match_delta": 0.000018723976218382177,
+              "median_ratio": 10.327464708113888,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 16.8423,
+              "reported_point": 7488
+            },
+            {
+              "child": 7722,
+              "child_type": 3,
+              "length": 21.094200624816292,
+              "match_delta": 6.248162911504096e-7,
+              "median_ratio": 12.93465680521412,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 21.0942,
+              "reported_point": 7722
+            },
+            {
+              "child": 4,
+              "child_type": 2,
+              "length": 20.661715804840604,
+              "match_delta": 0.000015804840604261017,
+              "median_ratio": 12.669463408254142,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 20.6617,
+              "reported_point": 4
+            },
+            {
+              "child": 6,
+              "child_type": 2,
+              "length": 11.175777377882936,
+              "match_delta": 0.000022622117064940994,
+              "median_ratio": 6.852824029004912,
+              "parent": 5,
+              "parent_is_soma": false,
+              "parent_type": 2,
+              "reported_length": 11.1758,
+              "reported_point": 6
+            },
+            {
+              "child": 101,
+              "child_type": 2,
+              "length": 6.497260961359023,
+              "match_delta": 0.000039038640976762906,
+              "median_ratio": 3.98402585638755,
+              "parent": 100,
+              "parent_is_soma": false,
+              "parent_type": 2,
+              "reported_length": 6.4973,
+              "reported_point": 101
+            },
+            {
+              "child": 7264,
+              "child_type": 2,
+              "length": 4.466419147370736,
+              "match_delta": 0.000019147370736050107,
+              "median_ratio": 2.7387432141662713,
+              "parent": 7263,
+              "parent_is_soma": false,
+              "parent_type": 2,
+              "reported_length": 4.4664,
+              "reported_point": 7264
+            }
+          ],
+          "warning_count": 7896
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 2.59,
+        "radius_min": 0.125,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 7893,
+        "sha256": "7784ac6b0eab9a406686e0bed52039cab59ebeeb4e962df2f0e005286deb9fc6",
+        "type_counts": {
+          "1": 3,
+          "2": 7484,
+          "3": 406
+        },
+        "unique_radius_count": 2,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "diameter_3d_no_angles",
+        "criterion": {
+          "field": "attributes",
+          "value": "Diameter, 3D, No Angles"
+        },
+        "population_size": 297,
+        "selected_zero_based_page": 186,
+        "prng_state": 730294377
+      },
+      "local_file": "NMO_001750__6-S18-3.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/1750",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/lewis/CNG%20version/6-S18-3.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/lewis/Remaining%20issues/6-S18-3.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_01750",
+        "neuron_id": 1750,
+        "neuron_name": "6-S18-3",
+        "archive": "Lewis",
+        "species": "human",
+        "scientific_name": null,
+        "brain_region": [
+          "neocortex",
+          "frontal",
+          "inferior frontal gyrus"
+        ],
+        "cell_type": [
+          "Magnopyramidal",
+          "pyramidal",
+          "principal cell"
+        ],
+        "domain": "Dendrites, Soma, No Axon",
+        "attributes": "Diameter, 3D, No Angles",
+        "physical_integrity": "Dendrites Incomplete",
+        "original_format": "Eutectic.txt",
+        "reference_pmid": [
+          "8970455"
+        ],
+        "reference_doi": [
+          "10.1001/archneur.1996.00550120089021"
+        ]
+      },
+      "validation": {
+        "status": "analyzable",
+        "bytes": 27529,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 789,
+        "dendritic_segment_count": 42,
+        "duplicate_id_count": 0,
+        "file": "NMO_001750__6-S18-3.CNG.swc",
+        "id": 1750,
+        "malformed_row_count": 0,
+        "max_edge_length": 21.28853917017323,
+        "median_edge_length": 3.079188204705912,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 13
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "long_segment": 4,
+            "radius": 8
+          },
+          "code_counts": {
+            "2.1": 1,
+            "2.4": 4,
+            "4.3": 8
+          },
+          "long_edge_warnings": [
+            {
+              "child": 4,
+              "child_type": 3,
+              "length": 15.54738241634263,
+              "match_delta": 0.00001758365736925782,
+              "median_ratio": 5.04918224634065,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 15.5474,
+              "reported_point": 4
+            },
+            {
+              "child": 381,
+              "child_type": 3,
+              "length": 20.369953362735025,
+              "match_delta": 0.00004663726497611265,
+              "median_ratio": 6.6153648327191235,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 20.37,
+              "reported_point": 381
+            },
+            {
+              "child": 526,
+              "child_type": 3,
+              "length": 21.28853917017323,
+              "match_delta": 0.000039170173231184435,
+              "median_ratio": 6.913685606367949,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 21.2885,
+              "reported_point": 526
+            },
+            {
+              "child": 677,
+              "child_type": 4,
+              "length": 21.22925575709144,
+              "match_delta": 0.000044242908558089766,
+              "median_ratio": 6.894432670483359,
+              "parent": 1,
+              "parent_is_soma": true,
+              "parent_type": 1,
+              "reported_length": 21.2293,
+              "reported_point": 677
+            }
+          ],
+          "warning_count": 13
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 17.512,
+        "radius_min": 0.7,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 792,
+        "sha256": "33c868b04664b98796e6a01b131c922df34127d9554e3e1ec7898a25e7f54173",
+        "type_counts": {
+          "1": 3,
+          "3": 673,
+          "4": 116
+        },
+        "unique_radius_count": 34,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "drosophila",
+        "criterion": {
+          "field": "species",
+          "value": "drosophila melanogaster"
+        },
+        "population_size": 37338,
+        "selected_zero_based_page": 21420,
+        "prng_state": 2552895156
+      },
+      "local_file": "NMO_024621__VGlut-F-400826.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/24621",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/chiang/CNG%20version/VGlut-F-400826.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/chiang/Remaining%20issues/VGlut-F-400826.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_24621",
+        "neuron_id": 24621,
+        "neuron_name": "VGlut-F-400826",
+        "archive": "Chiang",
+        "species": "drosophila melanogaster",
+        "scientific_name": "",
+        "brain_region": [
+          "Left Adult Central Complex",
+          "Left Protocerebral Bridge"
+        ],
+        "cell_type": [
+          "day4 Born",
+          "glutamatergic",
+          "principal cell"
+        ],
+        "domain": "No Dendrites, No Soma, Axon",
+        "attributes": "No Diameter, 3D, Angles",
+        "physical_integrity": "Axon Complete",
+        "original_format": "Custom.am",
+        "reference_pmid": [
+          "21129968"
+        ],
+        "reference_doi": [
+          "10.1016/j.cub.2010.11.056"
+        ]
+      },
+      "validation": {
+        "status": "rejected",
+        "bytes": 15157,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": null,
+        "dendritic_segment_count": null,
+        "duplicate_id_count": 0,
+        "file": "NMO_024621__VGlut-F-400826.CNG.swc",
+        "id": 24621,
+        "malformed_row_count": 0,
+        "max_edge_length": 35.94742967167472,
+        "median_edge_length": 7.96732415539473,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 434
+          },
+          "category_counts": {
+            "radius": 433,
+            "root_type": 1
+          },
+          "code_counts": {
+            "2.2": 1,
+            "4.3": 383,
+            "4.5": 50
+          },
+          "long_edge_warnings": [],
+          "warning_count": 434
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 0.5,
+        "radius_min": 0.5,
+        "remod_parse": "ValueError: non-soma root sample(s): [1]",
+        "root_count": 1,
+        "root_types": [
+          2
+        ],
+        "rows": 435,
+        "sha256": "91b00898a30b301f0d174cf4efe126258dbb2d4e7910ea4a444623aef2aed8ae",
+        "type_counts": {
+          "2": 435
+        },
+        "unique_radius_count": 1,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "human",
+        "criterion": {
+          "field": "species",
+          "value": "human"
+        },
+        "population_size": 15676,
+        "selected_zero_based_page": 10715,
+        "prng_state": 4080128643
+      },
+      "local_file": "NMO_300219__NGF_D1_2_212.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/300219",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/narkilahti/CNG%20version/NGF_D1_2_212.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/narkilahti/Remaining%20issues/NGF_D1_2_212.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_300219",
+        "neuron_id": 300219,
+        "neuron_name": "NGF_D1_2_212",
+        "archive": "Narkilahti",
+        "species": "human",
+        "scientific_name": null,
+        "brain_region": [
+          "neocortex"
+        ],
+        "cell_type": [
+          "principal cell",
+          "embryonic stem cell (ESC)-derived"
+        ],
+        "domain": "Neurites, No Soma",
+        "attributes": "Diameter, 3D, Angles",
+        "physical_integrity": "Neurites Complete",
+        "original_format": "Imaris.ims",
+        "reference_pmid": [
+          "39502022"
+        ],
+        "reference_doi": [
+          "10.1002/adhm.202402504"
+        ]
+      },
+      "validation": {
+        "status": "rejected",
+        "bytes": 24872,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": null,
+        "dendritic_segment_count": null,
+        "duplicate_id_count": 0,
+        "file": "NMO_300219__NGF_D1_2_212.CNG.swc",
+        "id": 300219,
+        "malformed_row_count": 0,
+        "max_edge_length": 0.7762087348130011,
+        "median_edge_length": 0.3923009049186607,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 1
+          },
+          "category_counts": {
+            "root_type": 1
+          },
+          "code_counts": {
+            "2.2": 1
+          },
+          "long_edge_warnings": [],
+          "warning_count": 1
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 2.079,
+        "radius_min": 0.25,
+        "remod_parse": "ValueError: non-soma root sample(s): [1]",
+        "root_count": 1,
+        "root_types": [
+          6
+        ],
+        "rows": 746,
+        "sha256": "34596702d7fbead9e7f0f0a056c526889b0ddb5fe36958d9d71a64427a953c4d",
+        "type_counts": {
+          "6": 746
+        },
+        "unique_radius_count": 419,
+        "zero_length_edge_count": 0
+      }
+    },
+    {
+      "stratum": {
+        "label": "dendrites_incomplete",
+        "criterion": {
+          "field": "Physical_Integrity",
+          "value": "Dendrites Incomplete"
+        },
+        "population_size": 3907,
+        "selected_zero_based_page": 3568,
+        "prng_state": 4272018950
+      },
+      "local_file": "NMO_006053__201SL.CNG.swc",
+      "source": {
+        "metadata_url": "https://neuromorpho.org/api/neuron/id/6053",
+        "standardized_swc_url": "https://neuromorpho.org/dableFiles/brunjes/CNG%20version/201SL.CNG.swc",
+        "standardization_log_url": "https://neuromorpho.org/dableFiles/brunjes/Remaining%20issues/201SL.CNG.swc.std"
+      },
+      "metadata": {
+        "neuromorpho_id": "NMO_06053",
+        "neuron_id": 6053,
+        "neuron_name": "201SL",
+        "archive": "Brunjes",
+        "species": "rat",
+        "scientific_name": "rattus norvegicus",
+        "brain_region": [
+          "anterior olfactory nucleus",
+          "pars principalis",
+          "superficial"
+        ],
+        "cell_type": [
+          "pyramidal",
+          "principal cell"
+        ],
+        "domain": "Dendrites, Soma, No Axon",
+        "attributes": "No Diameter, 3D, Angles",
+        "physical_integrity": "Dendrites Incomplete",
+        "original_format": "Neurolucida.dat",
+        "reference_pmid": [
+          "20187150"
+        ],
+        "reference_doi": [
+          "10.1002/cne.22293"
+        ]
+      },
+      "validation": {
+        "status": "analyzable",
+        "bytes": 16641,
+        "constant_z": false,
+        "cycle_trace_count": 0,
+        "dendritic_sample_count": 421,
+        "dendritic_segment_count": 43,
+        "duplicate_id_count": 0,
+        "file": "NMO_006053__201SL.CNG.swc",
+        "id": 6053,
+        "malformed_row_count": 0,
+        "max_edge_length": 23.162525769008877,
+        "median_edge_length": 3.361547262794312,
+        "missing_parent_count": 0,
+        "neuromorpho_log": {
+          "action_counts": {
+            "no action taken": 2
+          },
+          "category_counts": {
+            "high_degree": 1,
+            "long_segment": 1
+          },
+          "code_counts": {
+            "2.1": 1,
+            "2.4": 1
+          },
+          "long_edge_warnings": [
+            {
+              "child": 7,
+              "child_type": 3,
+              "length": 23.162525769008877,
+              "match_delta": 0.000025769008875187183,
+              "median_ratio": 6.890435849399556,
+              "parent": 6,
+              "parent_is_soma": false,
+              "parent_type": 3,
+              "reported_length": 23.1625,
+              "reported_point": 5
+            }
+          ],
+          "warning_count": 2
+        },
+        "nonpositive_radius_count": 0,
+        "parent_after_child_count": 0,
+        "radius_max": 7.93084,
+        "radius_min": 0.205,
+        "remod_analysis": "pass",
+        "remod_parse": "pass",
+        "root_count": 1,
+        "root_types": [
+          1
+        ],
+        "rows": 424,
+        "sha256": "ffa0247772bce713c091eddfe35461b533e61cdb595c49a58d38a266f227093a",
+        "type_counts": {
+          "1": 3,
+          "3": 215,
+          "4": 206
+        },
+        "unique_radius_count": 2,
+        "zero_length_edge_count": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.playwright-cli/
+output/playwright/
+.env
+.env.*
+!.env.example
+
+# Local and generated files
+.DS_Store
+*.log
+downloads/
+logs.md
+*_before.txt
+*_new.swc
+*_new_tmp.swc
+current_average_statistics.p
+log_parsed_files.txt
