@@ -1,146 +1,171 @@
 # Defensive contract
 
-REMOD is a local, standard-library Python CLI and scientific library. It has no
-HTTP listener, browser UI, remote client, telemetry, accounts, database, cache,
-internal worker pool, or installer/build pipeline. Security means preserving
-scientific meaning and local files while bounding untrusted input and work.
+REMOD is a local-first Python scientific application: a loopback browser Studio,
+an analysis/remodeling CLI, and a standard-library kernel. Security protects
+scientific meaning, original data, confidentiality, and bounded local resources.
 This is an engineering contract, not a compliance certification.
 
-## Threat model
+## Threat model and posture
 
-An external supplier can provide SWC records, comments, and filenames that an
-operator chooses to process. The boundaries are text -> validated immutable
-tree -> deterministic computation -> canonical SWC or finite JSON -> local file.
-The protected assets are source data, result integrity and identity, research
-confidentiality, and process resources. Numeric overflow, underflow, ambiguous
-serialization, partial files, and pathological geometry are concrete threats.
+Untrusted SWC records, comments, filenames, numeric options, and JSON cross into
+validated trees, analysis, previews, and exports. Hostile webpages may attempt
+to contact the listener, spoof origins, or use DNS rebinding. Local output paths
+may alias inputs or encounter symlinks, competing writers, and interruptions.
+Silent numeric corruption and nondeterministic preview/application are integrity
+failures, not merely usability bugs.
 
-The invoking OS account, interpreter, checkout, and destination directory are
-trusted. REMOD is not a sandbox against executable Python objects, hostile
-same-account code, administrators, malicious filesystems, or an embedding
-application that bypasses its file writer. Paths are explicit operator choices,
-not filenames supplied by SWC data; absolute and relative paths are legitimate.
-Directory ACLs and ancestors must not grant untrusted actors write access.
+The local OS account, browser, interpreter, checkout, and destination directories
+are trusted. Same-account malware can forge HTTP headers and inspect memory;
+Studio is not an authentication or sandbox boundary against it. Remote serving
+is unsupported. SaaS accounts, tenants, databases, cloud infrastructure, WAFs,
+centralized SIEM, production deployment, and TLS termination are out of scope.
+No telemetry, remote analysis, external assets, executable SWC content, or
+application subprocess execution is required.
 
-There is no network entry point for hostile webpages, DNS rebinding, Host/Origin
-spoofing, malformed HTTP framing, remote binding, or request-concurrency attacks.
-DOM XSS, URL/download handling, CSV formulas, prototype pollution, CSP and other
-HTTP headers are not applicable. Neither are SaaS accounts, tenants, WAFs,
-centralized SIEM, cloud infrastructure, or production deployment controls.
+## Local HTTP and browser boundary
+
+`remod_ui.py` binds only `127.0.0.1`. Its constructor and CLI expose no general
+host-binding option. Host must be the actual loopback authority; a supplied
+Origin must match it, and Fetch Metadata must not describe cross-site access.
+POST requires `X-Remod-Request: 1`, strict UTF-8 JSON, a single bounded positive
+Content-Length, and a complete body. Duplicate/reserved JSON keys, excessive
+nesting, non-finite/underflowing numbers, transfer/content encodings, and
+unsupported methods are rejected. The header is a browser same-origin defense,
+not a secret or login token. No CORS permission is granted.
+
+Only fixed UI assets, health, two public examples, workspace analysis, cohort
+summaries, and remodeling are routed. Browser requests cannot choose a server
+filesystem path. The server does not save uploaded data or exports to disk.
+Internal failures return generic errors without tracebacks or personal paths;
+request logging is disabled. The CSP permits local code and requests only,
+with no framing, external fonts, objects, or form submission. Anti-framing,
+nosniff, no-referrer, and a narrow Permissions Policy accompany responses.
+The server does not advertise its implementation version.
+
+Labels, errors, and filenames use DOM text sinks. Download names reject paths
+and control/format characters. CSV text that could begin a spreadsheet formula
+is prefixed as text; actual negative numeric measurements remain numbers.
+Only generated filename stems may be shortened to accommodate suffixes.
+Source metadata and morphology samples are not silently shortened.
 
 ## Capacity policy
 
-These are explicit operational limits, not inferred biological constraints.
-Excess input is rejected, never truncated, repaired, sampled, or rescaled.
+Limits are operational, not inferred biological constraints. Excess scientific
+input or work is rejected explicitly; warning ID lists may be summarized with
+an explicit total and truncation flag.
 
 | Input/work | Limit | Purpose |
 | --- | --- | --- |
-| CLI inputs/outputs | One SWC input and at most one result file per call | No batch amplification |
-| SWC UTF-8 bytes | 16 MiB | Bound read and parsing memory |
-| SWC line | 4,096 characters; comment body at most 4,094 | Bound tokenization and diagnostics |
-| Comment bodies plus canonical marker/newline allowance | 1 MiB | Bound metadata, including empty-comment streams |
-| Samples, including grafted nodes | 50,000 | Bound tree, branch, and output allocation |
-| Numeric token | 128 ASCII characters | Bound conversion; decimal grammar only |
-| Integer fields | Signed 64-bit; positive IDs | Sparse IDs do not allocate sparse arrays |
-| Geometry | Finite binary64; positive radii | Reject nonzero input underflow and unrepresentable results |
-| Selected-kind/prune iterables | 50,000 entries | Bound repeated/infinite parameter iterables |
-| Unit metadata | 128 characters | Bound and validate result metadata |
-| Radial shells | 10,000 | Bound discretization |
-| Radial work | 200,000 weighted units per call | Bound combined exact arithmetic and retained intervals |
+| SWC UTF-8 text | 16 MiB per file | Bounded read and parsing memory |
+| SWC line / total comments | 4,096 characters / 1 MiB | Bounded tokenization and metadata |
+| Samples including generated geometry | 50,000 per morphology | Bounded tree and output allocation |
+| Numeric token | 128 ASCII decimal characters | Bounded conversion, no nonzero-to-zero coercion |
+| IDs, kinds, parents | Signed 64-bit; IDs positive | Sparse maps, not identifier-sized arrays |
+| Browser integer fields and seeds | Magnitude at most 2^53 - 1 | Exact JavaScript identity |
+| Coordinates, radii, results | Finite binary64; radii positive | Explicit rejection of unrepresentable geometry |
+| Studio ancestor links | 1,000,000 | Bounds potentially quadratic root/descendant storage |
+| Studio selected edit work | 2,000,000 sample visits | Bounds repeated subtree transformations |
+| Radial shells / work | 10,000 / 200,000 weighted units per profile call | Bounded exact arithmetic and partitions |
+| HTTP body / JSON depth | 24 MiB / 8 levels | Bounds framing and decoded payload |
+| HTTP connections / computations | 8 / 2 | Bounds threads and concurrent scientific work |
+| Connection I/O timeout | 5 seconds | Releases stalled body/header readers and writers |
+| Files in browser/request | 128 | Bounds batch and cohort fan-out |
+| Browser current / retained source text | 64 MiB / 128 MiB | Bounds originals, previews, and history |
+| Browser retained geometry | 250,000 samples | Bounds current, preview, and undo models |
+| Undo | 20 edits per file | Explicit refusal, never silent history loss |
+| Cache | 12 analyses/sources, 512 statistics, 96 MiB retained Python objects | Bounded locked cache with eviction |
+| Plain browser filename | 240 UTF-8 bytes | Safe names including generated suffixes |
 
-For each selected edge, let `n` be its number of candidate shells and `b` the
+For exact radial work, let `n` be an edge's candidate shell count and `b` the
 largest numerator/denominator bit length of its six exact origin-relative
-endpoint coordinates. Work is `sum((1+n) * max(1, ceil(b/64))**2)`. The quadratic
-weight reserves more capacity for large-integer arithmetic; it is a conservative
-capacity policy, not a wall-clock prediction or a scientific score. Check it
-before contact solving. Every candidate generates at most two contacts, so the
-work cap and sample cap also bound retained partition terms. Keep `math.fsum`
-rather than weakening summation to reduce memory further.
+coordinates. Work is `sum((1+n) * max(1, ceil(b/64))**2)`. This conservative
+capacity policy is not a wall-clock prediction. It is checked before contact
+solving. Studio invokes bounded profiles for the generic arbor and eligible
+dendritic regions; the number of such profiles is fixed.
 
-The reviewed 14 public representative SWCs reached 7,893 samples, 274,574 bytes,
-and 99 characters per line. All fit these limits with margin and retained exact
-canonical/report hashes in the baseline analysis. A 50,000-deep synthetic tree
-also completed without recursion. Tree construction and branch indexing are
-iterative and use storage proportional to sample count, not identifier size.
-Multiple processes/callers and total disk usage remain OS responsibilities.
+Growth reserves worst-case samples from the minimum empirical step before
+generating any points. Wide-tree sibling counting is linear; deeply segmented
+trees may exceed the explicit ancestor budget. The kernel uses iterative,
+linear-storage topology without Studio's descendant tables. The bundled examples
+and representative public SWCs fit the limits. Multiple application instances,
+browser overhead, transient serialization allocations, and total disk usage
+remain OS responsibilities; these budgets are not a process RSS guarantee.
 
-## File and result guarantees
+## Scientific and filesystem integrity
 
-The POSIX CLI opens inputs without following a final symlink, rejects nonregular
-files before reading, caps reads, and checks file metadata for concurrent change.
-This detects ordinary mutation, not a malicious storage provider. UTF-8 decoding
-is strict. Errors do not include input/output paths and terminal control
-characters are escaped. Nothing is logged persistently by REMOD.
+[STUDIO.md](STUDIO.md) defines the cylinder/compartment/seeded-growth model;
+[ALGORITHM.md](ALGORITHM.md) defines the kernel's frustum/topological model.
+Their shared radial solver, strict input tokens, and file primitives do not
+erase those scientific differences. Cache keys bind source bytes, radial step,
+and analysis version. Cached inputs are not mutated by edits. Preview is the
+exact serialized, reparsed, reanalyzed artifact later applied; no random work is
+repeated on apply. Undo restores the prior artifact. Workspace capacity checks
+precede mutation, including atomic radial reanalysis.
 
-Output is written with mode `0600` to a random, exclusive temporary file in a
-pinned destination directory. The directory must be owned by the invoking user
-or root; group/world-writable directories require the sticky bit. The writer
-flushes, fsyncs, compares the actual bytes, and reparses SWC to check the expected
-canonical digest before atomic no-replacement publication. Existing files,
-input/output aliases, hardlinks, symlinks, and concurrent competing writers do
-not permit overwrites. There is no `--force` escape hatch or non-atomic fallback.
-Filesystems without the required primitives fail explicitly.
+POSIX file reads reject final symlinks and nonregular files, cap bytes, use strict
+UTF-8, and check metadata for ordinary concurrent mutation. Paths in CLI commands
+are explicit operator choices, not SWC-provided destinations. Ancestors and
+directory ACLs must not allow untrusted writers.
 
-Before publication, failures and Python-handled interruptions remove only the
-operation's owned temporary file. A hard kill or power loss can leave a private
-temporary file. After the atomic link succeeds, the complete output may exist
-even if directory fsync or receipt delivery fails. The output and stdout receipt
-are not a distributed transaction; verify a surviving file before retrying with
-a new name. Filesystem crash durability depends on its fsync implementation.
+The shared writer creates an exclusive mode-0600 temporary file in a pinned
+destination directory, flushes/fsyncs, compares actual bytes, and reparses SWC
+against its expected canonical digest before publication. Kernel commands never
+replace an existing output. Studio edits require explicit `--force` to replace
+a regular single-link destination; input/output aliases are rejected. Generated
+Studio reports/plots atomically replace regular single-link report files when
+rerun. Symlink/hardlink replacement and non-atomic fallbacks are not allowed.
+Browser downloads instead use the browser's save policy.
 
-Comments are scientific metadata, not automatically anonymized. Inspect them
-before sharing. Digests identify canonical content (including comments), not
-authenticity, biological validity, or the original input's whitespace. No
-preview/apply cache or random seed state exists: transforms are pure, and the
-CLI validates the exact serialized artifact against the result digest.
+Handled failures remove the operation's owned temporary file. A hard kill or
+power loss may leave a private temporary file. After atomic publication, a
+complete output can survive a directory-fsync or receipt-delivery failure.
+A batch of reports/plots is not a multi-file transaction. Verify surviving
+artifacts before retrying. Filesystem durability depends on its fsync semantics.
+
+SWC comments are preserved metadata, not anonymized data. Review them before
+sharing. Digests identify content, not authenticity or biological validity.
+Refreshing or closing Studio discards its in-memory workspace; export first.
 
 ## Runtime, repository, and response
 
-No direct or transitive third-party runtime dependency is required, and no
-dependency lock is needed for this empty set. `.python-version` records the
-verified interpreter, not a claim that upstream has no later fixes. Run only
-from a trusted checkout; `python -E -S -m remod ...` avoids environment overrides
-and third-party site initialization without breaking local package imports.
-Keep the host interpreter maintained through its trusted distributor. Review
-newly disclosed reachable vulnerabilities promptly; fix demonstrated integrity,
-code-execution, disclosure, and exhaustion defects before using affected data
-flows. Re-run the affected regressions when changing runtime or numerical code.
-Any future justified package dependency needs exact versions and SHA-256 hashes
-for the complete dependency set, verified during installation; do not add an
-installer or dependency merely to implement this policy.
+Studio requires NumPy; offline plotting adds Matplotlib and their transitive
+dependencies. Use the complete SHA-256 lock with pip's `--require-hashes` and
+`--only-binary :all:`. A successful hash check authenticates bytes against the
+reviewed lock, not a compromised publisher. The kernel requires no third-party
+packages. `.python-version` records the verified interpreter, not a promise of
+future security status. Maintain the host interpreter through its trusted
+distributor and reassess newly disclosed reachable advisories.
 
-Keep local research, credentials, and audit outputs outside tracked source.
-Ignore rules are accidental-staging protection, not a security boundary against
-forced staging. Review the exact public snapshot and diff before separately
-authorized publication; never include private archival refs or history. Do not
-post sensitive exploit samples, research data, or credentials to public issues.
-If a secret is discovered, preserve it privately without printing it, stop
-sharing affected material, and have the owner separately authorize revocation
-and history remediation. Preserve original input files and reproduce failures
-with minimized synthetic data. No private reporting address is invented here.
+Preserve original inputs; reproduce failures with minimized synthetic data.
+Keep credentials, research, audit artifacts, and private archival history out of
+the public tree. Ignore rules prevent accidental staging, not forced disclosure.
+Review the exact public diff before separately authorized publication. No secret,
+private exploit sample, or research data should be sent to a public issue.
+Credential revocation, history remediation, remote changes, and publication need
+separate owner authorization. No private reporting address is invented here.
 
 ## Standards considered (2026-09-05)
 
-The mapping adapts applicable application controls to a local CLI; it does not
-claim an ASVS level or formal compliance. Tests in `tests/test_security.py` and
-the scientific suite supply executable evidence.
+This applicability mapping is evidence-based engineering guidance, not an ASVS
+level or organization-wide compliance assertion. Executable evidence is in
+`tests/test_security.py`, `tests/test_studio.py`,
+`tests/test_studio_browser.js`, and the scientific suites.
 
-| Source/control | Disposition and evidence |
+| Baseline/control area | Disposition and implementation evidence |
 | --- | --- |
-| [ASVS 5.0.0](https://github.com/OWASP/ASVS/tree/v5.0.0), 2.1.1–3, 2.2.1/3 | Applicable, remediated: documented grammar/capacity, shared model validation, numeric and tree consistency |
-| ASVS 2.3.2/3, 5.2.1, 15.1.3, 15.2.2 | Applicable, remediated: bounded parsing/work and atomic result publication; stdout/crash limitations stated above |
-| ASVS 15.3.5, 15.4.1/2 | Applicable, satisfied/remediated: explicit types, immutable objects, isolated Decimal context, descriptor-bound file operations |
-| ASVS 16.4.1, 16.5.1/3 | Applicable, remediated: escaped path-free diagnostics, explicit rejection, no fail-open output |
-| ASVS V3–4, V6–10, V12, HTTP upload/download controls | Not applicable: no web, authentication, sessions, tokens, OAuth, or network transport |
-| [Top 10:2025](https://owasp.org/Top10/2025/) | Awareness only: design, supply chain, injection, integrity, and exceptional-condition risks considered; not a checklist |
-| [NIST SSDF 1.1](https://csrc.nist.gov/pubs/sp/800/218/final), PO.1, PW.1/4/5/7/8, RV.1–3 | Applicable practices: documented scope, minimal dependencies, threat-based implementation/review/tests, root-cause remediation; no organization-wide conformance claim |
-| [SSDF 1.2 draft](https://csrc.nist.gov/pubs/sp/800/218/r1/ipd) | Draft guidance only, not substituted for final 1.1 |
-| [NIST CSF 2.0](https://www.nist.gov/cyberframework) | Govern: owner/authority; Identify: surfaces/assets; Protect: controls; Detect: rejections/tests; Respond: private owner escalation; Recover: original inputs and no-overwrite outputs |
-| [CISA Secure by Design](https://www.cisa.gov/securebydesign) | Applicable: secure defaults, remove unnecessary surfaces, document failures and residual risk |
-| [Python security](https://docs.python.org/3.14/library/security_warnings.html), [PyPA secure installs](https://pip.pypa.io/en/stable/topics/secure-installs/) | Applicable: trusted interpreter/imports; no packages needed; hash-verified complete sets if dependencies are introduced |
-| SLSA 1.2 | Not applicable: no distributable build artifacts or build pipeline |
+| [ASVS 5.0.0](https://owasp.org/www-project-application-security-verification-standard/): validation, encoding, business logic | Applicable, remediated: strict parsing, text DOM sinks, CSV handling, numeric/geometry bounds, exact preview and atomic state |
+| ASVS: web frontend, HTTP/API, configuration | Applicable, remediated: loopback-only server, Host/Origin/Fetch-Metadata/framing checks, fixed routes, CSP, bounded requests and concurrency |
+| ASVS: file handling, data protection, errors | Applicable, satisfied/remediated: no browser-selected server paths, atomic file writer, finite serialization, safe responses, documented metadata boundary |
+| ASVS: authentication, sessions, OAuth, tenants, remote TLS | Not applicable to this local no-account application; trusted local processes are an accepted boundary |
+| [OWASP Top 10:2025](https://owasp.org/Top10/2025/) | Awareness only: access control, supply chain, injection, integrity, and exceptional conditions considered |
+| [NIST SSDF 1.1 final](https://csrc.nist.gov/pubs/sp/800/218/final): PO.1, PW.1/4/5/7/8, RV.1–3 | Applicable: documented scope, minimal locked dependencies, threat-based fixes/review/tests, owner response; organization-wide practices not claimed |
+| [SSDF 1.2](https://csrc.nist.gov/pubs/sp/800/218/r1/ipd) | Still initial public draft at lookup; guidance only, not substituted for final 1.1 |
+| [NIST CSF 2.0](https://www.nist.gov/cyberframework) | Govern: owner authority; Identify: assets/surfaces; Protect: controls; Detect: rejections/regressions; Respond: private owner escalation; Recover: originals, undo, safe outputs |
+| [CISA Secure by Design](https://www.cisa.gov/news-events/news/applying-secure-design-thinking-events-news) | Applicable: secure defaults that retain intended workflows, ownership of failures, transparent limits and residual risks |
+| [Python security](https://docs.python.org/3.14/library/security_warnings.html), [PyPA secure installs](https://pip.pypa.io/en/stable/topics/secure-installs/) | Applicable: trusted runtime/imports, pinned complete hash-verified binary dependency set |
+| SLSA 1.2 | Not applicable: no distributable build artifact or release/build pipeline |
 
-Accepted boundaries: trusted local OS/filesystem/interpreter, caller-controlled
-parallelism and stdout, unredacted user metadata, and explicitly rejected inputs
-beyond the documented capacity or numerical representation. Host maintenance and
-private-reporting service configuration are owner actions, not application code.
+Accepted residuals are the trusted host/filesystem/browser, process-wide resource
+overhead, transient cache eviction requiring reanalysis, original metadata, and
+the stated numerical/capacity limits. There is no persistent security-monitoring
+service, authentication platform, telemetry, deployment gate, or scanner stack.

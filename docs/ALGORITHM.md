@@ -1,8 +1,10 @@
 # Mathematical contract
 
-This document defines REMOD's data model, transformations, measurements, and
-numerical conventions. It is normative: behavior not described here is outside
-the scientific contract.
+This document defines the `remod` package and `python -m remod` kernel CLI:
+their data model, transformations, measurements, and numerical conventions.
+It is normative for that interface. The interactive Studio and `remod_cli.py`
+retain their distinct cylinder/compartment/growth contract in
+[STUDIO.md](STUDIO.md); they are not aliases for this kernel.
 
 ## 1. Morphology
 

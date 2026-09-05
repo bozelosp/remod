@@ -17,6 +17,11 @@ from .transforms import graft, prune, scale_edges, scale_radii, trim_terminal
 
 
 def _read(path: Path) -> Morphology:
+    return parse_swc(_read_text(path))
+
+
+def _read_text(path: Path) -> str:
+    """Bounded, descriptor-verified UTF-8 input shared by both interfaces."""
     _check_path(path)
     try:
         descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
@@ -34,7 +39,7 @@ def _read(path: Path) -> Morphology:
                 raise ValueError("input changed while it was being read")
         if len(data) > MAX_SWC_BYTES:
             raise ValueError(f"SWC input exceeds {MAX_SWC_BYTES} bytes")
-        return parse_swc(data.decode("utf-8"))
+        return data.decode("utf-8")
     except UnicodeError as exc:
         raise ValueError("input must be valid UTF-8") from exc
     except OSError as exc:
@@ -49,7 +54,8 @@ def _check_path(path: Path) -> None:
         raise ValueError("path must name a file")
 
 
-def _write_new(path: Path, text: str, *, swc_digest: str | None = None) -> None:
+def _write_new(path: Path, text: str, *, swc_digest: str | None = None,
+               overwrite: bool = False) -> None:
     """Verify a private temporary artifact, then atomically publish without replacement."""
 
     _check_path(path)
@@ -81,8 +87,20 @@ def _write_new(path: Path, text: str, *, swc_digest: str | None = None) -> None:
                 raise ValueError("written output differs from the computed artifact")
             if swc_digest is not None and parse_swc(written.decode("utf-8")).digest != swc_digest:
                 raise ValueError("written SWC does not preserve the computed morphology")
-            os.link(temporary, path.name, src_dir_fd=directory,
-                    dst_dir_fd=directory, follow_symlinks=False)
+            if overwrite:
+                try:
+                    existing = os.stat(path.name, dir_fd=directory, follow_symlinks=False)
+                except FileNotFoundError:
+                    existing = None
+                if existing is not None and (
+                    not stat.S_ISREG(existing.st_mode) or existing.st_nlink != 1
+                ):
+                    raise ValueError("replacement requires an ordinary, unlinked output file")
+                os.replace(temporary, path.name, src_dir_fd=directory, dst_dir_fd=directory)
+                temporary = None
+            else:
+                os.link(temporary, path.name, src_dir_fd=directory,
+                        dst_dir_fd=directory, follow_symlinks=False)
         os.fsync(directory)
     except FileExistsError as exc:
         raise ValueError("output already exists; choose a new path") from exc
