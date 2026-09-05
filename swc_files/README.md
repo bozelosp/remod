@@ -1,7 +1,7 @@
 # Bundled SWC Fixtures
 
-This directory contains two source morphologies used for parser, measurement,
-and remodeling checks. Their numeric SWC records are retained as distributed;
+This directory contains two source morphologies used for parser and measurement
+regression checks. Their numeric SWC records are retained as distributed;
 the comment headers have been normalized to remove email addresses and local or
 server file paths.
 

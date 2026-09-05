@@ -1,281 +1,221 @@
-# Algorithm and Measurement Conventions
+# Mathematical contract
 
-This document records the conventions implemented by REMOD. The scientific
-scope follows the [REMOD article](https://doi.org/10.3389/fnana.2015.00156),
-but the definitions below are the operational contract for the current code.
+This document defines REMOD's data model, transformations, measurements, and
+numerical conventions. It is normative: behavior not described here is outside
+the scientific contract.
 
-## Input model
+## 1. Morphology
 
-REMOD accepts the seven-column SWC representation:
+A morphology is
 
-```text
-sample_id type x y z radius parent_id
-```
+\[
+M=(V,E,x,r,c),
+\]
 
-Parsing requires:
+where `(V,E)` is a finite rooted tree, `x: V → R³` assigns coordinates,
+`r: V → R₊` assigns strictly positive radii, and `c: V → Z₆₄` assigns opaque
+signed 64-bit SWC kind labels. One node has parent `-1`; every other node has
+exactly one parent.
 
-- exactly one graph-root sample with parent `-1` (any integer SWC type);
-- positive, unique integer sample identifiers;
-- finite coordinates and strictly positive radii;
-- an existing parent for every non-root sample; and
-- soma-contour samples, when present, connected proximally through soma samples;
-- no soma sample hanging below a non-soma process; and
-- a connected, acyclic parent tree.
-
-Sample identifiers do not need to be contiguous on input. The graph root is an
-attachment anchor. If it is not type `1`, REMOD reports `NO_SOMA_ROOT` but keeps
-root-independent analysis available. A missing soma therefore does not turn a
-valid tree into malformed data.
-
-Compartment types follow the NeuroMorpho SWC convention without pretending the
-convention is enforced by the file format:
-
-| Type | Interpretation | REMOD treatment |
-| --- | --- | --- |
-| `0` | undefined | generic arbor only; explicit warning |
-| `1` | soma | root/origin when proximal |
-| `2` | axon | axon and generic-arbor measurements |
-| `3` | basal dendrite | dendritic and generic-arbor measurements |
-| `4` | apical dendrite | dendritic and generic-arbor measurements |
-| `5` | custom | generic arbor only; explicit warning |
-| `6` | unspecified neurite | unspecified-neurite and generic-arbor measurements |
-| `7` | glial process | glial-process and generic-arbor measurements |
-| other integer | non-standard | preserved and measured generically; explicit warning |
-
-If an edge crosses a type boundary, its measurement is assigned by the distal
-sample type and the distal sample starts a new segment.
-
-## Topological segments
-
-A segment begins at the first non-soma sample after the graph-root anchor, a
-soma sample, a branch point, or a change in SWC type. It continues through
-samples with one non-soma child until the next branch point or terminal sample.
-The graph-root sample itself is not a segment because it has no incoming edge.
-The segment is identified by the sample identifier of its first sample.
-
-The geometric length of a segment includes the edge from its proximal parent
-attachment to its first sample. A branch-point sample is therefore the distal
-end of its incoming segment; each child starts a new outgoing segment.
-
-A terminal segment has no downstream segment. A dendritic branch point is a
-basal or apical sample with more than one non-soma child. Centrifugal branch
-order is `1` before the first arbor bifurcation and increases by one at each
-true bifurcation on the path away from the graph root. A type boundary starts a new
-reporting segment but does not change branch order. This is the one-based
-convention used by the original REMOD implementation. Tools that label primary
-segments as order `0`, including the NeuroMorpho.Org morphometry record for the
-bundled fixture, report values one lower.
-
-## Morphometric definitions
-
-SWC carries no machine-readable coordinate unit. REMOD reports native
-`units`, `units²`, and `units³` and emits `COORDINATE_UNIT_UNSPECIFIED`; it does
-not silently infer micrometers. Files recorded in pixels or another unit must
-be calibrated before physical quantities are interpreted. The sixth SWC column
-is radius. Soma cable, surface area, and volume are excluded from arbor totals.
-
-For an edge with Euclidean centerline length `L` and distal sample radius `r`,
-REMOD uses:
+The parser requires seven whitespace-separated SWC fields per data row:
 
 ```text
-centerline length = L
-lateral area      = 2 * pi * r * L
-volume            = pi * r^2 * L
+id kind x y z radius parent
 ```
 
-The area and volume formulas model each edge as an open cylinder whose radius
-is recorded by its distal SWC sample. This is the explicit convention of the
-current implementation. The article identifies these measurements but does not
-specify the compartment formula. For the bundled NMO_01999 fixture, the
-resulting centerline length, lateral area, and volume reproduce the values in
-its [NeuroMorpho.Org morphometry
-record](https://neuromorpho.org/api/morphometry/id/1999). That agreement is a
-fixture-level consistency check, not proof of publication-era provenance or
-validation for every SWC file. The soma radius is not used for a
-soma-to-neurite edge. A zero-length edge contributes zero length, area, and
-volume.
+IDs, kinds, and parents are signed 64-bit integer tokens. IDs are positive; a
+parent is either `-1` or a positive ID. Coordinates and radii are finite. IDs
+are unique, all parents exist, the graph is connected and acyclic, and soma
+samples (`kind = 1`) may not occur below a non-soma ancestor. Multiple proximal
+soma samples are allowed. Input row order has no meaning. Direct construction
+and text parsing enforce the same integer domain; both store coordinates and
+radii as binary64 values.
 
-Other reported measurements use these definitions:
+The in-memory object is immutable. Canonical serialization emits comments and
+then a deterministic parent-before-child ordering, sorts siblings by ID,
+preserves IDs, and formats floating-point values with 17 significant digits.
 
-- **total length, area, and volume:** sums over the selected segments;
-- **root-path length:** the sum of full segment lengths from a segment through
-  its proximal ancestors to the graph-root anchor;
-- **median segment diameter:** twice the median sample radius within a segment;
-- **fractional diameter taper:** `(proximal diameter - distal diameter) /
-  proximal diameter`;
-- **diameter taper per length:** `(proximal diameter - distal diameter) /
-  segment length`; and
-- **branch-order summaries:** segment count and unweighted mean segment or path
-  length within each centrifugal order.
+## 2. Edges and branches
 
-The proximal and distal diameters used for taper are those of the first and
-last samples in the segment. A positive taper value denotes narrowing toward
-the distal end; a negative value denotes widening.
+Each non-root node `v` identifies the directed edge `(p(v),v)`. Its
+centerline length is
 
-## Radial and Sholl analysis
+\[
+L_v=\lVert x_v-x_{p(v)}\rVert_2.
+\]
 
-Classical `sholl_*` results require a validated soma root and classified type-3
-or type-4 dendrites. If either is absent, those maps are empty rather than
-misleading zero-valued results. REMOD also reports `radial_all_arbor_*` for all
-non-soma compartments. Its origin is the soma when present and otherwise the
-explicitly labeled reconstruction root. A root-centered profile is useful
-geometry, but it is not presented as soma-centered Sholl analysis. The radial
-step must be positive and may be non-integral.
+A neurite branch is a maximal path beginning immediately after a soma/root or a
+topological branch point and ending at the next branch point or terminal. SWC
+kind transitions never split a branch. The branch ID is its first distal node
+ID. Branch order is one at the proximal neurite boundary and increases by one
+after each topological branch point.
 
-Aggregate statistics apply the same capability boundary: morphologies for which
-a dendrite-specific, Sholl, or radial measurement is unavailable are excluded
-from that metric's mean and sample count, not inserted as zeros. This permits
-mixed real-world cohorts without silently depressing soma-dependent results.
+An analysis kind set `K` selects
 
-For each requested sphere radius, intersection counts are calculated from the
-exact intersections between a straight SWC edge and the sphere. A contact at
-an edge's distal endpoint is assigned to that edge; the proximal endpoint is
-excluded so a shared sample is not counted twice. Tangencies count as one
-intersection.
+\[
+E_K=\{(p(v),v)\in E:c(v)\in K\}.
+\]
 
-Cable length is split geometrically among radial shells. The bin labeled `r`
-contains length in the shell from `r - step` through `r`. A point on a shell
-boundary has zero cable length, so the open or closed boundary choice does not
-change the length sum. The shell lengths sum to the dendritic centerline length
-within floating-point tolerance.
+This distal-sample convention is explicit so a mixed-kind edge is not silently
+reclassified by an undocumented rule.
 
-Branch points are assigned to the smallest shell whose outer radius is greater
-than or equal to their radial distance. Basal, apical, and combined dendritic
-Sholl results are calculated separately, alongside a generic all-arbor radial
-profile. Branch-point profiles are zero-filled over
-the same radial extent as the corresponding cable-length profile, including
-for an unbranched arbor.
+## 3. Geometry
 
-A request that would require more than 10,000 radial bins is rejected before
-allocation. Increase the Sholl step for a morphology with a larger radial
-extent.
+Each edge is modeled as a straight centerline with radius varying linearly from
+`r₀` to `r₁`. It is therefore a conical frustum. Its lateral area and volume
+are
 
-## Remodeling operations
+\[
+A_v=\pi(r_0+r_1)\sqrt{L_v^2+(r_1-r_0)^2},
+\]
 
-Operations act on segment identifiers. Fixed selectors address all or regional
-segments; terminal selectors address terminal segments only. Random selectors
-sample terminal segments uniformly without replacement. The requested count
-is the nearest integer to `number of eligible segments * ratio`, with half
-values rounded upward. A seed makes random selection and generated geometry
-repeatable.
+\[
+Q_v=\frac{\pi L_v}{3}(r_0^2+r_0r_1+r_1^2).
+\]
 
-An action amount in `percent` is relative to the original length of each target
-segment. An amount in `units` is an absolute centerline distance in native SWC
-coordinates applied to each target.
+Totals are `math.fsum` over selected edges. Unlike a distal-radius cylinder,
+these formulas are invariant when an edge is subdivided at an exactly
+interpolated point. Surface area excludes end caps. Zero-length edges are
+allowed as topology but contribute zero centerline length and volume; their
+lateral area follows the same frustum equation. Edgewise sums do not subtract
+surface or volume overlap at branch junctions.
 
-- **shrink:** removes the requested length from the distal end. The remaining
-  segment must have positive length. Any downstream arbor is translated by the
-  tip displacement so its internal geometry and attachment are preserved.
-- **remove:** removes each selected segment and its complete distal subtree.
-- **extend:** appends the requested centerline length. For a nonterminal target,
-  the downstream arbor is translated and reattached to the new tip.
-- **branch:** adds exactly two daughter segments to each selected tip. Each
-  daughter has the requested centerline length; existing downstream segments,
-  if present, remain attached.
-- **scale:** interprets the amount as a scale percentage (`80` means a factor of
-  `0.8`). Selected segment coordinates are scaled about their proximal
-  attachment and their radii are multiplied by the same factor. Downstream
-  arbors are translated to preserve connections. The root anchor is unchanged.
-- **radius change:** applies either `radius * (1 + percentage / 100)` or
-  `radius + units` to selected segment samples. A result that is not
-  positive is rejected. When combined with branching, the radius edit occurs
-  first so both daughters inherit the edited attachment radius.
+Root path length is the sum of all ancestor-edge lengths, independent of the
+analysis kind filter. Units are never inferred. If the caller supplies a
+coordinate unit `u`, lengths have unit `u`, areas `u²`, and volumes
+`u³`.
 
-The browser interface previews the exact serialized and reanalyzed result
-without mutating the active morphology. Applying promotes that same artifact;
-it does not repeat random selection or geometry generation. Studio supplies an
-explicit seed for stochastic requests that do not already have one.
+## 4. Radial analysis
 
-Extension and branching divide the requested distance into steps drawn from
-`length_distribution.txt`; the final step is truncated when necessary so the
-requested path length is exact within floating-point tolerance. Each step is
-deflected by 5 degrees from the preceding direction with a random azimuth. The
-first steps of two new daughters use opposite azimuths on that cone. With a
-soma root, every generated endpoint must have a soma distance greater than or
-equal to its parent endpoint. Without a soma, no soma-radial claim is possible,
-so growth follows local forward direction and retains the `NO_SOMA_ROOT`
-warning. A 2D reconstruction uses the two in-plane directions and generated
-points retain the constant coordinate. Growth is rejected for a 0D/1D input
-because a meaningful deflection plane is absent.
+Radial analysis is computed only when the caller supplies both an origin
+`o ∈ R³` and a strictly positive step `Δ`. Supplying exactly one is an
+error. No soma center or default physical unit is inferred.
 
-`extend` and `branch` accept only type-3/type-4 targets. Their empirical length
-table and biological interpretation are dendritic, so applying them to an axon,
-unspecified neurite, glial process, custom type, or unknown type would be an
-unsupported scientific assumption. Those compartments remain eligible for
-deterministic `shrink`, `remove`, `scale`, and radius changes.
+For radius `R=kΔ`, intersections of the closed line segment
 
-REMOD tries at most 128 seeded directions for each step. If no candidate within
-the direction cone satisfies the applicable orientation and numeric
-representability conditions, the edit is rejected. Generation is limited to
-100,000 new samples per path. A request beyond that bound, or below the coordinate precision at the
-selected tip, is rejected without writing an output file.
+\[
+x(t)=x_0+t(x_1-x_0),\quad 0\le t\le1,
+\]
 
-## Serialization
+with the sphere `||x(t)-o||₂=R` are the real roots of its quadratic equation.
+The counting interval is `0 < t ≤ 1`: a shared node on a sphere belongs to
+its proximal edge exactly once. A tangent contributes one crossing and a
+secant may contribute two. Degenerate zero-length edges contribute none.
 
-Samples are validated and renumbered contiguously in deterministic
-parent-before-child order before serialization. The exact written file is
-reparsed before the command reports success. Floating-point fields use 17
-significant digits so finite binary64 values survive a write-read round trip.
-`--output` selects an explicit destination; otherwise REMOD uses
-`downloads/files/<stem>_new.swc`. Input and output must differ. An existing
-destination is rejected unless `--force` is supplied.
+Shell lengths partition every selected edge at all sphere crossings. Each open
+subsegment is assigned by its midpoint radius to shell
+`[kΔ,(k+1)Δ)`. Consequently,
 
-Output headers record the source file name, selector, segment identifiers,
-action, amounts, and seed without adding local paths or timestamps. Existing
-source comments are preserved unchanged.
+\[
+\sum_k S_k=\sum_{v\in E_K}L_v
+\]
 
-Those comments can contain paths, email addresses, or other metadata supplied
-by the input file. Comment text is never interpreted as SWC geometry and cannot
-affect parsing or analysis. Review or sanitize it separately before publishing
-or redistributing a file; morphology rows need not be modified.
+up to floating-point summation error. At most 10,000 shells are accepted, which
+bounds radial discretization for an accidentally tiny step.
 
-## Diagnostics and decision boundary
+An edge is tested only against its reachable contiguous shell interval.
+Origin subtraction occurs in exact rational arithmetic on the stored binary64
+coordinates. The minimum squared radius is therefore the exact squared
+distance from the origin to the segment; the maximum is the larger exact
+squared endpoint distance. Binary search compares those bounds with the exact
+values of the stored binary64 shell radii. Every remaining contact is
+classified from exact rational quadratic coefficients.
 
-REMOD distinguishes three classes of input condition:
+## 5. Pure transformations
 
-- **malformed data (hard error):** malformed rows, duplicate/non-positive IDs,
-  missing parents, no or multiple graph roots, cycles, non-finite values, or
-  non-positive radii. Continuing would make topology or geometry undefined.
-- **unusual but structurally valid data (warning):** a non-soma root, effective
-  2D/1D coordinates, coincident endpoints, very long internal edges, or
-  soma/root-attachment outliers. The parent graph is retained. Measurements
-  include the recorded edge and name the affected interpretation.
-- **incomplete or uncertain semantics (information/warning):** types `0`, `5`,
-  `6`, `7`, non-standard types, unknown units, or nearly uniform radii. Generic
-  measurements remain available; biological labels and radius-derived claims
-  are limited to what the file actually establishes.
+Every operation returns a validated morphology and leaves its input unchanged.
+A semantic no-op may return the identical immutable object.
 
-Long-edge diagnostics use conservative robust file-level thresholds. Every
-flagged edge must exceed four times the median positive arbor-edge length.
-Soma/root attachments, axons, and generic arbors must also exceed the median
-plus six scaled median absolute deviations. An internal dendritic edge must
-exceed the stricter median-plus-ten-scaled-MAD threshold before it is described
-as a possible geometric discontinuity. The edge classes receive distinct codes.
-These warnings do not repair, interpolate, delete, or disconnect samples.
-Length, path, radial, and remodeling results explicitly include the recorded
-connected edge.
+### Prune
 
-## Verification boundary and limitations
+`prune(M,R)` removes the descendant closure of each requested root in `R`.
+The morphology root cannot be pruned.
 
-The implementation can be checked against analytical synthetic trees and the
-structural invariants of the bundled SWC fixtures. These checks cover topology,
-length conservation, compartment formulas, Sholl partitioning, exact edit
-extents, connectivity, deterministic seeds, and valid SWC serialization.
+### Trim a terminal branch
 
-The population-level CA3 and basolateral amygdala examples reported in the
-REMOD article cannot be reproduced from this repository. The complete source
-cohorts, exact sampled segment sets, and random seeds used for those examples
-are not bundled. Their reported percentage changes are therefore contextual
-results, not regression targets for this implementation.
+`trim_terminal` removes either an explicit distal arclength `d` or an
+explicit fraction `f` of one terminal branch. Exactly one parameter is
+required. A cut inside an edge linearly interpolates both position and radius.
+Full-branch removal is deliberately a prune operation, not an ambiguous trim.
+An interpolation that cannot store each requested nonzero positional change
+within the binary64 component bound below is rejected. The realized retained
+arclength must also be within one ULP of the requested retained arclength.
 
-REMOD produces edited end-state geometries. It does not model biological growth
-dynamics, tissue mechanics, electrophysiology, or the probability that a
-particular remodeling operation occurs. The bundled empirical length
-distribution does not establish that generated branches are representative of
-another cell type, brain region, species, or experimental condition. Users
-should evaluate those assumptions for each analysis.
+### Scale edges
 
-The article identifies diameter taper as a measurement but does not specify the
-formula used for every reported taper value. The fractional and per-length
-definitions above are therefore explicit implementation conventions, tested on
-analytical fixtures rather than reconstructed from population results.
+An edge factor is keyed by its child node. With positive factors `s_v` and a
+default of one,
+
+\[
+x'_v=x'_{p(v)}+s_v(x_v-x_{p(v)}).
+\]
+
+Evaluation follows topological order. Thus an unscaled descendant is translated
+using its original edge vector when an ancestor changes. Radii and topology are
+unchanged. Stored coordinates use binary64 addition. The operation fails if
+finite storage would collapse or reverse any requested nonzero component, or if
+the realized component `δ̂` violates
+
+\[
+|\hat\delta-\delta|\le \operatorname{ulp}(\delta).
+\]
+
+The comparison is performed exactly between rational representations of the
+stored binary64 values; it has no empirical tolerance multiplier.
+
+### Scale radii
+
+For explicitly selected nodes and positive factors `a_v`,
+
+\[
+r'_v=a_vr_v.
+\]
+
+Coordinates and topology are unchanged.
+
+### Graft
+
+`graft` adds explicitly specified direct children to a named parent. Each
+child has a kind, a three-dimensional displacement from that parent, and a
+radius. IDs are allocated monotonically from the current maximum. There is no
+random direction, empirical length table, collision heuristic, or hidden seed.
+An offset is rejected if finite storage would collapse or reverse a requested
+nonzero component or violate the same componentwise binary64 bound.
+
+## 6. Reproducibility and falsifiability
+
+The implementation is required to satisfy these executable properties:
+
+1. Parsing and analysis are independent of SWC row order.
+2. Relabeling node IDs without changing the rooted geometry does not change
+   aggregate measurements.
+3. Translation and rotation preserve topology, length, area, and volume.
+4. Uniform coordinate/radius scaling by `s` scales length, area, and volume by
+   `s`, `s²`, and `s³` respectively.
+5. Exact linear subdivision preserves length, lateral area, and volume.
+6. Shell lengths conserve selected total length.
+7. Parse → serialize → parse preserves the complete scientific object.
+8. Transforms are pure, deterministic, and local according to their equations.
+9. Canonical input and output digests plus exact transform parameters are
+   sufficient to identify a CLI remodeling result.
+
+Floating-point aggregation uses `math.fsum`; root paths carry a compensated
+sum along the tree. Sphere-contact classification uses the exact rational
+quadratic coefficients of the binary64 inputs; irrational roots use decimal
+precision derived from the coefficients' bit span. Property tests verify
+radial length conservation and analytic quantities at operation-scaled
+binary64 tolerances rather than one global relative tolerance.
+
+If a derived length, area, volume, path, or transformed coordinate lies outside
+the finite binary64 range—or a positive result underflows to zero—the operation
+fails explicitly rather than emitting infinity, NaN, or a silently collapsed
+quantity.
+
+## 7. Non-claims
+
+SWC kinds beyond the proximal soma convention are not ontologies. Radii are not
+validated against microscopy. A reconstruction may omit anatomy or encode
+artifacts. Frustum geometry is a declared geometric model, not tissue truth.
+Transforms express counterfactual geometry; they do not establish biological
+plausibility. REMOD therefore reports only quantities determined by the stated
+tree, parameters, and assumptions.
