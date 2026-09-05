@@ -2,15 +2,60 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from hashlib import sha256
+from io import StringIO
+from itertools import islice
 from math import isfinite
+import re
 from types import MappingProxyType
 from typing import Mapping
+from unicodedata import category
 
 
 _INTEGER_MIN = -(1 << 63)
 _INTEGER_MAX = (1 << 63) - 1
+MAX_SWC_BYTES = 16 * 1024 * 1024
+MAX_NODES = 50_000
+MAX_LINE_CHARS = 4096
+MAX_COMMENT_BYTES = 1024 * 1024
+MAX_NUMBER_CHARS = 128
+_DECIMAL_TOKEN = re.compile(
+    r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?\Z"
+)
+
+
+def _bounded[T](values: Iterable[T], limit: int, label: str) -> tuple[T, ...]:
+    result = tuple(islice(values, limit + 1))
+    if len(result) > limit:
+        raise ValueError(f"{label} exceeds the limit of {limit}")
+    return result
+
+
+def _plain_text(text: str, label: str, *, allow_tab: bool = True) -> None:
+    if any(
+        category(char) in {"Cc", "Cf", "Cs", "Zl", "Zp"}
+        and not (allow_tab and char == "\t")
+        for char in text
+    ):
+        raise ValueError(f"{label} contains a control or line-separator character")
+
+
+def _finite_token(token: str) -> float:
+    """Parse ASCII decimal binary64, rejecting nonzero values rounded to zero."""
+
+    if len(token) > MAX_NUMBER_CHARS or not _DECIMAL_TOKEN.fullmatch(token):
+        raise ValueError(
+            f"number must be an ASCII decimal token of at most {MAX_NUMBER_CHARS} characters"
+        )
+    value = float(token)
+    if not isfinite(value):
+        raise ValueError("number must be finite")
+    mantissa = token.lower().split("e", 1)[0]
+    if value == 0.0 and any(char in "123456789" for char in mantissa):
+        raise ValueError("nonzero number underflows binary64")
+    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,8 +106,16 @@ class Morphology:
     _branches: tuple[Branch, ...] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
-        supplied_nodes = tuple(self.nodes)
-        comments = tuple(_comment_body(comment) for comment in self.comments)
+        supplied_nodes = _bounded(self.nodes, MAX_NODES, "sample count")
+        comments_list = []
+        comment_bytes = 0
+        for comment in self.comments:
+            body = _comment_body(comment)
+            comment_bytes += len(body.encode("utf-8")) + 3
+            if comment_bytes > MAX_COMMENT_BYTES:
+                raise ValueError(f"comments exceed {MAX_COMMENT_BYTES} bytes")
+            comments_list.append(body)
+        comments = tuple(comments_list)
 
         index: dict[int, Node] = {}
         roots: list[Node] = []
@@ -192,12 +245,11 @@ def _is_finite_number(value: object) -> bool:
 def _comment_body(comment: str) -> str:
     if not isinstance(comment, str):
         raise TypeError("comments must be strings")
-    if "\n" in comment or "\r" in comment:
-        raise ValueError("comments must be single lines")
-    body = comment.strip()
-    if body.startswith("#"):
-        body = body[1:].lstrip()
-    return body
+    if len(comment) > MAX_LINE_CHARS - 2:
+        raise ValueError("comment exceeds the SWC line limit")
+    _plain_text(comment, "comment")
+    # The parser removes exactly one SWC marker. Internal text is never syntax.
+    return comment.strip(" \t")
 
 
 def _build_branches(
@@ -230,6 +282,8 @@ def _build_branches(
 
 
 def _integral_token(token: str, *, line_number: int, field_name: str) -> int:
+    if len(token) > MAX_NUMBER_CHARS:
+        raise ValueError(f"line {line_number}: integer token is too long")
     digits = token[1:] if token[:1] in {"+", "-"} else token
     if not digits or not digits.isascii() or not digits.isdecimal():
         raise ValueError(
@@ -250,14 +304,11 @@ def _integral_token(token: str, *, line_number: int, field_name: str) -> int:
 
 def _float_token(token: str, *, line_number: int, field_name: str) -> float:
     try:
-        value = float(token)
+        return _finite_token(token)
     except ValueError as exc:
         raise ValueError(
-            f"line {line_number}: {field_name} is not numeric: {token!r}"
+            f"line {line_number}: {field_name}: {exc}"
         ) from exc
-    if not isfinite(value):
-        raise ValueError(f"line {line_number}: {field_name} must be finite")
-    return value
 
 
 def parse_swc(text: str) -> Morphology:
@@ -265,17 +316,30 @@ def parse_swc(text: str) -> Morphology:
 
     if not isinstance(text, str):
         raise TypeError("SWC input must be text")
+    if len(text) > MAX_SWC_BYTES or len(text.encode("utf-8")) > MAX_SWC_BYTES:
+        raise ValueError(f"SWC input exceeds {MAX_SWC_BYTES} bytes")
 
     nodes: list[Node] = []
     comments: list[str] = []
-    for line_number, raw_line in enumerate(text.splitlines(), start=1):
-        line = raw_line.strip()
+    comment_bytes = 0
+    for line_number, raw_line in enumerate(StringIO(text, newline=None), start=1):
+        raw_line = raw_line.removesuffix("\n")
+        if len(raw_line) > MAX_LINE_CHARS:
+            raise ValueError(f"line {line_number}: exceeds {MAX_LINE_CHARS} characters")
+        _plain_text(raw_line, f"line {line_number}")
+        line = raw_line.strip(" \t")
         if not line:
             continue
         if line.startswith("#"):
-            comments.append(line[1:].lstrip())
+            body = _comment_body(line[1:].lstrip(" \t"))
+            comment_bytes += len(body.encode("utf-8")) + 3
+            if comment_bytes > MAX_COMMENT_BYTES:
+                raise ValueError(f"comments exceed {MAX_COMMENT_BYTES} bytes")
+            comments.append(body)
             continue
 
+        if len(nodes) >= MAX_NODES:
+            raise ValueError(f"sample count exceeds the limit of {MAX_NODES}")
         fields = line.split()
         if len(fields) != 7:
             raise ValueError(

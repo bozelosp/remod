@@ -7,7 +7,7 @@ from fractions import Fraction
 from math import dist, fsum, isfinite, ulp
 from numbers import Real
 
-from .model import Morphology, Node
+from .model import MAX_NODES, Morphology, Node, _bounded
 
 _ChildSpec = tuple[int, tuple[float, float, float], float]
 
@@ -113,7 +113,10 @@ def prune(morphology: Morphology, roots: Iterable[int]) -> Morphology:
     """Remove each selected node and its exact descendant closure."""
 
     morphology = _morphology(morphology)
-    selected = {_node_id(node_id, "prune root") for node_id in roots}
+    selected = {
+        _node_id(node_id, "prune root")
+        for node_id in _bounded(roots, MAX_NODES, "prune roots")
+    }
     if not selected:
         return morphology
 
@@ -373,6 +376,8 @@ def graft(
         raise TypeError("graft children must be a sequence")
     if not children:
         raise ValueError("graft requires at least one child specification")
+    if len(morphology.nodes) + len(children) > MAX_NODES:
+        raise ValueError(f"graft exceeds the limit of {MAX_NODES} samples")
 
     next_id = max(node.id for node in morphology.nodes) + 1
     added: list[Node] = []
@@ -388,7 +393,7 @@ def graft(
         if isinstance(raw_vector, (str, bytes)):
             raise TypeError(f"graft child {index} offset must be a numeric sequence")
         try:
-            vector = tuple(raw_vector)
+            vector = _bounded(raw_vector, 3, "graft offset")
         except TypeError as exc:
             raise TypeError(
                 f"graft child {index} offset must be a numeric sequence"
@@ -419,6 +424,8 @@ def _finite_coordinate(value: object, label: str) -> float:
         raise ValueError(f"{label} values must be finite") from exc
     if not isfinite(coordinate):
         raise ValueError(f"{label} values must be finite")
+    if coordinate == 0.0 and value != 0:
+        raise ValueError(f"{label} underflows binary64")
     return coordinate
 
 

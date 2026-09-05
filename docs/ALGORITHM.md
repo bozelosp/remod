@@ -31,6 +31,13 @@ soma samples are allowed. Input row order has no meaning. Direct construction
 and text parsing enforce the same integer domain; both store coordinates and
 radii as binary64 values.
 
+Numeric text is bounded ASCII decimal notation. Nonzero values that round to
+zero are rejected, as are non-finite conversions. SWC line endings are LF, CRLF,
+or CR; other control/format/line-separator characters are rejected (tab is
+allowed). The parser removes exactly one comment marker; internal comment
+bodies retain literal leading hashes. Whitespace around bodies is canonicalized.
+Resource limits are defined in [DEFENSE.md](DEFENSE.md).
+
 The in-memory object is immutable. Canonical serialization emits comments and
 then a deterministic parent-before-child ordering, sorts siblings by ID,
 preserves IDs, and formats floating-point values with 17 significant digits.
@@ -110,8 +117,9 @@ subsegment is assigned by its midpoint radius to shell
 \sum_k S_k=\sum_{v\in E_K}L_v
 \]
 
-up to floating-point summation error. At most 10,000 shells are accepted, which
-bounds radial discretization for an accidentally tiny step.
+up to floating-point summation error. At most 10,000 shells are accepted.
+Aggregate edge-shell work is also checked before solving any contacts; the
+explicit capacity policy is in [DEFENSE.md](DEFENSE.md).
 
 An edge is tested only against its reachable contiguous shell interval.
 Origin subtraction occurs in exact rational arithmetic on the stored binary64
@@ -205,6 +213,13 @@ quadratic coefficients of the binary64 inputs; irrational roots use decimal
 precision derived from the coefficients' bit span. Property tests verify
 radial length conservation and analytic quantities at operation-scaled
 binary64 tolerances rather than one global relative tolerance.
+
+Decimal arithmetic uses a fresh context with round-to-nearest/ties-to-even;
+embedding callers' contexts cannot change results. If distinct sphere contacts
+round to the same binary64 parameter, an interior contact rounds to an endpoint,
+or a positive shell contribution rounds to zero, radial analysis fails rather
+than reporting an incorrect partition. This is a representation limit, not a
+change to Sholl counting or radial-shell semantics.
 
 If a derived length, area, volume, path, or transformed coordinate lies outside
 the finite binary64 range—or a positive result underflows to zero—the operation

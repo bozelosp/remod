@@ -4,30 +4,97 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
+import secrets
+import stat
 import sys
 from typing import Callable, Sequence
 
 from .metrics import analyze
-from .model import Morphology, parse_swc, to_swc
+from .model import MAX_SWC_BYTES, Morphology, _finite_token, _plain_text, parse_swc, to_swc
 from .transforms import graft, prune, scale_edges, scale_radii, trim_terminal
 
 
 def _read(path: Path) -> Morphology:
+    _check_path(path)
     try:
-        return parse_swc(path.read_text(encoding="utf-8"))
+        descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, "rb") as handle:
+            before = os.fstat(handle.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                raise ValueError("input must be a regular file")
+            if before.st_size > MAX_SWC_BYTES:
+                raise ValueError(f"SWC input exceeds {MAX_SWC_BYTES} bytes")
+            data = handle.read(MAX_SWC_BYTES + 1)
+            after = os.fstat(handle.fileno())
+            if (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+                after.st_size, after.st_mtime_ns, after.st_ctime_ns
+            ):
+                raise ValueError("input changed while it was being read")
+        if len(data) > MAX_SWC_BYTES:
+            raise ValueError(f"SWC input exceeds {MAX_SWC_BYTES} bytes")
+        return parse_swc(data.decode("utf-8"))
+    except UnicodeError as exc:
+        raise ValueError("input must be valid UTF-8") from exc
     except OSError as exc:
-        raise ValueError(f"cannot read {path}: {exc}") from exc
+        raise ValueError(f"cannot read input: {exc.strerror}") from exc
 
 
-def _write_new(path: Path, text: str) -> None:
+def _check_path(path: Path) -> None:
+    if os.name != "posix" or not hasattr(os, "O_NOFOLLOW"):
+        raise ValueError("secure CLI file I/O requires a POSIX filesystem")
+    _plain_text(str(path), "path", allow_tab=False)
+    if path.name in {"", ".", ".."}:
+        raise ValueError("path must name a file")
+
+
+def _write_new(path: Path, text: str, *, swc_digest: str | None = None) -> None:
+    """Verify a private temporary artifact, then atomically publish without replacement."""
+
+    _check_path(path)
+    data = text.encode("utf-8")
+    directory = None
+    temporary = None
     try:
-        with path.open("x", encoding="utf-8", newline="\n") as handle:
-            handle.write(text)
+        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        directory_stat = os.fstat(directory)
+        if directory_stat.st_uid not in {0, os.geteuid()} or (
+            directory_stat.st_mode & 0o022
+            and not directory_stat.st_mode & stat.S_ISVTX
+        ):
+            raise ValueError("output directory must be owner-controlled or protected by the sticky bit")
+        candidate = ".remod-" + secrets.token_hex(16) + ".tmp"
+        descriptor = os.open(
+            candidate, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600, dir_fd=directory,
+        )
+        temporary = candidate
+        with os.fdopen(descriptor, "w+b") as handle:
+            if handle.write(data) != len(data):
+                raise ValueError("incomplete output write")
+            handle.flush()
+            os.fsync(handle.fileno())
+            handle.seek(0)
+            written = handle.read(len(data) + 1)
+            if written != data:
+                raise ValueError("written output differs from the computed artifact")
+            if swc_digest is not None and parse_swc(written.decode("utf-8")).digest != swc_digest:
+                raise ValueError("written SWC does not preserve the computed morphology")
+            os.link(temporary, path.name, src_dir_fd=directory,
+                    dst_dir_fd=directory, follow_symlinks=False)
+        os.fsync(directory)
     except FileExistsError as exc:
-        raise ValueError(f"output already exists: {path}") from exc
+        raise ValueError("output already exists; choose a new path") from exc
     except OSError as exc:
-        raise ValueError(f"cannot write {path}: {exc}") from exc
+        raise ValueError(f"cannot publish output: {exc.strerror}") from exc
+    finally:
+        if directory is not None:
+            try:
+                if temporary is not None:
+                    os.unlink(temporary, dir_fd=directory)
+            finally:
+                os.close(directory)
 
 
 def _json(value: object) -> str:
@@ -58,7 +125,7 @@ def _factors(specifications: Sequence[str]) -> dict[int, float]:
             raise ValueError("each factor must have the form NODE_ID=FACTOR")
         try:
             node_id = int(fields[0])
-            factor = float(fields[1])
+            factor = _finite_token(fields[1])
         except ValueError as exc:
             raise ValueError("each factor must have the form NODE_ID=FACTOR") from exc
         if node_id in factors:
@@ -75,7 +142,7 @@ def _children(specifications: Sequence[str]) -> list[tuple[int, tuple[float, ...
             raise ValueError("each child must have the form KIND,DX,DY,DZ,RADIUS")
         try:
             kind = int(fields[0])
-            numbers = tuple(float(field) for field in fields[1:])
+            numbers = tuple(_finite_token(field) for field in fields[1:])
         except ValueError as exc:
             raise ValueError(
                 "each child must have the form KIND,DX,DY,DZ,RADIUS"
@@ -91,7 +158,7 @@ def _origin(specification: str, morphology: Morphology) -> tuple[float, float, f
     if len(fields) != 3:
         raise ValueError("origin must be 'root' or X,Y,Z")
     try:
-        origin = tuple(float(field) for field in fields)
+        origin = tuple(_finite_token(field) for field in fields)
     except ValueError as exc:
         raise ValueError("origin must be 'root' or X,Y,Z") from exc
     return origin  # type: ignore[return-value]
@@ -136,8 +203,9 @@ def _transform(
 ) -> None:
     source = _read(args.input)
     result = operation(source)
-    _write_new(args.output, to_swc(result))
-    sys.stdout.write(_json(_receipt(name, parameters, source, result)))
+    receipt = _json(_receipt(name, parameters, source, result))
+    _write_new(args.output, to_swc(result), swc_digest=result.digest)
+    sys.stdout.write(receipt)
 
 
 def _prune(args: argparse.Namespace) -> None:
@@ -210,7 +278,7 @@ def _parser() -> argparse.ArgumentParser:
     analysis.add_argument("--kinds", default="3,4", help="distal SWC kinds (default: 3,4)")
     analysis.add_argument("--unit", help="declared coordinate unit; never inferred")
     analysis.add_argument("--origin", help="'root' or X,Y,Z; requires --radial-step")
-    analysis.add_argument("--radial-step", type=float, help="explicit radial shell step")
+    analysis.add_argument("--radial-step", type=_finite_token, help="explicit radial shell step")
     analysis.add_argument("-o", "--output", type=Path, help="new JSON output path")
     analysis.set_defaults(handler=_analyze)
 
@@ -225,8 +293,8 @@ def _parser() -> argparse.ArgumentParser:
     trim.add_argument("output", type=Path)
     trim.add_argument("--branch", required=True, type=int)
     trim_extent = trim.add_mutually_exclusive_group(required=True)
-    trim_extent.add_argument("--length", type=float)
-    trim_extent.add_argument("--fraction", type=float)
+    trim_extent.add_argument("--length", type=_finite_token)
+    trim_extent.add_argument("--fraction", type=_finite_token)
     trim.set_defaults(handler=_trim)
 
     for command, help_text, handler in (
@@ -263,8 +331,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         args.handler(args)
-    except (ArithmeticError, TypeError, ValueError) as exc:
-        print(f"remod: error: {exc}", file=sys.stderr)
+    except (ArithmeticError, OSError, TypeError, ValueError) as exc:
+        print(f"remod: error: {ascii(str(exc))[1:-1]}", file=sys.stderr)
         return 2
     return 0
 

@@ -19,7 +19,9 @@ are absent from that object.
 | `remod.cli` | Thin command-line interface with machine-readable results and receipts |
 
 The implementation uses only the Python standard library. The repository pins
-Python 3.14.6 in `.python-version`.
+the verified Python runtime in `.python-version`. No package installation is
+required. Run from a trusted checkout; `python -E -S -m remod ...` also ignores
+Python environment overrides and third-party site packages.
 
 ## Use
 
@@ -50,8 +52,9 @@ python -m remod scale-radii input.swc output.swc --factor 41=1.2
 python -m remod graft input.swc output.swc --parent 41 --child 3,4,0,0,0.7
 ```
 
-Outputs are never overwritten. Transformations are deterministic and contain
-no random sampling.
+CLI outputs are never overwritten: a private, verified temporary file is
+published atomically at a new path. Inputs must be regular UTF-8 files, not
+symlinks. Transformations are deterministic and contain no random sampling.
 
 The library API is intentionally small:
 
@@ -63,8 +66,12 @@ from remod import analyze, parse_swc, scale_edges, to_swc
 morphology = parse_swc(Path("cell.swc").read_text(encoding="utf-8"))
 report = analyze(morphology, kinds=(3, 4), unit="micrometre")
 shorter = scale_edges(morphology, {41: 0.8})
-Path("shorter.swc").write_text(to_swc(shorter), encoding="utf-8")
+serialized = to_swc(shorter)
+assert parse_swc(serialized).digest == shorter.digest
 ```
+
+Library callers own file I/O. Use the CLI for the verified, no-overwrite file
+workflow; shell redirection does not inherit that guarantee.
 
 ## Scientific contract
 
@@ -88,11 +95,13 @@ Path("shorter.swc").write_text(to_swc(shorter), encoding="utf-8")
 
 The complete definitions and falsifiable invariants are in
 [`docs/ALGORITHM.md`](docs/ALGORITHM.md).
+The local threat model, supported input limits, file guarantees, and residual
+risks are in [`docs/DEFENSE.md`](docs/DEFENSE.md).
 
 ## Verification
 
 ```console
-python -m unittest discover -s tests -v
+python -m unittest discover -v
 ```
 
 The compact suite uses analytic trees and two attributed real SWC fixtures. It

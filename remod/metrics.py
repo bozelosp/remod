@@ -21,16 +21,17 @@ claims about unrecorded biological tissue.
 from __future__ import annotations
 
 from bisect import bisect_left, bisect_right
-from decimal import Decimal, localcontext
+from decimal import Context, Decimal, ROUND_HALF_EVEN, localcontext
 from fractions import Fraction
 from math import frexp, fsum, hypot, isfinite, ldexp, pi
 from numbers import Real
 from typing import Iterable, Sequence, cast
 
-from .model import Morphology, Node
+from .model import MAX_NODES, Morphology, Node, _bounded, _plain_text
 
 
 _MAX_RADIAL_SHELLS = 10_000
+_MAX_RADIAL_WORK = 200_000
 
 
 def _finite_product(factors: Sequence[float], label: str) -> float:
@@ -100,7 +101,7 @@ def _normalize_kinds(kinds: Iterable[int]) -> tuple[int, ...]:
     if isinstance(kinds, (str, bytes)):
         raise TypeError("kinds must be an iterable of integers")
     normalized: set[int] = set()
-    for kind in kinds:
+    for kind in _bounded(kinds, MAX_NODES, "selected kinds"):
         if type(kind) is not int:
             raise TypeError("every selected kind must be an integer")
         normalized.add(kind)
@@ -112,6 +113,9 @@ def _normalize_unit(unit: str | None) -> str | None:
         return None
     if not isinstance(unit, str) or not unit.strip():
         raise ValueError("unit must be a non-empty string or None")
+    if len(unit) > 128:
+        raise ValueError("unit exceeds 128 characters")
+    _plain_text(unit, "unit")
     return unit.strip()
 
 
@@ -127,7 +131,7 @@ def _normalize_radial_spec(
     if isinstance(origin, (str, bytes)):
         raise TypeError("origin must be an iterable of three real numbers")
     try:
-        origin_values = tuple(origin)
+        origin_values = _bounded(origin, 3, "origin")
     except TypeError as exc:
         raise TypeError("origin must be an iterable of three real numbers") from exc
     if len(origin_values) != 3:
@@ -145,6 +149,8 @@ def _normalize_radial_spec(
         raise ValueError("origin coordinates must be finite") from exc
     if not all(isfinite(value) for value in normalized_origin):
         raise ValueError("origin coordinates must be finite")
+    if any(stored == 0 and raw != 0 for stored, raw in zip(normalized_origin, origin_values)):
+        raise ValueError("origin coordinate underflows binary64")
     if isinstance(radial_step, bool) or not isinstance(radial_step, Real):
         raise TypeError("radial_step must be a real number, not a boolean or string")
     try:
@@ -217,6 +223,17 @@ def _fraction_to_decimal(value: Fraction) -> Decimal:
     return Decimal(value.numerator) / Decimal(value.denominator)
 
 
+def _stored_roots(roots: Iterable[Fraction | Decimal]) -> tuple[float, ...]:
+    selected = sorted(root for root in roots if 0 < root <= 1)
+    stored = tuple(float(root) for root in selected)
+    if len(set(stored)) != len(stored) or any(
+        value == 0.0 or (value == 1.0 and exact != 1)
+        for value, exact in zip(stored, selected)
+    ):
+        raise ValueError("radial contacts cannot be separated in binary64")
+    return stored
+
+
 def _sphere_parameters(
     start: Sequence[Fraction], end: Sequence[Fraction], radius: float
 ) -> tuple[float, ...]:
@@ -233,17 +250,17 @@ def _sphere_parameters(
     # Exact endpoint roots make the (0, 1] convention independent of rounding.
     if a + b + c == 0:
         roots = {Fraction(1), c / a}
-        return tuple(sorted(float(root) for root in roots if 0 < root <= 1))
+        return _stored_roots(roots)
     if c == 0:
         other = -b / a
-        return (float(other),) if 0 < other <= 1 else ()
+        return _stored_roots((other,))
 
     discriminant = b * b - 4 * a * c
     if discriminant < 0:
         return ()
     if discriminant == 0:
         root = -b / (2 * a)
-        return (float(root),) if 0 < root <= 1 else ()
+        return _stored_roots((root,))
 
     coefficient_bits = max(
         max(abs(value.numerator).bit_length(), value.denominator.bit_length())
@@ -252,17 +269,14 @@ def _sphere_parameters(
     decimal_precision = max(
         100, (2 * coefficient_bits * 30_103) // 100_000 + 50
     )
-    with localcontext() as context:
-        context.prec = decimal_precision
+    with localcontext(Context(prec=decimal_precision, rounding=ROUND_HALF_EVEN)):
         a_d = _fraction_to_decimal(a)
         b_d = _fraction_to_decimal(b)
         c_d = _fraction_to_decimal(c)
         root_discriminant = _fraction_to_decimal(discriminant).sqrt()
         q = -(b_d + (root_discriminant if b_d >= 0 else -root_discriminant)) / 2
         candidates = (q / a_d, c_d / q)
-        return tuple(
-            sorted(float(root) for root in candidates if Decimal(0) < root <= Decimal(1))
-        )
+        return _stored_roots(candidates)
 
 
 def _candidate_shell_indices(
@@ -310,6 +324,8 @@ def _extend_sum(state: tuple[float, float], value: float) -> tuple[float, float]
 
     total, correction = state
     updated = total + value
+    if not isfinite(updated):
+        raise ValueError("root path exceeds finite numeric range")
     if abs(total) >= abs(value):
         residual = (total - updated) + value
     else:
@@ -359,16 +375,38 @@ def _radial_profile(
             )
     shell_count = len(bounds)
 
+    # Budget before solving contacts or allocating interval contributions. Each
+    # candidate has at most two roots and three new intervals. Large rational
+    # bit spans cost more; the squared weight bounds adversarial exact work.
+    ranges = []
+    work = 0
+    for _, start, end in prepared:
+        indices = _candidate_shell_indices(start, end, bounds)
+        bits = max(
+            max(abs(value.numerator).bit_length(), value.denominator.bit_length())
+            for value in (*start, *end)
+        )
+        weight = max(1, (bits + 63) // 64) ** 2
+        work += (1 + len(indices)) * weight
+        if work > _MAX_RADIAL_WORK:
+            raise ValueError(
+                f"radial analysis exceeds {_MAX_RADIAL_WORK} work units; "
+                "use a larger step or smaller morphology"
+            )
+        ranges.append(indices)
+
     length_terms: list[list[float]] = [[] for _ in bounds]
     intersection_counts = [0 for _ in bounds]
-    for edge, start, end in prepared:
+    for (edge, start, end), indices in zip(prepared, ranges):
         edge_length = float(edge["length"])
         if edge_length == 0.0 or not bounds:
             continue
         cuts = {0.0, 1.0}
-        for index in _candidate_shell_indices(start, end, bounds):
+        for index in indices:
             bound = bounds[index]
             roots = _sphere_parameters(start, end, bound)
+            if any(root in cuts and root != 1.0 for root in roots):
+                raise ValueError("radial contacts cannot be separated in binary64")
             intersection_counts[index] += len(roots)
             cuts.update(roots)
         ordered = sorted(cuts)
@@ -397,6 +435,8 @@ def _radial_profile(
             contribution = edge_length * (right - left)
             if not isfinite(contribution):
                 raise ValueError("radial shell length exceeds finite numeric range")
+            if contribution == 0.0:
+                raise ValueError("positive radial shell length underflows binary64")
             length_terms[shell_index].append(contribution)
 
     shell_lengths = [fsum(terms) for terms in length_terms]
